@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { LogIn, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,38 +18,49 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError) {
-      setError(authError.message);
+    if (!isSupabaseConfigured) {
+      setError("Error de conexión: Supabase no está configurado. Verifica las variables de entorno.");
       setLoading(false);
       return;
     }
 
-    // Fetch user profile to determine role
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, parking_lot_id")
-      .eq("id", data.user.id)
-      .single();
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: `${username.toLowerCase().trim()}@parkingapp.local`,
+        password,
+      });
 
-    if (profileError) {
-      setError("Error al obtener perfil de usuario");
+      if (authError) {
+        setError(authError.message === "Failed to fetch" ? "Error de conexión con el servidor. Verifica tu internet o la configuración de Supabase." : authError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user profile to determine role
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role, parking_lot_id")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileError) {
+        setError("Error al obtener perfil de usuario");
+        setLoading(false);
+        return;
+      }
+
+      if (profile.role === "admin") {
+        router.push("/admin");
+      } else if (profile.role === "employee") {
+        router.push("/employee");
+      } else if (profile.role === "superadmin") {
+        router.push("/superadmin");
+      } else {
+        router.push("/");
+      }
+    } catch (err: any) {
+      setError(err.message || "Ocurrió un error inesperado al iniciar sesión.");
       setLoading(false);
-      return;
-    }
-
-    if (profile.role === "admin") {
-      router.push("/admin");
-    } else if (profile.role === "employee") {
-      router.push("/employee");
-    } else if (profile.role === "superadmin") {
-      router.push("/superadmin");
-    } else {
-      router.push("/");
     }
   };
 
@@ -83,14 +94,14 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Correo Electrónico
+              Usuario
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-              placeholder="usuario@ejemplo.com"
+              placeholder="ej. admin123"
               required
             />
           </div>
@@ -119,7 +130,7 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center">
           <Link href="/setup" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
-            ¿Primera vez? Configurar Dueño
+            Ver Historial de Versiones
           </Link>
         </div>
       </div>

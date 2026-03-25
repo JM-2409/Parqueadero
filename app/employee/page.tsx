@@ -50,7 +50,7 @@ export default function EmployeePage() {
       .from("parking_lots")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
     if (data) {
       setParkingLot(data);
       if (data.allowed_vehicles && data.allowed_vehicles.length > 0) {
@@ -58,7 +58,7 @@ export default function EmployeePage() {
       }
     }
     
-    const { data: appData } = await supabase.from("app_settings").select("*").limit(1).single();
+    const { data: appData } = await supabase.from("app_settings").select("*").limit(1).maybeSingle();
     if (appData) setAppSettings(appData);
 
     const { data: tariffData } = await supabase.from("tariffs").select("*").eq("parking_lot_id", id);
@@ -78,33 +78,40 @@ export default function EmployeePage() {
   }, []);
 
   const checkUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        router.push("/login");
+        return;
+      }
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profileError || profileData?.role !== "employee") {
+        router.push("/");
+        return;
+      }
+
+      setProfile(profileData);
+      fetchParkingLot(profileData.parking_lot_id);
+      fetchActiveSessions(profileData.parking_lot_id);
+    } catch (err) {
+      console.error("Error checking user:", err);
       router.push("/login");
-      return;
     }
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profileData?.role !== "employee") {
-      router.push("/");
-      return;
-    }
-
-    setProfile(profileData);
-    fetchParkingLot(profileData.parking_lot_id);
-    fetchActiveSessions(profileData.parking_lot_id);
   }, [router, fetchParkingLot, fetchActiveSessions]);
 
   useEffect(() => {
     // Check for saved shift
     const savedShift = sessionStorage.getItem("shiftName");
     if (savedShift) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShiftName(savedShift);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsShiftSet(true);
     }
     
@@ -126,7 +133,7 @@ export default function EmployeePage() {
         .from("vehicles")
         .select("*")
         .eq("plate", searchPlate.toUpperCase())
-        .single();
+        .maybeSingle();
 
       if (data) {
         setType(data.type);
@@ -183,7 +190,7 @@ export default function EmployeePage() {
         .from("vehicles")
         .select("id")
         .eq("plate", plate.toUpperCase())
-        .single();
+        .maybeSingle();
       vehicleId = existingVehicle?.id;
     }
 
@@ -231,8 +238,24 @@ export default function EmployeePage() {
       finalFee = calculateFee(entryTime, exitTime, tariff);
     }
 
-    // eslint-disable-next-line react-hooks/purity
-    const receiptNumber = `REN${Date.now().toString().slice(-5)}`;
+    // Generate consecutive receipt number
+    const { data: lastSession } = await supabase
+      .from("parking_sessions")
+      .select("receipt_number")
+      .eq("parking_lot_id", parkingLot.id)
+      .not("receipt_number", "is", null)
+      .order("exit_time", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let nextNumber = 1;
+    if (lastSession && lastSession.receipt_number) {
+      const match = lastSession.receipt_number.match(/\d+/);
+      if (match) {
+        nextNumber = parseInt(match[0], 10) + 1;
+      }
+    }
+    const receiptNumber = `REC-${nextNumber.toString().padStart(6, '0')}`;
 
     const { data: updatedSession, error: updateError } = await supabase
       .from("parking_sessions")
@@ -315,7 +338,7 @@ export default function EmployeePage() {
       </div>
 
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:block w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
+      <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
         <div className="p-6 hidden md:flex items-center gap-3 font-bold text-xl text-white border-b border-slate-800">
           <Car size={28} className="text-indigo-400" />
           <span>Operación</span>
@@ -329,7 +352,7 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           <button
             onClick={() => { setActiveTab("operation"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "operation" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
@@ -346,7 +369,7 @@ export default function EmployeePage() {
           </button>
         </nav>
         
-        <div className="p-4 mt-auto border-t border-slate-800 absolute bottom-0 w-full">
+        <div className="p-4 mt-auto border-t border-slate-800">
           <div className="mb-4 px-2">
             <p className="text-xs text-slate-500 mb-1">Ocupación</p>
             <div className="w-full bg-slate-800 rounded-full h-2.5">

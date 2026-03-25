@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { History, Search, FileText } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
@@ -11,7 +11,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     
     // Fetch tariffs
@@ -21,6 +21,10 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       .eq("parking_lot_id", parkingLotId);
     if (tariffData) setTariffs(tariffData);
 
+    // Calculate date 7 days ago
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     // Fetch sessions
     const { data: sessionData } = await supabase
       .from("parking_sessions")
@@ -29,13 +33,14 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
         vehicles (plate, type, brand, color, owner_name)
       `)
       .eq("parking_lot_id", parkingLotId)
+      .gte("entry_time", sevenDaysAgo.toISOString())
       .order("entry_time", { ascending: false });
     
     if (sessionData) {
       setSessions(sessionData);
     }
     setLoading(false);
-  };
+  }, [parkingLotId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -68,25 +73,25 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm mt-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
             <History size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Historial Completo</h2>
-            <p className="text-sm text-slate-500">Todos los vehículos que han ingresado</p>
+            <h2 className="text-xl font-semibold text-slate-900">Historial (Últimos 7 días)</h2>
+            <p className="text-sm text-slate-500">Registro de ingresos y salidas recientes</p>
           </div>
         </div>
         
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder="Buscar placa o propietario..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm w-64"
+            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full sm:w-64"
           />
         </div>
       </div>

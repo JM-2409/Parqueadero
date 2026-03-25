@@ -16,7 +16,7 @@ export function calculateFee(entryTime: Date, exitTime: Date, tariff: any): numb
   let totalFee = 0;
 
   // Simple block calculation
-  if (tariff.charge_type === 'block') {
+  if (tariff.charge_type === 'bloque') {
     const blockHours = tariff.block_hours || 12;
     const blocks = Math.ceil(billableMinutes / (blockHours * 60));
     // For simplicity, we'll just use the day rate for blocks
@@ -30,22 +30,27 @@ export function calculateFee(entryTime: Date, exitTime: Date, tariff: any): numb
   // If we charge by minute, hour, or fraction, we calculate the total units.
   
   let units = 0;
-  if (tariff.charge_type === 'minute') units = billableMinutes;
-  else if (tariff.charge_type === 'fraction') units = Math.ceil(billableMinutes / 15);
-  else if (tariff.charge_type === 'hour') units = Math.ceil(billableMinutes / 60);
+  if (tariff.charge_type === 'minuto') units = billableMinutes;
+  else if (tariff.charge_type === 'fraccion') units = Math.ceil(billableMinutes / 15);
+  else if (tariff.charge_type === 'hora') units = Math.ceil(billableMinutes / 60);
 
   // Determine if it's mostly day or night (simplified)
   // A robust implementation would split the duration into day minutes and night minutes.
   const entryHour = entryTime.getHours();
-  const dayStartHour = parseInt(tariff.day_start_time.split(':')[0]);
-  const nightStartHour = parseInt(tariff.night_start_time.split(':')[0]);
+  const dayStartHour = parseInt(tariff.day_start_time?.split(':')[0] || '6');
+  const nightStartHour = parseInt(tariff.night_start_time?.split(':')[0] || '18');
 
   let isDay = entryHour >= dayStartHour && entryHour < nightStartHour;
   
   // If duration is long (e.g., > 12 hours), it spans both.
   // For simplicity in this prototype, we'll just apply the rate of the entry time.
   // In a real app, you'd calculate exact minutes in day vs night.
-  const rate = isDay ? tariff.day_rate : tariff.night_rate;
+  let rate = isDay ? (tariff.day_rate || 0) : (tariff.night_rate || 0);
+
+  // Fallback if one rate is 0 (solo_dia or solo_noche)
+  if (rate === 0) {
+    rate = tariff.day_rate > 0 ? tariff.day_rate : tariff.night_rate;
+  }
 
   totalFee = units * rate;
 

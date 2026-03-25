@@ -27,7 +27,7 @@ export default function AdminPage() {
   const [customFields, setCustomFields] = useState<{name: string, required: boolean}[]>([]);
 
   // Employee creation states
-  const [newEmployee, setNewEmployee] = useState({ email: "", password: "" });
+  const [newEmployee, setNewEmployee] = useState({ username: "", password: "" });
 
   const vehicleTypes = ["motos", "carros", "bicicletas", "camionetas", "camiones"];
 
@@ -36,7 +36,7 @@ export default function AdminPage() {
       .from("parking_lots")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
     if (data) {
       setParkingLot(data);
       setCapacity(data.capacity?.toString() || "");
@@ -59,25 +59,30 @@ export default function AdminPage() {
   }, []);
 
   const checkUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        router.push("/login");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profileError || profile?.role !== "admin") {
+        router.push("/");
+        return;
+      }
+
+      fetchParkingLot(profile.parking_lot_id);
+      fetchEmployees(profile.parking_lot_id);
+    } catch (err) {
+      console.error("Error checking user:", err);
       router.push("/login");
-      return;
     }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      router.push("/");
-      return;
-    }
-
-    fetchParkingLot(profile.parking_lot_id);
-    fetchEmployees(profile.parking_lot_id);
   }, [router, fetchParkingLot, fetchEmployees]);
 
   useEffect(() => {
@@ -115,13 +120,13 @@ export default function AdminPage() {
     setError("");
     setSuccess("");
 
-    if (!newEmployee.email || !newEmployee.password) {
+    if (!newEmployee.username || !newEmployee.password) {
       setError("Todos los campos son obligatorios");
       return;
     }
 
     const result = await createUser(
-      newEmployee.email,
+      `${newEmployee.username.toLowerCase().trim()}@parkingapp.local`,
       newEmployee.password,
       "employee",
       parkingLot.id
@@ -131,7 +136,7 @@ export default function AdminPage() {
       setError(result.error || "Error al crear empleado");
     } else {
       setSuccess("Empleado creado exitosamente");
-      setNewEmployee({ email: "", password: "" });
+      setNewEmployee({ username: "", password: "" });
       fetchEmployees(parkingLot.id);
       setTimeout(() => setSuccess(""), 3000);
     }
@@ -175,7 +180,7 @@ export default function AdminPage() {
       </div>
 
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:block w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
+      <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
         <div className="p-6 hidden md:flex items-center gap-3 font-bold text-xl text-white border-b border-slate-800">
           <Settings size={28} className="text-indigo-400" />
           <span>Panel Admin</span>
@@ -184,7 +189,7 @@ export default function AdminPage() {
           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Parqueadero</p>
           <p className="text-white font-medium truncate">{parkingLot?.name}</p>
         </div>
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           <button
             onClick={() => { setActiveTab("dashboard"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "dashboard" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
@@ -214,7 +219,7 @@ export default function AdminPage() {
             <span className="font-medium">Configuración</span>
           </button>
         </nav>
-        <div className="p-4 mt-auto border-t border-slate-800 absolute bottom-0 w-full">
+        <div className="p-4 mt-auto border-t border-slate-800">
           <Link
             href="/"
             onClick={() => supabase.auth.signOut()}
@@ -271,13 +276,13 @@ export default function AdminPage() {
 
                 <form onSubmit={handleCreateEmployee} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Usuario</label>
                     <input
-                      type="email"
-                      value={newEmployee.email}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                      type="text"
+                      value={newEmployee.username}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, username: e.target.value })}
                       className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      placeholder="empleado@parqueadero.com"
+                      placeholder="ej. empleado1"
                     />
                   </div>
                   <div>
@@ -312,10 +317,10 @@ export default function AdminPage() {
                       <div key={emp.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors bg-slate-50/50">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">
-                            {emp.email.charAt(0).toUpperCase()}
+                            {emp.email.replace('@parkingapp.local', '').charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">{emp.email}</p>
+                            <p className="font-medium text-slate-900">{emp.email.replace('@parkingapp.local', '')}</p>
                             <p className="text-xs text-slate-500">Rol: Empleado</p>
                           </div>
                         </div>

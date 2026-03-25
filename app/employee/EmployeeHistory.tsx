@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { History, Search } from "lucide-react";
 
@@ -9,7 +9,7 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     
     // Calculate date 7 days ago
@@ -31,7 +31,7 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
       setSessions(sessionData);
     }
     setLoading(false);
-  };
+  }, [parkingLotId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -54,7 +54,7 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm mt-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-slate-100 text-slate-600 rounded-xl">
             <History size={24} />
@@ -65,14 +65,14 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
           </div>
         </div>
         
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder="Buscar placa..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm w-64"
+            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm w-full sm:w-64"
           />
         </div>
       </div>

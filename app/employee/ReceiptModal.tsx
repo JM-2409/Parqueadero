@@ -1,3 +1,5 @@
+"use client";
+
 import { Receipt, Printer, X, Car } from "lucide-react";
 
 export default function ReceiptModal({ session, appSettings, parkingLot, onClose }: any) {
@@ -68,16 +70,9 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
               <span className="font-medium text-slate-900">{hours}h {minutes}m</span>
             </div>
           </div>
-
-          <div className="border-t border-slate-100 pt-4 mt-4 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500 text-xs">Atendido por</span>
-              <span className="font-medium text-slate-700 text-xs">{session.exit_employee_name || 'N/A'}</span>
-            </div>
-          </div>
         </div>
 
-        <div className="bg-slate-50 p-4 rounded-xl mb-6 print:bg-transparent print:border-t print:border-dashed print:border-slate-300 print:rounded-none">
+        <div className="bg-slate-50 p-4 rounded-xl mt-6 mb-6 print:bg-transparent print:border-t print:border-dashed print:border-slate-300 print:rounded-none">
           <div className="flex justify-between items-center">
             <span className="font-bold text-slate-700">TOTAL A PAGAR</span>
             <span className="text-2xl font-bold text-emerald-600">${session.total_charged?.toLocaleString()}</span>

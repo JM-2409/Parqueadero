@@ -22,7 +22,7 @@ export default function SuperAdminPage() {
   // Form states
   const [newLot, setNewLot] = useState({ name: "", nit: "", address: "" });
   const [newAdmin, setNewAdmin] = useState({
-    email: "",
+    username: "",
     password: "",
     parkingLotId: "",
   });
@@ -32,7 +32,7 @@ export default function SuperAdminPage() {
       .from("app_settings")
       .select("*")
       .limit(1)
-      .single();
+      .maybeSingle();
     if (data) {
       setAppSettings(data);
     }
@@ -54,22 +54,27 @@ export default function SuperAdminPage() {
   }, []);
 
   const checkUser = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        router.push("/login");
+        return;
+      }
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      
+      if (profileError || !profile || profile.role !== "superadmin") {
+        router.push("/");
+      } else {
+        fetchParkingLots();
+        fetchAppSettings();
+      }
+    } catch (err) {
+      console.error("Error checking user:", err);
       router.push("/login");
-      return;
-    }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    
-    if (!profile || profile.role !== "superadmin") {
-      router.push("/");
-    } else {
-      fetchParkingLots();
-      fetchAppSettings();
     }
   }, [router, fetchParkingLots, fetchAppSettings]);
 
@@ -163,13 +168,13 @@ export default function SuperAdminPage() {
     setError("");
     setSuccess("");
 
-    if (!newAdmin.email || !newAdmin.password || !newAdmin.parkingLotId) {
+    if (!newAdmin.username || !newAdmin.password || !newAdmin.parkingLotId) {
       setError("Todos los campos del administrador son obligatorios");
       return;
     }
 
     const result = await createUser(
-      newAdmin.email,
+      `${newAdmin.username.toLowerCase().trim()}@parkingapp.local`,
       newAdmin.password,
       "admin",
       newAdmin.parkingLotId,
@@ -179,7 +184,7 @@ export default function SuperAdminPage() {
       setError(result.error || "Error al crear administrador");
     } else {
       setSuccess("Administrador creado exitosamente");
-      setNewAdmin({ email: "", password: "", parkingLotId: "" });
+      setNewAdmin({ username: "", password: "", parkingLotId: "" });
       setTimeout(() => setSuccess(""), 3000);
     }
   };
@@ -202,12 +207,12 @@ export default function SuperAdminPage() {
       </div>
 
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:block w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
+      <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
         <div className="p-6 hidden md:flex items-center gap-3 font-bold text-xl text-white border-b border-slate-800">
           <ShieldCheck size={28} className="text-indigo-400" />
           <span>Panel Dueño</span>
         </div>
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           <button
             onClick={() => { setActiveTab("lots"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "lots" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
@@ -230,7 +235,7 @@ export default function SuperAdminPage() {
             <span className="font-medium">Configuración</span>
           </button>
         </nav>
-        <div className="p-4 mt-auto border-t border-slate-800 absolute bottom-0 w-full">
+        <div className="p-4 mt-auto border-t border-slate-800">
           <Link
             href="/"
             onClick={() => supabase.auth.signOut()}
@@ -372,13 +377,13 @@ export default function SuperAdminPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Usuario</label>
                     <input
-                      type="email"
-                      value={newAdmin.email}
-                      onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                      type="text"
+                      value={newAdmin.username}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
                       className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                      placeholder="admin@parqueadero.com"
+                      placeholder="ej. admin1"
                     />
                   </div>
                   <div>

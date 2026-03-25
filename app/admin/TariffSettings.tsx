@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { DollarSign, Save, CheckCircle2 } from "lucide-react";
 
@@ -10,7 +10,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
 
-  const fetchTariffs = async () => {
+  const fetchTariffs = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("tariffs")
@@ -21,7 +21,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
       setTariffs(data);
     }
     setLoading(false);
-  };
+  }, [parkingLotId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -35,6 +35,10 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
     // If "Tarifa Única" mode, ensure night rate equals day rate
     if (mode === "unica") {
       tariffData.night_rate = tariffData.day_rate;
+    } else if (mode === "solo_dia") {
+      tariffData.night_rate = 0;
+    } else if (mode === "solo_noche") {
+      tariffData.day_rate = 0;
     }
 
     const existingTariff = tariffs.find(t => t.vehicle_type === vehicleType);
@@ -95,14 +99,21 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
             };
 
             // Determine initial mode based on data
-            const isUnica = existing.day_rate === existing.night_rate;
+            let initialMode = "dia_noche";
+            if (existing.day_rate === existing.night_rate) {
+              initialMode = "unica";
+            } else if (existing.night_rate === 0 && existing.day_rate > 0) {
+              initialMode = "solo_dia";
+            } else if (existing.day_rate === 0 && existing.night_rate > 0) {
+              initialMode = "solo_noche";
+            }
             
             return (
               <TariffForm 
                 key={type} 
                 vehicleType={type} 
                 initialData={existing} 
-                initialMode={isUnica ? "unica" : "dia_noche"}
+                initialMode={initialMode}
                 onSave={handleSave} 
                 saving={saving} 
               />
@@ -134,6 +145,8 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
           >
             <option value="unica">Todo el día (Tarifa Única)</option>
             <option value="dia_noche">Día y Noche (Tarifas Diferentes)</option>
+            <option value="solo_dia">Solo Día</option>
+            <option value="solo_noche">Solo Noche</option>
           </select>
         </div>
 
@@ -153,22 +166,26 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            {mode === "unica" ? "Valor de la Tarifa ($)" : "Tarifa de Día ($)"}
-          </label>
-          <input
-            type="number"
-            value={data.day_rate}
-            onChange={(e) => setData({ ...data, day_rate: Number(e.target.value) })}
-            className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-            min="0"
-          />
-        </div>
-
-        {mode === "dia_noche" && (
+        {mode !== "solo_noche" && (
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Tarifa de Noche ($)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {mode === "unica" ? "Valor de la Tarifa ($)" : "Tarifa de Día ($)"}
+            </label>
+            <input
+              type="number"
+              value={data.day_rate}
+              onChange={(e) => setData({ ...data, day_rate: Number(e.target.value) })}
+              className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              min="0"
+            />
+          </div>
+        )}
+
+        {(mode === "dia_noche" || mode === "solo_noche") && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {mode === "solo_noche" ? "Valor de la Tarifa ($)" : "Tarifa de Noche ($)"}
+            </label>
             <input
               type="number"
               value={data.night_rate}
@@ -180,7 +197,7 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
         )}
       </div>
 
-      {mode === "dia_noche" && (
+      {(mode === "dia_noche" || mode === "solo_dia" || mode === "solo_noche") && (
         <div className="grid md:grid-cols-2 gap-6 mb-6 p-4 bg-white rounded-lg border border-slate-200">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Hora inicio Día</label>
