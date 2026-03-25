@@ -19,7 +19,9 @@ export default function LoginPage() {
     setError("");
 
     if (!isSupabaseConfigured) {
-      setError("Error de conexión: Supabase no está configurado. Verifica las variables de entorno.");
+      console.error("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.error("Supabase Key exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+      setError("Error de conexión: Supabase no está configurado. Verifica que las variables NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY estén definidas en tu entorno (.env.local o Vercel). Si estás en local, reinicia el servidor. Si estás en Vercel, vuelve a compilar (Redeploy).");
       setLoading(false);
       return;
     }
