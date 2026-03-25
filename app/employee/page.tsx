@@ -34,6 +34,7 @@ export default function EmployeePage() {
 
   // Entry form states
   const [plate, setPlate] = useState("");
+  const [debouncedPlate, setDebouncedPlate] = useState("");
   const [type, setType] = useState("carros");
   const [brand, setBrand] = useState("");
   const [color, setColor] = useState("");
@@ -44,6 +45,9 @@ export default function EmployeePage() {
   // Exit form states
   const [exitPlate, setExitPlate] = useState("");
   const [fee, setFee] = useState("");
+
+  const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
+  const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
 
   const fetchParkingLot = useCallback(async (id: string) => {
     const { data } = await supabase
@@ -111,12 +115,41 @@ export default function EmployeePage() {
     if (savedShift) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShiftName(savedShift);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsShiftSet(true);
     }
     
     checkUser();
   }, [checkUser]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedPlate(plate), 300);
+    return () => clearTimeout(timer);
+  }, [plate]);
+
+  useEffect(() => {
+    const searchVehicle = async () => {
+      if (debouncedPlate.length >= 5) {
+        const { data } = await supabase
+          .from("vehicles")
+          .select("*")
+          .eq("plate", debouncedPlate.toUpperCase())
+          .maybeSingle();
+
+        if (data) {
+          setType(data.type);
+          setBrand(data.brand || "");
+          setColor(data.color || "");
+          setOwnerName(data.owner_name || "");
+          setIsNewVehicle(false);
+        } else {
+          setIsNewVehicle(true);
+        }
+      } else {
+        setIsNewVehicle(true);
+      }
+    };
+    searchVehicle();
+  }, [debouncedPlate]);
 
   const handleStartShift = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,42 +159,27 @@ export default function EmployeePage() {
     }
   };
 
-  const handleSearchPlate = async (searchPlate: string) => {
+  const handleSearchPlate = (searchPlate: string) => {
     setPlate(searchPlate);
-    if (searchPlate.length >= 5) {
-      const { data } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("plate", searchPlate.toUpperCase())
-        .maybeSingle();
-
-      if (data) {
-        setType(data.type);
-        setBrand(data.brand || "");
-        setColor(data.color || "");
-        setOwnerName(data.owner_name || "");
-        setIsNewVehicle(false);
-      } else {
-        setIsNewVehicle(true);
-      }
-    } else {
-      setIsNewVehicle(true);
-    }
   };
 
   const handleEntry = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingEntry) return;
+    setIsSubmittingEntry(true);
     setError("");
     setSuccess("");
 
     if (!plate || !type) {
       setError("Placa y tipo son obligatorios");
+      setIsSubmittingEntry(false);
       return;
     }
 
     // Check capacity
     if (activeSessions.length >= parkingLot.capacity) {
       setError("El parqueadero está lleno");
+      setIsSubmittingEntry(false);
       return;
     }
 
@@ -182,6 +200,7 @@ export default function EmployeePage() {
 
       if (vehicleError) {
         setError("Error al registrar vehículo: " + vehicleError.message);
+        setIsSubmittingEntry(false);
         return;
       }
       vehicleId = newVehicle.id;
@@ -210,23 +229,30 @@ export default function EmployeePage() {
       } else {
         setSuccess("Ingreso registrado exitosamente");
         setPlate("");
+        setDebouncedPlate("");
         setBrand("");
         setColor("");
         setOwnerName("");
         setExtraData({});
         setIsNewVehicle(true);
-        fetchActiveSessions(parkingLot.id);
+        await fetchActiveSessions(parkingLot.id);
         setTimeout(() => setSuccess(""), 3000);
       }
     }
+    setIsSubmittingEntry(false);
   };
 
   const handleExit = async (sessionId: string) => {
+    if (isSubmittingExit === sessionId) return;
+    setIsSubmittingExit(sessionId);
     setError("");
     setSuccess("");
 
     const sessionToExit = activeSessions.find(s => s.id === sessionId);
-    if (!sessionToExit) return;
+    if (!sessionToExit) {
+      setIsSubmittingExit(null);
+      return;
+    }
 
     const entryTime = new Date(sessionToExit.entry_time);
     const exitTime = new Date();
@@ -277,11 +303,12 @@ export default function EmployeePage() {
       setSuccess("Salida registrada exitosamente");
       setExitPlate("");
       setFee("");
-      fetchActiveSessions(parkingLot.id);
+      await fetchActiveSessions(parkingLot.id);
       setSelectedSession(updatedSession);
       setShowReceipt(true);
       setTimeout(() => setSuccess(""), 3000);
     }
+    setIsSubmittingExit(null);
   };
 
   const handleLogout = async () => {
@@ -499,10 +526,15 @@ export default function EmployeePage() {
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6 shadow-md shadow-indigo-200"
+                    disabled={isSubmittingEntry}
+                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6 shadow-md shadow-indigo-200"
                   >
-                    <LogIn size={20} />
-                    Dar Ingreso
+                    {isSubmittingEntry ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <LogIn size={20} />
+                    )}
+                    {isSubmittingEntry ? "Registrando..." : "Dar Ingreso"}
                   </button>
                 </form>
               </div>
@@ -577,9 +609,17 @@ export default function EmployeePage() {
                           </div>
                           <button
                             onClick={() => handleExit(session.id)}
-                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition-colors whitespace-nowrap shadow-sm shadow-emerald-200"
+                            disabled={isSubmittingExit === session.id}
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-lg text-sm font-bold transition-colors whitespace-nowrap shadow-sm shadow-emerald-200 flex items-center justify-center gap-2"
                           >
-                            Dar Salida
+                            {isSubmittingExit === session.id ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Procesando...
+                              </>
+                            ) : (
+                              "Dar Salida"
+                            )}
                           </button>
                         </div>
                       </div>

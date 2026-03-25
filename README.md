@@ -93,11 +93,9 @@ $$ LANGUAGE plpgsql;
 Copia y pega el siguiente mensaje al hacer tu commit:
 
 ```text
-feat: Autenticación por usuario y campos personalizados obligatorios
+perf: Optimización de rendimiento y estados de carga
 
-- feat(auth): Migración del sistema de inicio de sesión de correo electrónico a nombre de usuario (username).
-- feat(admin): Creación de empleados y administradores utilizando nombres de usuario en lugar de correos electrónicos.
-- feat(admin): Interfaz para crear campos personalizados dinámicos para la admisión de vehículos, permitiendo definir cuáles son obligatorios y cuáles opcionales.
-- feat(employee): Formulario de ingreso de vehículos actualizado para soportar y validar campos personalizados obligatorios y opcionales.
-- fix(auth): Generación automática de correos ficticios internos (@parkingapp.local) basados en el nombre de usuario para mantener compatibilidad con Supabase Auth.
+- perf(ui): Implementación de estados de carga (spinners) en todos los botones de acción principales (crear empleado, guardar configuración, registrar ingreso, registrar salida, etc.) para evitar clics dobles y mejorar la retroalimentación visual.
+- perf(employee): Implementación de "debouncing" en la búsqueda de placas para reducir llamadas innecesarias a la base de datos mientras el usuario escribe.
+- fix(ui): Corrección de errores menores de linting y limpieza de código no utilizado.
 ```

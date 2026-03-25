@@ -21,11 +21,13 @@ export default function SuperAdminPage() {
 
   // Form states
   const [newLot, setNewLot] = useState({ name: "", nit: "", address: "" });
+  const [isCreatingLot, setIsCreatingLot] = useState(false);
   const [newAdmin, setNewAdmin] = useState({
     username: "",
     password: "",
     parkingLotId: "",
   });
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
 
   const fetchAppSettings = useCallback(async () => {
     const { data, error } = await supabase
@@ -129,11 +131,14 @@ export default function SuperAdminPage() {
 
   const handleCreateParkingLot = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCreatingLot) return;
+    setIsCreatingLot(true);
     setError("");
     setSuccess("");
 
     if (!newLot.name || !newLot.nit || !newLot.address) {
       setError("Todos los campos del parqueadero son obligatorios");
+      setIsCreatingLot(false);
       return;
     }
 
@@ -157,19 +162,23 @@ export default function SuperAdminPage() {
     } else {
       setSuccess("Parqueadero creado exitosamente");
       setNewLot({ name: "", nit: "", address: "" });
-      fetchParkingLots();
+      await fetchParkingLots();
       setActiveTab("lots");
       setTimeout(() => setSuccess(""), 3000);
     }
+    setIsCreatingLot(false);
   };
 
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCreatingAdmin) return;
+    setIsCreatingAdmin(true);
     setError("");
     setSuccess("");
 
     if (!newAdmin.username || !newAdmin.password || !newAdmin.parkingLotId) {
       setError("Todos los campos del administrador son obligatorios");
+      setIsCreatingAdmin(false);
       return;
     }
 
@@ -187,6 +196,7 @@ export default function SuperAdminPage() {
       setNewAdmin({ username: "", password: "", parkingLotId: "" });
       setTimeout(() => setSuccess(""), 3000);
     }
+    setIsCreatingAdmin(false);
   };
 
   if (loading) {
@@ -310,10 +320,15 @@ export default function SuperAdminPage() {
                   <div className="md:col-span-3 flex justify-end mt-2">
                     <button
                       type="submit"
-                      className="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 w-full md:w-auto"
+                      disabled={isCreatingLot}
+                      className="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 w-full md:w-auto shadow-md shadow-indigo-200"
                     >
-                      <PlusCircle size={20} />
-                      Crear Parqueadero
+                      {isCreatingLot ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <PlusCircle size={20} />
+                      )}
+                      {isCreatingLot ? "Creando..." : "Crear Parqueadero"}
                     </button>
                   </div>
                 </form>
@@ -398,10 +413,15 @@ export default function SuperAdminPage() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-2"
+                    disabled={isCreatingAdmin}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-2"
                   >
-                    <UserPlus size={20} />
-                    Crear Administrador
+                    {isCreatingAdmin ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <UserPlus size={20} />
+                    )}
+                    {isCreatingAdmin ? "Creando..." : "Crear Administrador"}
                   </button>
                 </form>
               </div>
@@ -470,7 +490,11 @@ export default function SuperAdminPage() {
                     disabled={savingSettings}
                     className="w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <Settings size={20} />
+                    {savingSettings ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Settings size={20} />
+                    )}
                     {savingSettings ? "Guardando..." : "Guardar Configuración"}
                   </button>
                 </form>

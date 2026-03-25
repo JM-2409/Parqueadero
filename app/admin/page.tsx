@@ -28,6 +28,8 @@ export default function AdminPage() {
 
   // Employee creation states
   const [newEmployee, setNewEmployee] = useState({ username: "", password: "" });
+  const [isCreatingEmployee, setIsCreatingEmployee] = useState(false);
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
 
   const vehicleTypes = ["motos", "carros", "bicicletas", "camionetas", "camiones"];
 
@@ -92,10 +94,15 @@ export default function AdminPage() {
 
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isUpdatingSettings) return;
+    setIsUpdatingSettings(true);
     setError("");
     setSuccess("");
 
-    if (!parkingLot) return;
+    if (!parkingLot) {
+      setIsUpdatingSettings(false);
+      return;
+    }
 
     const { error: updateError } = await supabase
       .from("parking_lots")
@@ -113,15 +120,19 @@ export default function AdminPage() {
       setSuccess("Configuración actualizada exitosamente");
       setTimeout(() => setSuccess(""), 3000);
     }
+    setIsUpdatingSettings(false);
   };
 
   const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCreatingEmployee) return;
+    setIsCreatingEmployee(true);
     setError("");
     setSuccess("");
 
     if (!newEmployee.username || !newEmployee.password) {
       setError("Todos los campos son obligatorios");
+      setIsCreatingEmployee(false);
       return;
     }
 
@@ -137,9 +148,10 @@ export default function AdminPage() {
     } else {
       setSuccess("Empleado creado exitosamente");
       setNewEmployee({ username: "", password: "" });
-      fetchEmployees(parkingLot.id);
+      await fetchEmployees(parkingLot.id);
       setTimeout(() => setSuccess(""), 3000);
     }
+    setIsCreatingEmployee(false);
   };
 
   const toggleVehicleType = (type: string) => {
@@ -297,10 +309,15 @@ export default function AdminPage() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-2"
+                    disabled={isCreatingEmployee}
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-2"
                   >
-                    <UserPlus size={20} />
-                    Crear Empleado
+                    {isCreatingEmployee ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <UserPlus size={20} />
+                    )}
+                    {isCreatingEmployee ? "Creando..." : "Crear Empleado"}
                   </button>
                 </form>
               </div>
@@ -454,10 +471,15 @@ export default function AdminPage() {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      className="w-full md:w-auto py-3 px-8 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                      disabled={isUpdatingSettings}
+                      className="w-full md:w-auto py-3 px-8 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                     >
-                      <Settings size={20} />
-                      Guardar Configuración
+                      {isUpdatingSettings ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Settings size={20} />
+                      )}
+                      {isUpdatingSettings ? "Guardando..." : "Guardar Configuración"}
                     </button>
                   </div>
                 </form>

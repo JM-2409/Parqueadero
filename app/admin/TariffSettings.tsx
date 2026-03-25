@@ -253,7 +253,11 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
           disabled={saving}
           className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
         >
-          <Save size={18} />
+          {saving ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Save size={18} />
+          )}
           {saving ? "Guardando..." : "Guardar Tarifa"}
         </button>
       </div>
