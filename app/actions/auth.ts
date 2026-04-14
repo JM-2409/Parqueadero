@@ -3,7 +3,10 @@
 import { createClient } from "@supabase/supabase-js";
 
 let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").trim();
-const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+if (supabaseUrl === "undefined" || supabaseUrl === "null") supabaseUrl = "";
+
+let supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+if (supabaseServiceKey === "undefined" || supabaseServiceKey === "null") supabaseServiceKey = "";
 
 // Ensure URL has protocol
 if (supabaseUrl && !supabaseUrl.startsWith('http')) {

@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TariffSettings from "./TariffSettings";
 import AdminHistory from "./AdminHistory";
+import ManualEntry from "./ManualEntry";
+import { FileEdit } from "lucide-react";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -210,6 +212,13 @@ export default function AdminPage() {
             <span className="font-medium">Historial</span>
           </button>
           <button
+            onClick={() => { setActiveTab("manual_entry"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "manual_entry" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <FileEdit size={20} />
+            <span className="font-medium">Ingreso Manual</span>
+          </button>
+          <button
             onClick={() => { setActiveTab("tariffs"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "tariffs" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
@@ -265,6 +274,17 @@ export default function AdminPage() {
           {activeTab === "dashboard" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <AdminHistory parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
+          {/* TAB: INGRESO MANUAL */}
+          {activeTab === "manual_entry" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <ManualEntry 
+                parkingLotId={parkingLot.id} 
+                allowedVehicles={allowedVehicles} 
+                customFields={customFields} 
+              />
             </div>
           )}
 

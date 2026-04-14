@@ -6,6 +6,7 @@ import { createUser } from "@/app/actions/auth";
 import { Building2, UserPlus, LogOut, PlusCircle, Settings, Image as ImageIcon, Car, Menu, X, ShieldCheck, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import CustomRoles from "./CustomRoles";
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -231,6 +232,13 @@ export default function SuperAdminPage() {
             <span className="font-medium">Parqueaderos</span>
           </button>
           <button
+            onClick={() => { setActiveTab("roles"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "roles" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <ShieldCheck size={20} />
+            <span className="font-medium">Roles y Permisos</span>
+          </button>
+          <button
             onClick={() => { setActiveTab("admins"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "admins" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
@@ -361,6 +369,13 @@ export default function SuperAdminPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* TAB: ROLES */}
+          {activeTab === "roles" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CustomRoles />
             </div>
           )}
 
