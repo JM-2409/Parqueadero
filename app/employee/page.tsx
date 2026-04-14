@@ -595,15 +595,12 @@ export default function EmployeePage() {
                             <span className="absolute left-3 top-2.5 text-slate-500 font-medium">$</span>
                             <input
                               type="number"
-                              placeholder={calculateFee(new Date(session.entry_time), new Date(), tariffs.find(t => t.vehicle_type === session.vehicles.type)).toString() || "Cobro"}
+                              value={exitPlate === session.id ? fee : calculateFee(new Date(session.entry_time), new Date(), tariffs.find(t => t.vehicle_type === session.vehicles.type)).toString()}
+                              placeholder="Cobro"
                               className="w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium"
                               onChange={(e) => {
-                                if (exitPlate === session.id)
-                                  setFee(e.target.value);
-                                else {
-                                  setExitPlate(session.id);
-                                  setFee(e.target.value);
-                                }
+                                setExitPlate(session.id);
+                                setFee(e.target.value);
                               }}
                             />
                           </div>

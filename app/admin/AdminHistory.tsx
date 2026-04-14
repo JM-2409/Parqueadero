@@ -2,14 +2,18 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { History, Search, FileText } from "lucide-react";
+import { History, Search, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
+
+const PAGE_SIZE = 20;
 
 export default function AdminHistory({ parkingLotId }: { parkingLotId: string }) {
   const [sessions, setSessions] = useState<any[]>([]);
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -21,37 +25,51 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       .eq("parking_lot_id", parkingLotId);
     if (tariffData) setTariffs(tariffData);
 
-    // Calculate date 7 days ago
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    // Fetch sessions
-    const { data: sessionData } = await supabase
+    // Fetch sessions with pagination and search
+    let query = supabase
       .from("parking_sessions")
       .select(`
         *,
-        vehicles (plate, type, brand, color, owner_name)
-      `)
+        vehicles!inner (plate, type, brand, color, owner_name)
+      `, { count: 'exact' })
       .eq("parking_lot_id", parkingLotId)
-      .gte("entry_time", sevenDaysAgo.toISOString())
       .order("entry_time", { ascending: false });
+
+    if (searchTerm) {
+      // Search by plate
+      query = query.ilike('vehicles.plate', `%${searchTerm}%`);
+    }
+
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data: sessionData, count, error } = await query.range(from, to);
     
-    if (sessionData) {
+    if (error) {
+      console.error("Error fetching sessions:", error);
+    } else if (sessionData) {
       setSessions(sessionData);
     }
+    
+    if (count !== null) {
+      setTotalPages(Math.max(1, Math.ceil(count / PAGE_SIZE)));
+    }
+    
     setLoading(false);
-  }, [parkingLotId]);
+  }, [parkingLotId, page, searchTerm]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchData();
-  }, [parkingLotId, fetchData]);
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      fetchData();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [fetchData]);
 
-  const filteredSessions = sessions.filter(
-    (s) =>
-      s.vehicles.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.vehicles.owner_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -114,7 +132,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredSessions.map((session) => {
+              {sessions.map((session) => {
                 const isCompleted = session.status === "completed";
                 const currentFee = calculateCurrentFee(session);
                 
@@ -168,7 +186,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                   </tr>
                 );
               })}
-              {filteredSessions.length === 0 && (
+              {sessions.length === 0 && (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-500">
                     No se encontraron registros.
@@ -177,6 +195,31 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
+          <p className="text-sm text-slate-500">
+            Página {page} de {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="p-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       )}
     </div>

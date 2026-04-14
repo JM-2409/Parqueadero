@@ -29,6 +29,7 @@ export async function createUser(
   password: string,
   role: string,
   parkingLotId: string | null,
+  customRoleId?: string
 ) {
   if (!supabaseUrl || !supabaseServiceKey) {
     return { success: false, error: "Faltan las variables de entorno de Supabase (URL o Service Role Key) en el servidor." };
@@ -53,6 +54,7 @@ export async function createUser(
         email,
         role,
         parking_lot_id: parkingLotId,
+        custom_role_id: customRoleId || null,
       });
 
     if (profileError) {

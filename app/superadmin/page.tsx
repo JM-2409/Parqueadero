@@ -14,6 +14,7 @@ export default function SuperAdminPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [parkingLots, setParkingLots] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -56,6 +57,19 @@ export default function SuperAdminPage() {
     setLoading(false);
   }, []);
 
+  const fetchAdmins = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, parking_lots(name)")
+      .eq("role", "admin")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching admins:", error);
+    } else {
+      setAdmins(data || []);
+    }
+  }, []);
+
   const checkUser = useCallback(async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -74,12 +88,13 @@ export default function SuperAdminPage() {
       } else {
         fetchParkingLots();
         fetchAppSettings();
+        fetchAdmins();
       }
     } catch (err) {
       console.error("Error checking user:", err);
       router.push("/login");
     }
-  }, [router, fetchParkingLots, fetchAppSettings]);
+  }, [router, fetchParkingLots, fetchAppSettings, fetchAdmins]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -195,6 +210,7 @@ export default function SuperAdminPage() {
     } else {
       setSuccess("Administrador creado exitosamente");
       setNewAdmin({ username: "", password: "", parkingLotId: "" });
+      fetchAdmins();
       setTimeout(() => setSuccess(""), 3000);
     }
     setIsCreatingAdmin(false);
@@ -230,13 +246,6 @@ export default function SuperAdminPage() {
           >
             <Building2 size={20} />
             <span className="font-medium">Parqueaderos</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab("roles"); setIsMobileMenuOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "roles" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
-          >
-            <ShieldCheck size={20} />
-            <span className="font-medium">Roles y Permisos</span>
           </button>
           <button
             onClick={() => { setActiveTab("admins"); setIsMobileMenuOpen(false); }}
@@ -372,13 +381,6 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* TAB: ROLES */}
-          {activeTab === "roles" && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <CustomRoles />
-            </div>
-          )}
-
           {/* TAB: ADMINISTRADORES */}
           {activeTab === "admins" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -439,6 +441,34 @@ export default function SuperAdminPage() {
                     {isCreatingAdmin ? "Creando..." : "Crear Administrador"}
                   </button>
                 </form>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
+                <h2 className="text-xl font-semibold text-slate-900 mb-6">Administradores Registrados</h2>
+                {admins.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    No hay administradores registrados aún.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {admins.map((admin) => (
+                      <div key={admin.id} className="p-4 border border-slate-100 rounded-xl flex items-center justify-between hover:border-emerald-100 transition-colors bg-slate-50/50">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold">
+                            {admin.email.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">{admin.email.split('@')[0]}</p>
+                            <p className="text-sm text-slate-500 flex items-center gap-1">
+                              <Building2 size={14} />
+                              {admin.parking_lots?.name || "Sin parqueadero asignado"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

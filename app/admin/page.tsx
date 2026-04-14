@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import TariffSettings from "./TariffSettings";
 import AdminHistory from "./AdminHistory";
 import ManualEntry from "./ManualEntry";
-import { FileEdit } from "lucide-react";
+import CustomRoles from "./CustomRoles";
+import { FileEdit, Shield } from "lucide-react";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [parkingLot, setParkingLot] = useState<any>(null);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [customRoles, setCustomRoles] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -29,7 +31,7 @@ export default function AdminPage() {
   const [customFields, setCustomFields] = useState<{name: string, required: boolean}[]>([]);
 
   // Employee creation states
-  const [newEmployee, setNewEmployee] = useState({ username: "", password: "" });
+  const [newEmployee, setNewEmployee] = useState({ username: "", password: "", customRoleId: "" });
   const [isCreatingEmployee, setIsCreatingEmployee] = useState(false);
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
 
@@ -53,12 +55,22 @@ export default function AdminPage() {
   const fetchEmployees = useCallback(async (parkingLotId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, custom_roles(name)")
       .eq("parking_lot_id", parkingLotId)
       .eq("role", "employee");
     if (data) {
       setEmployees(data);
     }
+    
+    // Fetch custom roles for this parking lot
+    const { data: rolesData } = await supabase
+      .from("custom_roles")
+      .select("*")
+      .eq("parking_lot_id", parkingLotId);
+    if (rolesData) {
+      setCustomRoles(rolesData);
+    }
+    
     setLoading(false);
   }, []);
 
@@ -142,14 +154,15 @@ export default function AdminPage() {
       `${newEmployee.username.toLowerCase().trim()}@parkingapp.local`,
       newEmployee.password,
       "employee",
-      parkingLot.id
+      parkingLot.id,
+      newEmployee.customRoleId || undefined
     );
 
     if (!result.success) {
       setError(result.error || "Error al crear empleado");
     } else {
       setSuccess("Empleado creado exitosamente");
-      setNewEmployee({ username: "", password: "" });
+      setNewEmployee({ username: "", password: "", customRoleId: "" });
       await fetchEmployees(parkingLot.id);
       setTimeout(() => setSuccess(""), 3000);
     }
@@ -231,6 +244,13 @@ export default function AdminPage() {
           >
             <Users size={20} />
             <span className="font-medium">Empleados</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab("roles"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "roles" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <Shield size={20} />
+            <span className="font-medium">Roles</span>
           </button>
           <button
             onClick={() => { setActiveTab("settings"); setIsMobileMenuOpen(false); }}
@@ -327,6 +347,19 @@ export default function AdminPage() {
                       placeholder="Mínimo 6 caracteres"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Rol Personalizado (Opcional)</label>
+                    <select
+                      value={newEmployee.customRoleId}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, customRoleId: e.target.value })}
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                    >
+                      <option value="">Empleado Estándar</option>
+                      {customRoles.map(role => (
+                        <option key={role.id} value={role.id}>{role.name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <button
                     type="submit"
                     disabled={isCreatingEmployee}
@@ -358,7 +391,9 @@ export default function AdminPage() {
                           </div>
                           <div>
                             <p className="font-medium text-slate-900">{emp.email.replace('@parkingapp.local', '')}</p>
-                            <p className="text-xs text-slate-500">Rol: Empleado</p>
+                            <p className="text-xs text-slate-500">
+                              Rol: {emp.custom_roles?.name || "Empleado Estándar"}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -366,6 +401,13 @@ export default function AdminPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* TAB: ROLES */}
+          {activeTab === "roles" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CustomRoles parkingLotId={parkingLot.id} />
             </div>
           )}
 

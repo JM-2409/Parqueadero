@@ -15,12 +15,64 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
   const [exitDate, setExitDate] = useState("");
   const [exitTime, setExitTime] = useState("");
   const [isCompleted, setIsCompleted] = useState(true);
+  const [isSpecialFee, setIsSpecialFee] = useState(false);
   const [totalFee, setTotalFee] = useState("");
   const [extraData, setExtraData] = useState<Record<string, string>>({});
+  const [tariffs, setTariffs] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const fetchTariffs = async () => {
+      const { data } = await supabase
+        .from("tariffs")
+        .select("*")
+        .eq("parking_lot_id", parkingLotId);
+      if (data) setTariffs(data);
+    };
+    fetchTariffs();
+  }, [parkingLotId]);
+
+  useEffect(() => {
+    if (isSpecialFee || !isCompleted || !entryDate || !entryTime || !exitDate || !exitTime) return;
+
+    const entry = new Date(`${entryDate}T${entryTime}`);
+    const exit = new Date(`${exitDate}T${exitTime}`);
+    
+    if (isNaN(entry.getTime()) || isNaN(exit.getTime()) || exit <= entry) {
+      setTotalFee("");
+      return;
+    }
+
+    const durationMs = exit.getTime() - entry.getTime();
+    const durationMinutes = Math.ceil(durationMs / (1000 * 60));
+    
+    const vehicleTariffs = tariffs.filter(t => t.vehicle_type === type);
+    if (vehicleTariffs.length === 0) return;
+
+    let calculatedFee = 0;
+    
+    const monthlyTariff = vehicleTariffs.find(t => t.rate_type === "month");
+    const dailyTariff = vehicleTariffs.find(t => t.rate_type === "day");
+    const hourlyTariff = vehicleTariffs.find(t => t.rate_type === "hour");
+    const minuteTariff = vehicleTariffs.find(t => t.rate_type === "minute");
+
+    if (monthlyTariff && durationMinutes >= 30 * 24 * 60) {
+      calculatedFee = Math.ceil(durationMinutes / (30 * 24 * 60)) * monthlyTariff.amount;
+    } else if (dailyTariff && durationMinutes >= 24 * 60) {
+      calculatedFee = Math.ceil(durationMinutes / (24 * 60)) * dailyTariff.amount;
+    } else if (hourlyTariff && durationMinutes >= 60) {
+      calculatedFee = Math.ceil(durationMinutes / 60) * hourlyTariff.amount;
+    } else if (minuteTariff) {
+      calculatedFee = durationMinutes * minuteTariff.amount;
+    } else if (hourlyTariff) {
+      calculatedFee = hourlyTariff.amount; // fallback to 1 hour if less than an hour and no minute tariff
+    }
+
+    setTotalFee(calculatedFee.toString());
+  }, [entryDate, entryTime, exitDate, exitTime, type, tariffs, isSpecialFee, isCompleted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,18 +320,38 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
                   </div>
                 </div>
 
-                <div>
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="isSpecialFee"
+                      checked={isSpecialFee}
+                      onChange={(e) => setIsSpecialFee(e.target.checked)}
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                    />
+                    <label htmlFor="isSpecialFee" className="text-sm font-medium text-slate-700">
+                      Tarifa especial (Ingresar valor manualmente)
+                    </label>
+                  </div>
+                  
                   <label className="block text-sm font-medium text-slate-700 mb-1">Tarifa Cobrada ($) *</label>
-                  <input
-                    type="number"
-                    value={totalFee}
-                    onChange={(e) => setTotalFee(e.target.value)}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    required={isCompleted}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                    <input
+                      type="number"
+                      value={totalFee}
+                      onChange={(e) => setTotalFee(e.target.value)}
+                      disabled={!isSpecialFee}
+                      className={`w-full p-3 pl-8 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none ${!isSpecialFee ? 'bg-slate-100 text-slate-600' : ''}`}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      required={isCompleted}
+                    />
+                  </div>
+                  {!isSpecialFee && (
+                    <p className="text-xs text-slate-500 mt-1">El valor se calcula automáticamente según las tarifas. Marca "Tarifa especial" para modificarlo.</p>
+                  )}
                 </div>
               </>
             )}

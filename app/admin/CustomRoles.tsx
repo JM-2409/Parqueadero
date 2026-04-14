@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Shield, Plus, Trash2, CheckSquare, Square, Save, X } from "lucide-react";
 
@@ -14,7 +14,7 @@ const AVAILABLE_PERMISSIONS = [
   { id: "manage_settings", label: "Configuración del Parqueadero" }
 ];
 
-export default function CustomRoles() {
+export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) {
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,22 +24,18 @@ export default function CustomRoles() {
   const [newRoleName, setNewRoleName] = useState("");
   const [newRolePermissions, setNewRolePermissions] = useState<string[]>([]);
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
-
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("custom_roles")
         .select("*")
+        .eq("parking_lot_id", parkingLotId)
         .order("created_at", { ascending: false });
       
       if (error) {
-        // If table doesn't exist yet, handle gracefully
-        if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('Could not find the table')) {
+        if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('Could not find the table') || error.message.includes('column "parking_lot_id" does not exist')) {
           setRoles([]);
-          setError("Falta crear la tabla en Supabase. Por favor, ejecuta el script SQL que te proporcionó el asistente.");
+          setError("Falta actualizar la tabla en Supabase. Por favor, ejecuta el script SQL que te proporcionó el asistente.");
         } else {
           throw error;
         }
@@ -52,7 +48,11 @@ export default function CustomRoles() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [parkingLotId]);
+
+  useEffect(() => {
+    fetchRoles();
+  }, [fetchRoles]);
 
   const togglePermission = (permId: string) => {
     if (newRolePermissions.includes(permId)) {
@@ -68,6 +68,15 @@ export default function CustomRoles() {
       setError("El nombre del rol es obligatorio");
       return;
     }
+
+    // Check for uniqueness
+    const isDuplicate = roles.some(
+      (r) => r.name.toLowerCase() === newRoleName.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      setError("Ya existe un rol con este nombre en tu parqueadero.");
+      return;
+    }
     
     setError("");
     setSuccess("");
@@ -77,7 +86,8 @@ export default function CustomRoles() {
         .from("custom_roles")
         .insert([{
           name: newRoleName.trim(),
-          permissions: newRolePermissions
+          permissions: newRolePermissions,
+          parking_lot_id: parkingLotId
         }])
         .select();
         
@@ -118,7 +128,7 @@ export default function CustomRoles() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Roles Personalizados</h2>
-          <p className="text-sm text-slate-500">Crea roles con permisos específicos para asignar a los empleados</p>
+          <p className="text-sm text-slate-500">Crea roles con permisos específicos para asignar a los empleados de tu parqueadero</p>
         </div>
         {!isCreating && (
           <button

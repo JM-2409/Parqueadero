@@ -157,13 +157,55 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
             onChange={(e) => setData({ ...data, charge_type: e.target.value })}
             className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
           >
+            <option value="segundo">Por Segundo</option>
             <option value="minuto">Por Minuto</option>
             <option value="fraccion">Por Fracción (15 min)</option>
             <option value="hora">Por Hora</option>
+            <option value="12_horas">Cada 12 Horas</option>
+            <option value="24_horas">Cada 24 Horas</option>
+            <option value="turnos">Por Turnos (Día y Noche sumables)</option>
             <option value="bloque">Por Bloque de Horas</option>
           </select>
         </div>
       </div>
+
+      {data.charge_type === "turnos" && (
+        <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+          <p className="text-sm text-indigo-800 mb-3 font-medium">Configuración de Turnos (Día y Noche)</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-indigo-700 mb-1">Inicio Turno Día</label>
+              <input
+                type="time"
+                value={data.day_start_time || "06:00"}
+                onChange={(e) => setData({ ...data, day_start_time: e.target.value })}
+                className="w-full p-2 border border-indigo-200 rounded-lg outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-indigo-700 mb-1">Inicio Turno Noche</label>
+              <input
+                type="time"
+                value={data.night_start_time || "18:00"}
+                onChange={(e) => setData({ ...data, night_start_time: e.target.value })}
+                className="w-full p-2 border border-indigo-200 rounded-lg outline-none"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-indigo-700 mb-1">Minutos de Gabela (Tolerancia)</label>
+              <input
+                type="number"
+                value={data.grace_period_minutes !== undefined ? data.grace_period_minutes : 15}
+                onChange={(e) => setData({ ...data, grace_period_minutes: Number(e.target.value) })}
+                className="w-full p-2 border border-indigo-200 rounded-lg outline-none"
+                min="0"
+                placeholder="Ej. 15"
+              />
+              <p className="text-[10px] text-indigo-600 mt-1">Tiempo de gracia antes/después de un turno para no cobrarlo.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         {mode !== "solo_noche" && (
