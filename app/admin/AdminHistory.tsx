@@ -12,6 +12,10 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
@@ -39,6 +43,20 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     if (searchTerm) {
       // Search by plate
       query = query.ilike('vehicles.plate', `%${searchTerm}%`);
+    }
+    if (filterType !== "all") {
+      query = query.eq("vehicles.type", filterType);
+    }
+    if (filterStatus !== "all") {
+      query = query.eq("status", filterStatus);
+    }
+    if (dateFrom) {
+      query = query.gte("entry_time", new Date(dateFrom).toISOString());
+    }
+    if (dateTo) {
+      const dt = new Date(dateTo);
+      dt.setHours(23, 59, 59, 999);
+      query = query.lte("entry_time", dt.toISOString());
     }
 
     const from = (page - 1) * PAGE_SIZE;
@@ -174,22 +192,11 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
             <History size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Historial (Últimos 7 días)</h2>
-            <p className="text-sm text-slate-500">Registro de ingresos y salidas recientes</p>
+            <h2 className="text-xl font-semibold text-slate-900">Historial de Vehículos</h2>
+            <p className="text-sm text-slate-500">Registro de ingresos y salidas</p>
           </div>
         </div>
-        
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              placeholder="Buscar placa o propietario..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full sm:w-64"
-            />
-          </div>
           <button
             onClick={exportToCSV}
             disabled={isExporting || sessions.length === 0}
@@ -199,6 +206,55 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
             {isExporting ? "Exportando..." : "Exportar CSV"}
           </button>
         </div>
+      </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input
+            type="text"
+            placeholder="Placa..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
+          />
+        </div>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
+        >
+          <option value="all">Tipos (Todos)</option>
+          <option value="motos">Motos</option>
+          <option value="carros">Carros</option>
+          <option value="bicicletas">Bicicletas</option>
+          <option value="camionetas">Camionetas</option>
+          <option value="camiones">Camiones</option>
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
+        >
+          <option value="all">Estado (Todos)</option>
+          <option value="active">Activos</option>
+          <option value="completed">Completados</option>
+        </select>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white text-slate-600"
+          title="Fecha Inicio"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white text-slate-600"
+          title="Fecha Fin"
+        />
       </div>
 
       {loading ? (

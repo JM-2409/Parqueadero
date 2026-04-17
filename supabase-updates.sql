@@ -11,6 +11,9 @@ SELECT 'Sistema de Parqueaderos', ''
 WHERE NOT EXISTS (SELECT 1 FROM app_settings);
 
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS allow_employee_view_revenue BOOLEAN DEFAULT false;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS receipt_sequence INTEGER DEFAULT 0;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS nit TEXT;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS address TEXT;
 
 CREATE TABLE IF NOT EXISTS tariffs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

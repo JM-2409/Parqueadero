@@ -62,6 +62,31 @@ export default function AdminPage() {
   const [isClosingRegister, setIsClosingRegister] = useState(false);
   const [weeklyStats, setWeeklyStats] = useState<{date: string, amount: number}[]>([]);
 
+  const [statPeriod, setStatPeriod] = useState<"7days"|"30days">("7days");
+  
+  // Need to extract fetch stats logic to make it respect period without refetching employees
+  const fetchStats = useCallback(async (parkingLotId: string, period: "7days"|"30days") => {
+    let periodDays = period === "7days" ? 7 : 30;
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - periodDays);
+    const { data: periodData } = await supabase
+      .from("parking_sessions")
+      .select("exit_time, total_charged")
+      .eq("parking_lot_id", parkingLotId)
+      .not("exit_time", "is", null)
+      .gte("exit_time", pastDate.toISOString());
+    
+    if (periodData) {
+      const dailyMap: Record<string, number> = {};
+      periodData.forEach(s => {
+        const dateStr = new Date(s.exit_time).toLocaleDateString();
+        dailyMap[dateStr] = (dailyMap[dateStr] || 0) + (Number(s.total_charged) || 0);
+      });
+      const statsArray = Object.keys(dailyMap).map(date => ({ date, amount: dailyMap[date] }));
+      setWeeklyStats(statsArray);
+    }
+  }, []);
+
   const fetchEmployees = useCallback(async (parkingLotId: string) => {
     const { data } = await supabase
       .from("profiles")
@@ -121,30 +146,10 @@ export default function AdminPage() {
       setTodayStats(prev => ({ ...prev, vehicles: todayVehiclesData?.length || 0, revenue }));
     }
 
-    // Load Last 7 days stats
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const { data: weekData } = await supabase
-      .from("parking_sessions")
-      .select("exit_time, total_charged")
-      .eq("parking_lot_id", parkingLotId)
-      .not("exit_time", "is", null)
-      .gte("exit_time", sevenDaysAgo.toISOString());
-    
-    if (weekData) {
-      const dailyMap: Record<string, number> = {};
-      weekData.forEach(s => {
-        const dateStr = new Date(s.exit_time).toLocaleDateString();
-        dailyMap[dateStr] = (dailyMap[dateStr] || 0) + (Number(s.total_charged) || 0);
-      });
-      // Convert to array
-      const statsArray = Object.keys(dailyMap).map(date => ({ date, amount: dailyMap[date] }));
-      // Sort by date conceptual (for now keep simple sort by assuming localized format isn't strictly ISO)
-      setWeeklyStats(statsArray);
-    }
+    await fetchStats(parkingLotId, statPeriod);
 
     setLoading(false);
-  }, []);
+  }, [fetchStats, statPeriod]);
 
   const handleCloseRegister = async () => {
     if (!confirm("¿Está seguro que desea cerrar la caja? El recaudo volverá a $0.")) return;
@@ -223,7 +228,9 @@ export default function AdminPage() {
         capacity: parseInt(capacity),
         show_revenue: showRevenue,
         allowed_vehicles: allowedVehicles,
-        custom_fields: customFields
+        custom_fields: customFields,
+        nit: parkingLot?.nit,
+        address: parkingLot?.address
       })
       .eq("id", parkingLot.id);
 
@@ -437,7 +444,28 @@ export default function AdminPage() {
               
               {parkingLot.show_revenue && weeklyStats.length > 0 && (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                  <h3 className="text-slate-700 font-semibold mb-4">Ingresos (Últimos 7 Días)</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-slate-700 font-semibold">
+                      Ingresos Acumulados ({statPeriod === '7days' ? 'Últimos 7 Días' : 'Últimos 30 Días'}): 
+                      <span className="ml-2 text-emerald-600">
+                        {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(
+                          weeklyStats.reduce((sum, stat) => sum + stat.amount, 0)
+                        )}
+                      </span>
+                    </h3>
+                    <select
+                      value={statPeriod}
+                      onChange={(e) => {
+                        const newPeriod = e.target.value as "7days"|"30days";
+                        setStatPeriod(newPeriod);
+                        fetchStats(parkingLot.id, newPeriod);
+                      }}
+                      className="px-3 py-1.5 border border-slate-200 text-sm rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="7days">Últimos 7 días</option>
+                      <option value="30days">Últimos 30 días</option>
+                    </select>
+                  </div>
                   <div className="flex gap-4 overflow-x-auto pb-2">
                     {weeklyStats.map((stat, idx) => (
                       <div key={idx} className="min-w-[120px] bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -591,6 +619,26 @@ export default function AdminPage() {
 
                 <form onSubmit={handleUpdateSettings} className="space-y-8">
                   <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">NIT del Parqueadero</label>
+                        <input
+                          type="text"
+                          value={parkingLot?.nit || ""}
+                          onChange={(e) => setParkingLot({ ...parkingLot, nit: e.target.value })}
+                          className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                          placeholder="Ej. 900.123.456-7"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Dirección Comercial</label>
+                        <input
+                          type="text"
+                          value={parkingLot?.address || ""}
+                          onChange={(e) => setParkingLot({ ...parkingLot, address: e.target.value })}
+                          className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                          placeholder="Ej. Calle 123 #45-67"
+                        />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Capacidad Total</label>
                       <input

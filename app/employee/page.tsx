@@ -313,24 +313,13 @@ export default function EmployeePage() {
       finalFee = calculateFee(entryTime, exitTime, tariff);
     }
 
-    // Generate consecutive receipt number
-    const { data: lastSession } = await supabase
-      .from("parking_sessions")
-      .select("receipt_number")
-      .eq("parking_lot_id", parkingLot.id)
-      .not("receipt_number", "is", null)
-      .order("exit_time", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Generar consecutivo usando sequence property si se quiere, o autocalculado
+    const { data: lotData } = await supabase.from('parking_lots').select('receipt_sequence').eq('id', parkingLot.id).single();
+    const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+    await supabase.from('parking_lots').update({ receipt_sequence: nextSeq }).eq('id', parkingLot.id);
 
-    let nextNumber = 1;
-    if (lastSession && lastSession.receipt_number) {
-      const match = lastSession.receipt_number.match(/\d+/);
-      if (match) {
-        nextNumber = parseInt(match[0], 10) + 1;
-      }
-    }
-    const receiptNumber = `REC-${nextNumber.toString().padStart(6, '0')}`;
+    const receiptNumber = `REC-${nextSeq.toString().padStart(6, '0')}`;
+    const durationMinutes = Math.round((exitTime.getTime() - entryTime.getTime()) / 60000);
 
     const { data: updatedSession, error: updateError } = await supabase
       .from("parking_sessions")
@@ -340,6 +329,7 @@ export default function EmployeePage() {
         fee: finalFee,
         total_charged: finalFee,
         receipt_number: receiptNumber,
+        duration_minutes: durationMinutes,
         exit_employee_name: shiftName
       })
       .eq("id", sessionId)

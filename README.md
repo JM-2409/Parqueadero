@@ -46,7 +46,10 @@ SELECT 'Sistema de Parqueaderos', ''
 WHERE NOT EXISTS (SELECT 1 FROM app_settings);
 
 -- 2. Variables para parking_lots y sesiones
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS receipt_sequence INTEGER DEFAULT 0;
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS allow_employee_view_revenue BOOLEAN DEFAULT false;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS nit TEXT;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS address TEXT;
 ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS receipt_number TEXT;
 ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS total_charged NUMERIC DEFAULT 0;
 ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 0;
