@@ -19,6 +19,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -97,6 +98,45 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       currency: "COP",
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleExit = async (sessionToExit: any) => {
+    if (isSubmittingExit === sessionToExit.id) return;
+    setIsSubmittingExit(sessionToExit.id);
+    
+    try {
+      const entryTime = new Date(sessionToExit.entry_time);
+      const exitTime = new Date();
+      const tariff = tariffs.find(t => t.vehicle_type === sessionToExit.vehicles.type);
+      const finalFee = calculateFee(entryTime, exitTime, tariff);
+
+      const { data: lotData } = await supabase.from('parking_lots').select('receipt_sequence').eq('id', parkingLotId).single();
+      const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+      await supabase.from('parking_lots').update({ receipt_sequence: nextSeq }).eq('id', parkingLotId);
+
+      const receiptNumber = `REC-${nextSeq.toString().padStart(6, '0')}`;
+      const durationMinutes = Math.round((exitTime.getTime() - entryTime.getTime()) / 60000);
+
+      const { error: updateError } = await supabase
+        .from("parking_sessions")
+        .update({
+          status: "completed",
+          exit_time: exitTime.toISOString(),
+          fee: finalFee,
+          total_charged: finalFee,
+          receipt_number: receiptNumber,
+          duration_minutes: durationMinutes,
+          exit_employee_name: "Admin"
+        })
+        .eq("id", sessionToExit.id);
+
+      if (!updateError) {
+        fetchData(); // Reload list
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsSubmittingExit(null);
   };
 
   const calculateCurrentFee = (session: any) => {
@@ -271,7 +311,8 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                 <th className="p-4 font-medium">Atendido Por</th>
                 <th className="p-4 font-medium">Datos Extra</th>
                 <th className="p-4 font-medium">Estado</th>
-                <th className="p-4 font-medium rounded-tr-xl">Valor (Actual/Cobrado)</th>
+                <th className="p-4 font-medium">Valor (Actual/Cobrado)</th>
+                <th className="p-4 font-medium rounded-tr-xl">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -325,6 +366,17 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                     </td>
                     <td className="p-4 font-medium text-slate-900">
                       {formatCurrency(currentFee)}
+                    </td>
+                    <td className="p-4">
+                      {!isCompleted && (
+                        <button
+                          onClick={() => handleExit(session)}
+                          disabled={isSubmittingExit === session.id}
+                          className="px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                        >
+                          {isSubmittingExit === session.id ? "..." : "Dar Salida"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

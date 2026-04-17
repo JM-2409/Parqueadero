@@ -159,7 +159,7 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Básico</h3>
                 <p className="text-slate-500 text-sm mb-6">Para un solo parqueadero pequeño.</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-slate-900">$29</span>
+                  <span className="text-4xl font-extrabold text-slate-900">$29.000</span>
                   <span className="text-slate-500 font-medium">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">
@@ -193,7 +193,7 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-white mb-2">Profesional</h3>
                 <p className="text-indigo-200 text-sm mb-6">Para operaciones en crecimiento.</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-white">$79</span>
+                  <span className="text-4xl font-extrabold text-white">$69.000</span>
                   <span className="text-indigo-200 font-medium">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">
@@ -215,7 +215,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-3 text-indigo-50">
                     <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
-                    <span>Soporte Prioritario</span>
+                    <span>Historial y CSV Analytics</span>
                   </li>
                 </ul>
                 <a href="#contact" className="w-full py-3 px-4 bg-white hover:bg-slate-50 text-indigo-600 font-bold rounded-xl text-center transition-colors shadow-sm">
@@ -228,7 +228,7 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Empresarial</h3>
                 <p className="text-slate-500 text-sm mb-6">Para grandes redes de parqueaderos.</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-slate-900">$199</span>
+                  <span className="text-4xl font-extrabold text-slate-900">$149.000</span>
                   <span className="text-slate-500 font-medium">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">
@@ -238,15 +238,15 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Roles Personalizados</span>
+                    <span>Cierres de Caja Avanzados</span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>API de Integración</span>
+                    <span>Roles de Admin, Supervisor...</span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Soporte 24/7 Dedicado</span>
+                    <span>Soporte y Entregas Prioritarias</span>
                   </li>
                 </ul>
                 <a href="#contact" className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium rounded-xl text-center transition-colors">
@@ -334,15 +334,10 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Contacto</h4>
+              <h4 className="text-white font-semibold mb-4">Ayuda</h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
-                  <Mail size={16} />
-                  <span>soporte@parkmanager.com</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Phone size={16} />
-                  <span>+57 300 123 4567</span>
+                  <span>Envíenos un mensaje a través del formulario de contacto para cualquier solicitud.</span>
                 </li>
               </ul>
             </div>
