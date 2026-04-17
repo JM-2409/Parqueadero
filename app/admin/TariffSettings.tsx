@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { DollarSign, Save, CheckCircle2 } from "lucide-react";
+import { Spinner } from "@/components/ui/Spinner";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function TariffSettings({ parkingLotId, allowedVehicles }: { parkingLotId: string, allowedVehicles: string[] }) {
   const [tariffs, setTariffs] = useState<any[]>([]);
@@ -74,12 +76,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
         </div>
       </div>
 
-      {success && (
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-2">
-          <CheckCircle2 size={20} />
-          {success}
-        </div>
-      )}
+      {success && <SuccessMessage message={success} />}
 
       {allowedVehicles.length === 0 ? (
         <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500">
@@ -296,7 +293,7 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
           className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
         >
           {saving ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <Spinner size={16} className="text-white" />
           ) : (
             <Save size={18} />
           )}

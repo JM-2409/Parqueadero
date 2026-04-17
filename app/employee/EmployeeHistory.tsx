@@ -59,6 +59,7 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
 
   // Reset page when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchTerm]);
 

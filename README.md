@@ -24,7 +24,7 @@ Por defecto, Supabase requiere que los usuarios confirmen su correo electrónico
 6. Guarda los cambios. Ahora podrás iniciar sesión inmediatamente después de crear un usuario.
 
 ### 2. Actualización de la Base de Datos (¡IMPORTANTE!)
-Para que las nuevas funcionalidades (Roles personalizados, Tarifas por turnos, Paginación) funcionen correctamente, **debes ejecutar el siguiente código SQL** en tu base de datos de Supabase:
+Para que las nuevas funcionalidades (Roles personalizados, Parqueaderos privados, Tarifas) funcionen correctamente, **debes ejecutar el siguiente código SQL** en tu base de datos de Supabase:
 
 1. Ve a tu panel de Supabase.
 2. En el menú lateral izquierdo, selecciona **SQL Editor**.
@@ -32,7 +32,36 @@ Para que las nuevas funcionalidades (Roles personalizados, Tarifas por turnos, P
 4. Pega y ejecuta el siguiente código:
 
 ```sql
--- 1. Crear tabla de roles personalizados
+-- 1. Crear tabla de configuraciones de aplicación (si no existe)
+CREATE TABLE IF NOT EXISTS app_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  app_name TEXT DEFAULT 'Sistema de Parqueaderos',
+  logo_url TEXT DEFAULT '',
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insertar configuraciones por defecto
+INSERT INTO app_settings (app_name, logo_url)
+SELECT 'Sistema de Parqueaderos', ''
+WHERE NOT EXISTS (SELECT 1 FROM app_settings);
+
+-- 2. Variables para parking_lots y sesiones
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS allow_employee_view_revenue BOOLEAN DEFAULT false;
+ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS receipt_number TEXT;
+ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS total_charged NUMERIC DEFAULT 0;
+ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 0;
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS custom_fields_data JSONB DEFAULT '{}'::jsonb;
+
+-- 4. Cerrar Caja
+CREATE TABLE IF NOT EXISTS cash_closures (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  parking_lot_id UUID REFERENCES parking_lots(id),
+  closed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  amount NUMERIC DEFAULT 0,
+  closed_by UUID REFERENCES profiles(id)
+);
+
+-- 5. Crear tabla de roles personalizados
 CREATE TABLE IF NOT EXISTS custom_roles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
@@ -41,17 +70,28 @@ CREATE TABLE IF NOT EXISTS custom_roles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Añadir columna de rol personalizado a perfiles
+-- 4. Añadir columna de rol personalizado a perfiles
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_role_id UUID REFERENCES custom_roles(id) ON DELETE SET NULL;
 
--- 3. Habilitar RLS para la nueva tabla
-ALTER TABLE custom_roles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow authenticated full access on custom_roles" ON custom_roles FOR ALL USING (auth.role() = 'authenticated');
+-- 5. Crear tabla de parqueaderos privados
+CREATE TABLE IF NOT EXISTS private_parking_spaces (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
+  block TEXT,
+  house_or_apartment TEXT,
+  owner_name TEXT,
+  space_number TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 6. Habilitar o deshabilitar RLS según convenga (Deshabilitado para asegurar el prototipo rápido, pero recomendable habilitar en producción con políticas)
+ALTER TABLE custom_roles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE private_parking_spaces DISABLE ROW LEVEL SECURITY;
 ```
 
 ## Estructura de Roles
 
-1. **Dueño (Super Admin)**: Se crea desde el panel de Supabase o mediante la API.
+1. **Dueño (Super Admin)**: Se crea desde el panel de Supabase o mediante la ruta `/setup-owner`.
 2. **Administrador**: Es creado por el Dueño desde su panel. Cada administrador está asignado a un parqueadero específico.
 3. **Empleado**: Es creado por el Administrador desde su panel. Solo puede operar el parqueadero al que fue asignado. Puede tener un rol estándar o un **Rol Personalizado** con permisos específicos.
 
@@ -62,11 +102,11 @@ CREATE POLICY "Allow authenticated full access on custom_roles" ON custom_roles 
 Copia y pega el siguiente mensaje al hacer tu commit:
 
 ```text
-feat: Gestión de roles personalizados, tarifas avanzadas y paginación
+feat: Roles personalizados, Parqueaderos privados, y búsqueda/edición avanzada
 
-- feat(admin): Implementación de creación y asignación de roles personalizados con permisos granulares por parte del administrador.
-- feat(pricing): Nueva lógica de cálculo de tarifas por turnos (día y noche sumables) con configuración de tiempo de gracia (gabela).
-- feat(history): Implementación de paginación y búsqueda del lado del servidor (Supabase) para el historial de administrador y empleado, mejorando el rendimiento con grandes volúmenes de datos.
-- fix(roles): Validación de nombres de roles únicos por parqueadero para evitar duplicados.
-- refactor(ui): Mejoras en la interfaz de usuario para la configuración de tarifas y visualización de historial.
+- feat(admin): Implementación de creación y asignación de roles personalizados con selección desde el formulario de empleados. Además incluye opciones de búsqueda y edición.
+- feat(admin): Añadido listado de parqueaderos privados permitiendo visualizar, crear, editar y eliminar con datos sobre bloque, casa/apartamento, nombre y número.
+- feat(roles): Inclusión en la base de datos de los roles en los "profiles", control de errores para base desactualizada con script fácil de copiar.
+- fix(ui): Integración del copiado de scripts SQL y alertas amigables al detectar errores de las tablas `custom_roles` y `private_parking_spaces`.
+- refactor(ui): Reemplazados spinners de carga de estilos fijos por un componente Spinner y los mensajes de éxito uniformes con el componente SuccessMessage.
 ```

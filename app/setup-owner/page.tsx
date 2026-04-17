@@ -4,6 +4,8 @@ import { useState } from "react";
 import { createUser } from "@/app/actions/auth";
 import { ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { Spinner } from "@/components/ui/Spinner";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function SetupOwnerPage() {
   const [username, setUsername] = useState("");
@@ -65,11 +67,12 @@ export default function SetupOwnerPage() {
 
         {success ? (
           <div className="text-center space-y-6">
-            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex flex-col items-center gap-3">
-              <CheckCircle2 size={32} />
-              <p className="font-medium">¡Usuario Dueño creado exitosamente!</p>
-              <p className="text-sm">Usuario: <strong>{username}</strong></p>
-            </div>
+            <SuccessMessage message={
+              <div className="flex flex-col items-center gap-2">
+                <p className="font-medium">¡Usuario Dueño creado exitosamente!</p>
+                <p className="text-sm">Usuario: <strong>{username}</strong></p>
+              </div>
+            } />
             <Link
               href="/login"
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
@@ -121,7 +124,7 @@ export default function SetupOwnerPage() {
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <Spinner size={20} className="text-white" />
                   Creando...
                 </>
               ) : (

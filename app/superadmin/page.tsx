@@ -6,7 +6,9 @@ import { createUser } from "@/app/actions/auth";
 import { Building2, UserPlus, LogOut, PlusCircle, Settings, Image as ImageIcon, Car, Menu, X, ShieldCheck, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import CustomRoles from "./CustomRoles";
+import { sanitizeInput } from "@/lib/sanitize";
+import { Spinner } from "@/components/ui/Spinner";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -15,11 +17,13 @@ export default function SuperAdminPage() {
   
   const [parkingLots, setParkingLots] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [appSettings, setAppSettings] = useState({ id: "", app_name: "", logo_url: "" });
   const [savingSettings, setSavingSettings] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Form states
   const [newLot, setNewLot] = useState({ name: "", nit: "", address: "" });
@@ -70,6 +74,19 @@ export default function SuperAdminPage() {
     }
   }, []);
 
+  const fetchEmployees = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, parking_lots(name)")
+      .eq("role", "employee")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching employees:", error);
+    } else {
+      setEmployees(data || []);
+    }
+  }, []);
+
   const checkUser = useCallback(async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -89,12 +106,13 @@ export default function SuperAdminPage() {
         fetchParkingLots();
         fetchAppSettings();
         fetchAdmins();
+        fetchEmployees();
       }
     } catch (err) {
       console.error("Error checking user:", err);
       router.push("/login");
     }
-  }, [router, fetchParkingLots, fetchAppSettings, fetchAdmins]);
+  }, [router, fetchParkingLots, fetchAppSettings, fetchAdmins, fetchEmployees]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -162,9 +180,9 @@ export default function SuperAdminPage() {
       .from("parking_lots")
       .insert([
         {
-          name: newLot.name,
-          nit: newLot.nit,
-          address: newLot.address,
+          name: sanitizeInput(newLot.name),
+          nit: sanitizeInput(newLot.nit),
+          address: sanitizeInput(newLot.address),
           allowed_vehicles: ["motos", "carros", "bicicletas"],
           capacity: 100,
           show_revenue: false,
@@ -199,7 +217,7 @@ export default function SuperAdminPage() {
     }
 
     const result = await createUser(
-      `${newAdmin.username.toLowerCase().trim()}@parkingapp.local`,
+      `${sanitizeInput(newAdmin.username).toLowerCase().trim()}@parkingapp.local`,
       newAdmin.password,
       "admin",
       newAdmin.parkingLotId,
@@ -285,12 +303,7 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {success && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-2">
-              <CheckCircle2 size={20} className="flex-shrink-0" />
-              <p>{success}</p>
-            </div>
-          )}
+          {success && <SuccessMessage message={success} />}
 
           {/* TAB: PARQUEADEROS */}
           {activeTab === "lots" && (
@@ -341,7 +354,7 @@ export default function SuperAdminPage() {
                       className="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 w-full md:w-auto shadow-md shadow-indigo-200"
                     >
                       {isCreatingLot ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <Spinner size={20} className="text-white" />
                       ) : (
                         <PlusCircle size={20} />
                       )}
@@ -352,29 +365,82 @@ export default function SuperAdminPage() {
               </div>
 
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h2 className="text-xl font-semibold text-slate-900 mb-6">Parqueaderos Registrados</h2>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                  <h2 className="text-xl font-semibold text-slate-900">Parqueaderos Registrados</h2>
+                  <div className="relative w-full sm:w-auto">
+                    <input
+                      type="text"
+                      placeholder="Buscar parqueadero..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-4 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full sm:w-64"
+                    />
+                  </div>
+                </div>
                 {parkingLots.length === 0 ? (
                   <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                     No hay parqueaderos registrados aún.
                   </p>
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {parkingLots.map((lot) => (
-                      <div key={lot.id} className="border border-slate-200 p-5 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all bg-slate-50/50">
-                        <div className="flex items-start justify-between mb-3">
-                          <h3 className="font-bold text-lg text-slate-800 leading-tight">{lot.name}</h3>
-                          <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
-                            <Building2 size={16} className="text-indigo-500" />
+                    {parkingLots
+                      .filter(lot => lot.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                      .map((lot) => {
+                      const lotAdmins = admins.filter(a => a.parking_lot_id === lot.id);
+                      const lotEmployees = employees.filter(e => e.parking_lot_id === lot.id);
+                      
+                      return (
+                        <div key={lot.id} className="border border-slate-200 p-5 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all bg-slate-50/50 flex flex-col">
+                          <div className="flex items-start justify-between mb-3">
+                            <h3 className="font-bold text-lg text-slate-800 leading-tight">{lot.name}</h3>
+                            <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                              <Building2 size={16} className="text-indigo-500" />
+                            </div>
+                          </div>
+                          <p className="text-sm text-slate-500 mb-2 font-mono bg-white inline-block px-2 py-1 rounded border border-slate-100">NIT: {lot.nit}</p>
+                          <p className="text-sm text-slate-600 mb-4 line-clamp-2">{lot.address}</p>
+                          
+                          <div className="mt-auto space-y-3">
+                            <div className="pt-4 border-t border-slate-200">
+                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Administradores</h4>
+                              {lotAdmins.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {lotAdmins.map(admin => (
+                                    <li key={admin.id} className="text-sm text-slate-700 flex items-center gap-2">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                      {admin.email.replace('@parkingapp.local', '')}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-xs text-slate-400 italic">Sin administradores</p>
+                              )}
+                            </div>
+                            
+                            <div className="pt-3 border-t border-slate-100">
+                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Empleados</h4>
+                              {lotEmployees.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {lotEmployees.map(emp => (
+                                    <li key={emp.id} className="text-sm text-slate-700 flex items-center gap-2">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                      {emp.email.replace('@parkingapp.local', '')}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-xs text-slate-400 italic">Sin empleados</p>
+                              )}
+                            </div>
+                            
+                            <div className="pt-4 border-t border-slate-200 flex justify-between text-xs text-slate-500 font-medium">
+                              <span>Capacidad: {lot.capacity}</span>
+                              <span>{new Date(lot.created_at).toLocaleDateString()}</span>
+                            </div>
                           </div>
                         </div>
-                        <p className="text-sm text-slate-500 mb-2 font-mono bg-white inline-block px-2 py-1 rounded border border-slate-100">NIT: {lot.nit}</p>
-                        <p className="text-sm text-slate-600 mb-4 line-clamp-2">{lot.address}</p>
-                        <div className="pt-4 border-t border-slate-200 flex justify-between text-xs text-slate-500 font-medium">
-                          <span>Capacidad: {lot.capacity}</span>
-                          <span>{new Date(lot.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -434,7 +500,7 @@ export default function SuperAdminPage() {
                     className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-2"
                   >
                     {isCreatingAdmin ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Spinner size={20} className="text-white" />
                     ) : (
                       <UserPlus size={20} />
                     )}
@@ -536,7 +602,7 @@ export default function SuperAdminPage() {
                     className="w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                   >
                     {savingSettings ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Spinner size={20} className="text-white" />
                     ) : (
                       <Settings size={20} />
                     )}

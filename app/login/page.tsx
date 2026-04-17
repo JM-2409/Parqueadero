@@ -7,6 +7,8 @@ import { LogIn, ArrowLeft, UserPlus, ShieldCheck, Car, Eye, EyeOff } from "lucid
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { createUser } from "@/app/actions/auth";
+import { Spinner } from "@/components/ui/Spinner";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -161,9 +163,9 @@ export default function LoginPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-6 p-4 bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 text-emerald-600 rounded-xl text-sm text-center"
+              className="mb-6"
             >
-              {success}
+              <SuccessMessage message={success} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -234,7 +236,7 @@ export default function LoginPage() {
             className="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 disabled:opacity-70 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 mt-4"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Spinner size={20} className="text-white" />
             ) : isLogin ? (
               <LogIn size={20} />
             ) : (

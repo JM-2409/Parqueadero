@@ -14,6 +14,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -68,6 +69,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
 
   // Reset page when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchTerm]);
 
@@ -89,6 +91,81 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     return calculateFee(entryTime, exitTime, tariff);
   };
 
+  const exportToCSV = async () => {
+    setIsExporting(true);
+    try {
+      let query = supabase
+        .from("parking_sessions")
+        .select(`
+          *,
+          vehicles!inner (plate, type, brand, color, owner_name)
+        `)
+        .eq("parking_lot_id", parkingLotId)
+        .order("entry_time", { ascending: false });
+
+      if (searchTerm) {
+        query = query.ilike('vehicles.plate', `%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        alert("No hay datos para exportar.");
+        setIsExporting(false);
+        return;
+      }
+
+      // Generate CSV content
+      const headers = ["Placa", "Tipo", "Marca", "Color", "Propietario", "Ingreso", "Salida", "Atendido Por (Ingreso)", "Atendido Por (Salida)", "Estado", "Valor Cobrado", "Extras"];
+      
+      const csvRows = [headers.join(",")];
+      
+      for (const row of data) {
+        const isCompleted = row.status === "completed";
+        const entryDate = new Date(row.entry_time).toLocaleString();
+        const exitDate = isCompleted ? new Date(row.exit_time).toLocaleString() : "-";
+        
+        let extras = "";
+        if (row.extra_data) {
+          extras = Object.entries(row.extra_data).map(([k, v]) => `${k}: ${v}`).join(" | ");
+        }
+
+        const csvRow = [
+          `"${row.vehicles.plate}"`,
+          `"${row.vehicles.type}"`,
+          `"${row.vehicles.brand || ''}"`,
+          `"${row.vehicles.color || ''}"`,
+          `"${row.vehicles.owner_name || ''}"`,
+          `"${entryDate}"`,
+          `"${exitDate}"`,
+          `"${row.entry_employee_name || ''}"`,
+          `"${row.exit_employee_name || ''}"`,
+          `"${row.status}"`,
+          `"${row.total_charged || row.fee || 0}"`,
+          `"${extras}"`
+        ];
+        
+        csvRows.push(csvRow.join(","));
+      }
+      
+      const csvString = csvRows.join("\n");
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `historial_parqueadero_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      alert("Ocurrió un error al exportar los datos.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm mt-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -102,15 +179,25 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
           </div>
         </div>
         
-        <div className="relative w-full sm:w-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Buscar placa o propietario..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full sm:w-64"
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Buscar placa o propietario..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full sm:w-64"
+            />
+          </div>
+          <button
+            onClick={exportToCSV}
+            disabled={isExporting || sessions.length === 0}
+            className="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+          >
+            <FileText size={18} />
+            {isExporting ? "Exportando..." : "Exportar CSV"}
+          </button>
         </div>
       </div>
 

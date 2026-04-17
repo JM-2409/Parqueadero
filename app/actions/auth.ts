@@ -44,7 +44,12 @@ export async function createUser(
         email_confirm: true,
       });
 
-    if (authError) throw new Error(authError.message);
+    if (authError) {
+      if (authError.message.includes("already registered") || authError.message.includes("already exists")) {
+        throw new Error("El nombre de usuario ya está en uso. Por favor, elige otro.");
+      }
+      throw new Error(authError.message);
+    }
 
     // 2. Create profile
     const { error: profileError } = await supabaseAdmin

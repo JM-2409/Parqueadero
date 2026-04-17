@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Car, Clock, Calendar, CheckCircle2, X } from "lucide-react";
+import { sanitizeInput } from "@/lib/sanitize";
+import { Spinner } from "@/components/ui/Spinner";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function ManualEntry({ parkingLotId, allowedVehicles, customFields }: { parkingLotId: string, allowedVehicles: string[], customFields: any[] }) {
   const [plate, setPlate] = useState("");
@@ -98,7 +101,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
       const { data: existingVehicle } = await supabase
         .from("vehicles")
         .select("id")
-        .eq("plate", plate.toUpperCase())
+        .eq("plate", sanitizeInput(plate.toUpperCase()))
         .maybeSingle();
 
       if (existingVehicle) {
@@ -107,11 +110,11 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
         const { data: newVehicle, error: vehicleError } = await supabase
           .from("vehicles")
           .insert([{
-            plate: plate.toUpperCase(),
+            plate: sanitizeInput(plate.toUpperCase()),
             type,
-            brand,
-            color,
-            owner_name: ownerName,
+            brand: sanitizeInput(brand),
+            color: sanitizeInput(color),
+            owner_name: sanitizeInput(ownerName),
           }])
           .select()
           .single();
@@ -119,6 +122,16 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
         if (vehicleError) throw vehicleError;
         vehicleId = newVehicle.id;
       }
+
+      // Sanitize extraData
+      const sanitizedExtraData: Record<string, any> = {};
+      Object.keys(extraData).forEach(key => {
+        if (typeof extraData[key] === 'string') {
+          sanitizedExtraData[key] = sanitizeInput(extraData[key]);
+        } else {
+          sanitizedExtraData[key] = extraData[key];
+        }
+      });
 
       // 2. Create session
       const entryTimestamp = new Date(`${entryDate}T${entryTime}`).toISOString();
@@ -130,7 +143,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
         status: isCompleted ? "completed" : "active",
         entry_time: entryTimestamp,
         entry_employee_name: "Admin (Manual)",
-        extra_data: extraData
+        extra_data: sanitizedExtraData
       };
 
       if (isCompleted) {
@@ -180,12 +193,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
         </div>
       )}
 
-      {success && (
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-2">
-          <CheckCircle2 size={20} />
-          <p>{success}</p>
-        </div>
-      )}
+      {success && <SuccessMessage message={success} />}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -350,7 +358,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
                     />
                   </div>
                   {!isSpecialFee && (
-                    <p className="text-xs text-slate-500 mt-1">El valor se calcula automáticamente según las tarifas. Marca "Tarifa especial" para modificarlo.</p>
+                    <p className="text-xs text-slate-500 mt-1">El valor se calcula automáticamente según las tarifas. Marca &quot;Tarifa especial&quot; para modificarlo.</p>
                   )}
                 </div>
               </>
@@ -364,7 +372,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
           className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-lg mt-6"
         >
           {loading ? (
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <Spinner size={24} className="text-white" />
           ) : (
             <>
               <Car size={24} />

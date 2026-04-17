@@ -3,14 +3,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { createUser } from "@/app/actions/auth";
-import { UserPlus, LogOut, Settings, Users, DollarSign, LayoutDashboard, Menu, X, Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { UserPlus, LogOut, Settings, Users, DollarSign, LayoutDashboard, Menu, X, Plus, Trash2, CheckCircle2, Home, Car } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TariffSettings from "./TariffSettings";
 import AdminHistory from "./AdminHistory";
 import ManualEntry from "./ManualEntry";
 import CustomRoles from "./CustomRoles";
+import PrivateParking from "./PrivateParking";
 import { FileEdit, Shield } from "lucide-react";
+import { sanitizeInput } from "@/lib/sanitize";
+
+import { Spinner } from "@/components/ui/Spinner";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -19,6 +24,7 @@ export default function AdminPage() {
 
   const [loading, setLoading] = useState(true);
   const [parkingLot, setParkingLot] = useState<any>(null);
+  const [todayStats, setTodayStats] = useState({ vehicles: 0, revenue: 0 });
   const [employees, setEmployees] = useState<any[]>([]);
   const [customRoles, setCustomRoles] = useState<any[]>([]);
   const [error, setError] = useState("");
@@ -52,6 +58,10 @@ export default function AdminPage() {
     }
   }, []);
 
+  const [currentShiftRevenue, setCurrentShiftRevenue] = useState(0);
+  const [isClosingRegister, setIsClosingRegister] = useState(false);
+  const [weeklyStats, setWeeklyStats] = useState<{date: string, amount: number}[]>([]);
+
   const fetchEmployees = useCallback(async (parkingLotId: string) => {
     const { data } = await supabase
       .from("profiles")
@@ -71,8 +81,97 @@ export default function AdminPage() {
       setCustomRoles(rolesData);
     }
     
+    // Fetch last closure
+    const { data: lastClosure } = await supabase
+      .from("cash_closures")
+      .select("closed_at")
+      .eq("parking_lot_id", parkingLotId)
+      .order("closed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const lastClosureTime = lastClosure ? lastClosure.closed_at : null;
+
+    // Fetch stats for current shift (since last closure)
+    let query = supabase
+      .from("parking_sessions")
+      .select("total_charged")
+      .eq("parking_lot_id", parkingLotId)
+      .not("exit_time", "is", null); // Solo sumamos lo que ya salió/fue cobrado
+
+    if (lastClosureTime) {
+      query = query.gt("exit_time", lastClosureTime);
+    }
+    
+    // Fetch today stats for total vehicles (all day, irrespective of closure)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { data: todayVehiclesData } = await supabase
+      .from("parking_sessions")
+      .select("id")
+      .eq("parking_lot_id", parkingLotId)
+      .gte("entry_time", today.toISOString());
+      
+    // Fetch accumulated revenue for shift
+    const { data: shiftData } = await query;
+
+    if (shiftData) {
+      const revenue = shiftData.reduce((sum, s) => sum + (Number(s.total_charged) || 0), 0);
+      setCurrentShiftRevenue(revenue);
+      setTodayStats(prev => ({ ...prev, vehicles: todayVehiclesData?.length || 0, revenue }));
+    }
+
+    // Load Last 7 days stats
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const { data: weekData } = await supabase
+      .from("parking_sessions")
+      .select("exit_time, total_charged")
+      .eq("parking_lot_id", parkingLotId)
+      .not("exit_time", "is", null)
+      .gte("exit_time", sevenDaysAgo.toISOString());
+    
+    if (weekData) {
+      const dailyMap: Record<string, number> = {};
+      weekData.forEach(s => {
+        const dateStr = new Date(s.exit_time).toLocaleDateString();
+        dailyMap[dateStr] = (dailyMap[dateStr] || 0) + (Number(s.total_charged) || 0);
+      });
+      // Convert to array
+      const statsArray = Object.keys(dailyMap).map(date => ({ date, amount: dailyMap[date] }));
+      // Sort by date conceptual (for now keep simple sort by assuming localized format isn't strictly ISO)
+      setWeeklyStats(statsArray);
+    }
+
     setLoading(false);
   }, []);
+
+  const handleCloseRegister = async () => {
+    if (!confirm("¿Está seguro que desea cerrar la caja? El recaudo volverá a $0.")) return;
+    setIsClosingRegister(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const { error } = await supabase.from("cash_closures").insert([{
+        parking_lot_id: parkingLot.id,
+        amount: currentShiftRevenue,
+        closed_by: session?.user?.id
+      }]);
+
+      if (error) throw error;
+      
+      setSuccess("Caja cerrada exitosamente.");
+      setTimeout(() => setSuccess(""), 3000);
+      
+      // Reload stats
+      fetchEmployees(parkingLot.id);
+    } catch (err: any) {
+      console.error("Error cerrado caja", err);
+      setError("No se pudo cerrar la caja: " + err.message);
+    } finally {
+      setIsClosingRegister(false);
+    }
+  };
 
   const checkUser = useCallback(async () => {
     try {
@@ -150,8 +249,9 @@ export default function AdminPage() {
       return;
     }
 
+    const sanitizedUsername = sanitizeInput(newEmployee.username.toLowerCase().trim());
     const result = await createUser(
-      `${newEmployee.username.toLowerCase().trim()}@parkingapp.local`,
+      `${sanitizedUsername}@parkingapp.local`,
       newEmployee.password,
       "employee",
       parkingLot.id,
@@ -183,7 +283,11 @@ export default function AdminPage() {
 
   const updateCustomField = (index: number, key: 'name' | 'required', value: any) => {
     const newFields = [...customFields];
-    newFields[index] = { ...newFields[index], [key]: value };
+    if (key === 'name' && typeof value === 'string') {
+      newFields[index] = { ...newFields[index], [key]: sanitizeInput(value) };
+    } else {
+      newFields[index] = { ...newFields[index], [key]: value };
+    }
     setCustomFields(newFields);
   };
 
@@ -253,6 +357,13 @@ export default function AdminPage() {
             <span className="font-medium">Roles</span>
           </button>
           <button
+            onClick={() => { setActiveTab("private_parking"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "private_parking" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <Home size={20} />
+            <span className="font-medium">Parqueaderos Privados</span>
+          </button>
+          <button
             onClick={() => { setActiveTab("settings"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "settings" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
@@ -283,16 +394,62 @@ export default function AdminPage() {
             </div>
           )}
 
-          {success && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-2">
-              <CheckCircle2 size={20} className="flex-shrink-0" />
-              <p>{success}</p>
-            </div>
-          )}
+          {success && <SuccessMessage message={success} />}
 
           {/* TAB: DASHBOARD / HISTORIAL */}
           {activeTab === "dashboard" && parkingLot && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                  <div className="p-4 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <Car size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-slate-500 text-sm font-medium">Vehículos Hoy</h3>
+                    <p className="text-3xl font-bold text-slate-800">{todayStats.vehicles}</p>
+                  </div>
+                </div>
+                {parkingLot.show_revenue && (
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl">
+                          <DollarSign size={32} />
+                        </div>
+                        <div>
+                          <h3 className="text-slate-500 text-sm font-medium">Recaudo Actual (En Caja)</h3>
+                          <p className="text-3xl font-bold text-slate-800">
+                            {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(todayStats.revenue)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleCloseRegister}
+                        disabled={isClosingRegister || todayStats.revenue === 0}
+                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                      >
+                        {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {parkingLot.show_revenue && weeklyStats.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <h3 className="text-slate-700 font-semibold mb-4">Ingresos (Últimos 7 Días)</h3>
+                  <div className="flex gap-4 overflow-x-auto pb-2">
+                    {weeklyStats.map((stat, idx) => (
+                      <div key={idx} className="min-w-[120px] bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium mb-1">{stat.date}</p>
+                        <p className="font-bold text-slate-800">
+                          {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(stat.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <AdminHistory parkingLotId={parkingLot.id} />
             </div>
           )}
@@ -366,7 +523,7 @@ export default function AdminPage() {
                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-2"
                   >
                     {isCreatingEmployee ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Spinner size={20} className="text-white" />
                     ) : (
                       <UserPlus size={20} />
                     )}
@@ -408,6 +565,13 @@ export default function AdminPage() {
           {activeTab === "roles" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <CustomRoles parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
+          {/* TAB: PARQUEADEROS PRIVADOS */}
+          {activeTab === "private_parking" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <PrivateParking parkingLotId={parkingLot.id} />
             </div>
           )}
 
@@ -537,7 +701,7 @@ export default function AdminPage() {
                       className="w-full md:w-auto py-3 px-8 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       {isUpdatingSettings ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <Spinner size={20} className="text-white" />
                       ) : (
                         <Settings size={20} />
                       )}

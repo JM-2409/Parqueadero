@@ -10,6 +10,10 @@ import EmployeeHistory from "./EmployeeHistory";
 import ReceiptModal from "./ReceiptModal";
 import { calculateFee } from "@/lib/pricing";
 
+import { sanitizeInput } from "@/lib/sanitize";
+import { Spinner } from "@/components/ui/Spinner";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
+
 export default function EmployeePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("operation"); // operation, history
@@ -31,6 +35,7 @@ export default function EmployeePage() {
   // Receipt Modal
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [viewingSession, setViewingSession] = useState<any>(null);
 
   // Entry form states
   const [plate, setPlate] = useState("");
@@ -48,6 +53,7 @@ export default function EmployeePage() {
 
   const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
+  const [accumulatedRevenue, setAccumulatedRevenue] = useState(0);
 
   const fetchParkingLot = useCallback(async (id: string) => {
     const { data } = await supabase
@@ -62,6 +68,33 @@ export default function EmployeePage() {
       }
     }
     
+    // Fetch last closure to calculate accumulated revenue
+    const { data: lastClosure } = await supabase
+      .from("cash_closures")
+      .select("closed_at")
+      .eq("parking_lot_id", id)
+      .order("closed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const lastClosureTime = lastClosure ? lastClosure.closed_at : null;
+
+    let query = supabase
+      .from("parking_sessions")
+      .select("total_charged")
+      .eq("parking_lot_id", id)
+      .not("exit_time", "is", null);
+
+    if (lastClosureTime) {
+      query = query.gt("exit_time", lastClosureTime);
+    }
+    
+    const { data: shiftData } = await query;
+    if (shiftData) {
+      const revenue = shiftData.reduce((sum, s) => sum + (Number(s.total_charged) || 0), 0);
+      setAccumulatedRevenue(revenue);
+    }
+
     const { data: appData } = await supabase.from("app_settings").select("*").limit(1).maybeSingle();
     if (appData) setAppSettings(appData);
 
@@ -140,6 +173,7 @@ export default function EmployeePage() {
           setBrand(data.brand || "");
           setColor(data.color || "");
           setOwnerName(data.owner_name || "");
+          if (data.custom_fields_data) setExtraData(data.custom_fields_data);
           setIsNewVehicle(false);
         } else {
           setIsNewVehicle(true);
@@ -189,11 +223,12 @@ export default function EmployeePage() {
       const { data: newVehicle, error: vehicleError } = await supabase
         .from("vehicles")
         .insert([{
-            plate: plate.toUpperCase(),
+            plate: sanitizeInput(plate.toUpperCase()),
             type,
-            brand,
-            color,
-            owner_name: ownerName,
+            brand: sanitizeInput(brand),
+            color: sanitizeInput(color),
+            owner_name: sanitizeInput(ownerName),
+            custom_fields_data: extraData
         }])
         .select()
         .single();
@@ -210,10 +245,24 @@ export default function EmployeePage() {
         .select("id")
         .eq("plate", plate.toUpperCase())
         .maybeSingle();
-      vehicleId = existingVehicle?.id;
+
+      if (existingVehicle) {
+        vehicleId = existingVehicle.id;
+        await supabase.from("vehicles").update({ custom_fields_data: extraData }).eq("id", vehicleId);
+      }
     }
 
     if (vehicleId) {
+      // Sanitize extraData
+      const sanitizedExtraData: Record<string, any> = {};
+      Object.keys(extraData).forEach(key => {
+        if (typeof extraData[key] === 'string') {
+          sanitizedExtraData[key] = sanitizeInput(extraData[key]);
+        } else {
+          sanitizedExtraData[key] = extraData[key];
+        }
+      });
+
       const { error: sessionError } = await supabase
         .from("parking_sessions")
         .insert([{
@@ -221,7 +270,7 @@ export default function EmployeePage() {
             vehicle_id: vehicleId,
             status: "active",
             entry_employee_name: shiftName,
-            extra_data: extraData
+            extra_data: sanitizedExtraData
         }]);
 
       if (sessionError) {
@@ -425,12 +474,7 @@ export default function EmployeePage() {
             </div>
           )}
 
-          {success && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-2">
-              <CheckCircle2 size={20} className="flex-shrink-0" />
-              <p>{success}</p>
-            </div>
-          )}
+          {success && <SuccessMessage message={success} />}
 
           {/* TAB: OPERATION */}
           {activeTab === "operation" && (
@@ -530,7 +574,7 @@ export default function EmployeePage() {
                     className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6 shadow-md shadow-indigo-200"
                   >
                     {isSubmittingEntry ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Spinner size={20} className="text-white" />
                     ) : (
                       <LogIn size={20} />
                     )}
@@ -551,7 +595,9 @@ export default function EmployeePage() {
                   {parkingLot?.show_revenue && (
                     <div className="hidden sm:flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg text-sm font-medium border border-emerald-100">
                       <DollarSign size={16} />
-                      <span>Recaudo Visible</span>
+                      <span className="font-bold">
+                        Recaudo Actual: {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(accumulatedRevenue)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -590,14 +636,21 @@ export default function EmployeePage() {
                           </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                          <div className="relative flex-1 sm:w-32">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+                          <button
+                            onClick={() => setViewingSession(session)}
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center justify-center gap-2"
+                          >
+                            Tiquete
+                          </button>
+                          
+                          <div className="relative flex-1 sm:w-32 hidden lg:block">
                             <span className="absolute left-3 top-2.5 text-slate-500 font-medium">$</span>
                             <input
                               type="number"
                               value={exitPlate === session.id ? fee : calculateFee(new Date(session.entry_time), new Date(), tariffs.find(t => t.vehicle_type === session.vehicles.type)).toString()}
                               placeholder="Cobro"
-                              className="w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium"
+                              className="w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium bg-white"
                               onChange={(e) => {
                                 setExitPlate(session.id);
                                 setFee(e.target.value);
@@ -611,8 +664,8 @@ export default function EmployeePage() {
                           >
                             {isSubmittingExit === session.id ? (
                               <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Procesando...
+                                <Spinner size={16} className="text-white" />
+                                <span className="hidden sm:inline">Procesando...</span>
                               </>
                             ) : (
                               "Dar Salida"
@@ -642,6 +695,77 @@ export default function EmployeePage() {
               parkingLot={parkingLot} 
               onClose={() => setShowReceipt(false)} 
             />
+          )}
+
+          {/* Info Modal */}
+          {viewingSession && (
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="bg-slate-900 border-b border-slate-200 p-4 flex justify-between items-center text-white">
+                  <h3 className="text-lg font-bold font-mono">
+                    Tiquete Vehículo - {viewingSession.vehicles.plate}
+                  </h3>
+                  <button 
+                    onClick={() => setViewingSession(null)}
+                    className="p-1 hover:bg-slate-800 rounded-lg transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <p className="text-xs text-slate-500 font-medium mb-1">Tipo</p>
+                      <p className="font-semibold text-slate-900 capitalize">{viewingSession.vehicles.type}</p>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <p className="text-xs text-slate-500 font-medium mb-1">Hora Ingreso</p>
+                      <p className="font-semibold text-slate-900">
+                        {new Date(viewingSession.entry_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </p>
+                    </div>
+                    {viewingSession.entry_employee_name && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2">
+                        <p className="text-xs text-slate-500 font-medium mb-1">Registrado por</p>
+                        <p className="font-semibold text-slate-900">{viewingSession.entry_employee_name}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {viewingSession.extra_data && Object.keys(viewingSession.extra_data).length > 0 && (
+                    <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-2 mt-4">
+                      <h4 className="font-semibold text-indigo-900 text-sm mb-3">Información Adicional</h4>
+                      {Object.entries(viewingSession.extra_data).map(([k, v]) => (
+                        <div key={k} className="flex justify-between items-center text-sm border-b border-indigo-100/50 pb-2 last:border-0 last:pb-0">
+                          <span className="text-slate-600 font-medium">{k}</span>
+                          <span className="text-slate-900 font-semibold">{v as string}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 bg-slate-50 border-t border-slate-200">
+                  <button
+                    onClick={() => {
+                      const sessionId = viewingSession.id;
+                      setViewingSession(null);
+                      // Pre-fill the exit form logic
+                      setExitPlate(sessionId);
+                      const currentFee = calculateFee(new Date(viewingSession.entry_time), new Date(), tariffs.find(t => t.vehicle_type === viewingSession.vehicles.type)).toString();
+                      setFee(currentFee);
+                      
+                      // Focus the input if possible or handle exit directly? 
+                      // The prompt said "ver el resumen sin tener que ir al modal de recibo", so they can read and then click close or proceed.
+                    }}
+                    className="w-full py-3 bg-white border border-slate-200 text-slate-900 rounded-xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-2"
+                  >
+                    Cerrar Detalle
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
