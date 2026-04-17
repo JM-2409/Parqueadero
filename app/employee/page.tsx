@@ -124,12 +124,25 @@ export default function EmployeePage() {
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, parking_lots(*)")
         .eq("id", session.user.id)
         .single();
 
       if (profileError || profileData?.role !== "employee") {
         router.push("/");
+        return;
+      }
+
+      if (profileData.parking_lots && profileData.parking_lots.is_suspended) {
+        await supabase.auth.signOut();
+        router.push("/login?error=suspended");
+        return;
+      }
+      
+      const subEnd = profileData.parking_lots?.subscription_end_date;
+      if (subEnd && new Date(subEnd) < new Date()) {
+        await supabase.auth.signOut();
+        router.push("/login?error=expired");
         return;
       }
 
@@ -215,6 +228,17 @@ export default function EmployeePage() {
       setError("El parqueadero está lleno");
       setIsSubmittingEntry(false);
       return;
+    }
+
+    // Validate custom fields
+    if (parkingLot?.custom_fields) {
+      for (const field of parkingLot.custom_fields) {
+        if (field.required && !extraData[field.name]) {
+          setError(`El campo ${field.name} es obligatorio`);
+          setIsSubmittingEntry(false);
+          return;
+        }
+      }
     }
 
     let vehicleId = null;

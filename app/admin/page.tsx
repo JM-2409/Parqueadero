@@ -188,12 +188,25 @@ export default function AdminPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, parking_lots(*)")
         .eq("id", session.user.id)
         .single();
 
       if (profileError || profile?.role !== "admin") {
         router.push("/");
+        return;
+      }
+
+      if (profile.parking_lots && profile.parking_lots.is_suspended) {
+        await supabase.auth.signOut();
+        router.push("/login?error=suspended");
+        return;
+      }
+      
+      const subEnd = profile.parking_lots?.subscription_end_date;
+      if (subEnd && new Date(subEnd) < new Date()) {
+        await supabase.auth.signOut();
+        router.push("/login?error=expired");
         return;
       }
 
@@ -206,7 +219,6 @@ export default function AdminPage() {
   }, [router, fetchParkingLot, fetchEmployees]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkUser();
   }, [checkUser]);
 
@@ -230,7 +242,9 @@ export default function AdminPage() {
         allowed_vehicles: allowedVehicles,
         custom_fields: customFields,
         nit: parkingLot?.nit,
-        address: parkingLot?.address
+        address: parkingLot?.address,
+        subscription_end_date: parkingLot?.subscription_end_date,
+        is_suspended: parkingLot?.is_suspended
       })
       .eq("id", parkingLot.id);
 
@@ -466,15 +480,31 @@ export default function AdminPage() {
                       <option value="30days">Últimos 30 días</option>
                     </select>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-2">
-                    {weeklyStats.map((stat, idx) => (
-                      <div key={idx} className="min-w-[120px] bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <p className="text-xs text-slate-500 font-medium mb-1">{stat.date}</p>
-                        <p className="font-bold text-slate-800">
-                          {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(stat.amount)}
-                        </p>
-                      </div>
-                    ))}
+                  <div className="flex gap-2 overflow-x-auto pb-4 items-end h-48 mt-6">
+                    {weeklyStats.map((stat, idx) => {
+                      const maxAmount = Math.max(...weeklyStats.map(s => s.amount), 1);
+                      const heightPercent = Math.max((stat.amount / maxAmount) * 100, 5); // at least 5% height
+
+                      return (
+                        <div key={idx} className="flex flex-col justify-end items-center min-w-[60px] flex-1 group">
+                          {/* Tooltip on hover */}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-2 bg-slate-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap pointer-events-none">
+                            {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(stat.amount)}
+                          </div>
+                          
+                          {/* Bar */}
+                          <div 
+                            className="w-full max-w-[40px] bg-indigo-500 rounded-t-sm hover:bg-indigo-600 transition-colors"
+                            style={{ height: `${heightPercent}%` }}
+                          ></div>
+                          
+                          {/* Label */}
+                          <p className="text-[10px] text-slate-500 font-medium mt-2 truncate w-full text-center">
+                            {stat.date}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -682,6 +712,40 @@ export default function AdminPage() {
                           <span className="capitalize">{type}</span>
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-8">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">Estado de Suscripción</h3>
+                        <p className="text-sm text-slate-500">Administra la fecha límite del servicio local (Demostración de Control)</p>
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                       <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Expiración</label>
+                          <input
+                            type="date"
+                            value={parkingLot?.subscription_end_date ? new Date(parkingLot.subscription_end_date).toISOString().split('T')[0] : ""}
+                            onChange={(e) => {
+                              const newDate = e.target.value ? new Date(e.target.value).toISOString() : null;
+                              setParkingLot({ ...parkingLot, subscription_end_date: newDate })
+                            }}
+                            className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                          />
+                       </div>
+                       <div className="flex flex-col justify-end">
+                         <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-white transition-colors bg-white/50">
+                           <input
+                             type="checkbox"
+                             checked={parkingLot?.is_suspended || false}
+                             onChange={(e) => setParkingLot({ ...parkingLot, is_suspended: e.target.checked })}
+                             className="w-5 h-5 text-red-600 rounded border-slate-300 focus:ring-red-500"
+                           />
+                           <span className="text-slate-700 font-medium text-sm">Suspender Plataforma Manualmente</span>
+                         </label>
+                       </div>
                     </div>
                   </div>
 

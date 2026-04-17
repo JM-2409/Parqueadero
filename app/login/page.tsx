@@ -1,26 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { LogIn, ArrowLeft, UserPlus, ShieldCheck, Car, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { createUser } from "@/app/actions/auth";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-export default function LoginPage() {
+function LoginContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("superadmin");
+  const [inviteCode, setInviteCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const errParam = searchParams.get("error");
+    if (errParam === "suspended") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError("La plataforma ha sido suspendida para este parqueadero.");
+    } else if (errParam === "expired") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError("Tu suscripción ha expirado. Por favor, contacta a ventas o actualiza tu suscripción.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +68,20 @@ export default function LoginPage() {
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("role, parking_lot_id")
+          .select("role, parking_lot_id, parking_lots(is_suspended)")
           .eq("id", data.user.id)
           .single();
 
         if (profileError) {
           setError("Error al obtener perfil de usuario");
+          setLoading(false);
+          return;
+        }
+        
+        // Check suspension
+        if (profile.parking_lots && (profile.parking_lots as any).is_suspended) {
+          await supabase.auth.signOut();
+          setError("La plataforma está suspendida para este parqueadero. Por favor renueva tu suscripción.");
           setLoading(false);
           return;
         }
@@ -70,21 +92,52 @@ export default function LoginPage() {
         else router.push("/");
 
       } else {
-        // REGISTER FLOW (Temporary)
+        // REGISTER FLOW (With Invite Code)
         if (password.length < 6) {
           setError("La contraseña debe tener al menos 6 caracteres.");
           setLoading(false);
           return;
         }
+        
+        if (!inviteCode) {
+          setError("Se requiere un código de verificación para registrarse.");
+          setLoading(false);
+          return;
+        }
 
-        const result = await createUser(loginEmail, password, role, null);
+        // Verify invite code
+        const { data: codeData, error: codeError } = await supabase
+          .from("invite_codes")
+          .select("*")
+          .eq("code", inviteCode)
+          .eq("is_active", true)
+          .is("used_at", null)
+          .single();
+
+        if (codeError || !codeData) {
+          setError("Código de verificación inválido o ya utilizado.");
+          setLoading(false);
+          return;
+        }
+
+        const roleToAssign = codeData.role;
+        const parkingLotToAssign = codeData.parking_lot_id;
+
+        const result = await createUser(loginEmail, password, roleToAssign, parkingLotToAssign);
 
         if (!result.success) {
           setError(result.error || "Error al crear el usuario.");
         } else {
-          setSuccess(`¡Usuario ${role} creado exitosamente! Ahora puedes iniciar sesión.`);
+          // Mark code as used
+          await supabase.from("invite_codes").update({ 
+            used_at: new Date().toISOString(),
+            is_active: false
+          }).eq("id", codeData.id);
+          
+          setSuccess(`¡Usuario ${roleToAssign} creado exitosamente! Ahora puedes iniciar sesión.`);
           setIsLogin(true);
           setPassword("");
+          setInviteCode("");
         }
         setLoading(false);
       }
@@ -177,17 +230,19 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
             >
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Tipo de Usuario
+                Código de Acesso
               </label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+              <input
+                type="text"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.trim())}
                 className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all"
-              >
-                <option value="superadmin">Dueño (Super Admin)</option>
-                <option value="admin">Administrador de Parqueadero</option>
-                <option value="employee">Empleado / Cajero</option>
-              </select>
+                placeholder="Ej. VIP-2026-CODE"
+                required={!isLogin}
+              />
+              <p className="text-xs text-slate-500 mt-2">
+                Consulta a la administración para obtener tu código de registro y el rol se asignará automáticamente.
+              </p>
             </motion.div>
           )}
 
@@ -247,5 +302,13 @@ export default function LoginPage() {
         </form>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center">Cargando...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

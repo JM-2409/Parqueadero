@@ -62,7 +62,20 @@ CREATE TABLE IF NOT EXISTS private_parking_spaces (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Disable RLS for new tables
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAMP WITH TIME ZONE;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS invite_codes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  code TEXT UNIQUE NOT NULL,
+  role TEXT NOT NULL,
+  parking_lot_id UUID REFERENCES parking_lots(id),
+  used_at TIMESTAMP WITH TIME ZONE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE invite_codes DISABLE ROW LEVEL SECURITY;
 ALTER TABLE app_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE tariffs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE custom_roles DISABLE ROW LEVEL SECURITY;

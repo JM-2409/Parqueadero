@@ -109,6 +109,74 @@ export default function Home() {
           </div>
         </section>
 
+        {/* How it Works Section */}
+        <section className="py-24 bg-slate-50 border-t border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">¿Cómo funciona?</h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">Un flujo de trabajo diseñado para la velocidad en la entrada y precisión en el cobro a la salida.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8 text-center relative">
+              <div className="hidden md:block absolute top-12 left-1/6 right-1/6 border-t-2 border-dashed border-slate-300 z-0"></div>
+              
+              <div className="relative z-10">
+                <div className="w-20 h-20 mx-auto bg-white border-4 border-indigo-100 rounded-full flex items-center justify-center text-2xl font-bold text-indigo-600 mb-6 shadow-sm">1</div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Ingreso Rápido</h3>
+                <p className="text-slate-600 leading-relaxed">El operario registra la placa y tipo de vehículo. El sistema valida la disponibilidad y toma el tiempo de entrada exacto.</p>
+              </div>
+              <div className="relative z-10">
+                <div className="w-20 h-20 mx-auto bg-white border-4 border-indigo-100 rounded-full flex items-center justify-center text-2xl font-bold text-indigo-600 mb-6 shadow-sm">2</div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Vigilancia Real</h3>
+                <p className="text-slate-600 leading-relaxed">Tanto desde el panel del operario como del administrador, se puede revisar el estado de los vehículos en tiempo real.</p>
+              </div>
+              <div className="relative z-10">
+                <div className="w-20 h-20 mx-auto bg-white border-4 border-indigo-100 rounded-full flex items-center justify-center text-2xl font-bold text-indigo-600 mb-6 shadow-sm">3</div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Cobro y Cierre</h3>
+                <p className="text-slate-600 leading-relaxed">Al darle salida, el sistema calcula automáticamente la tarifa y genera el ticket. El administrador recauda al final del turno.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="py-24 bg-white border-t border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Lo que dicen nuestros clientes</h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">Estas son algunas experiencias de negocios que ya transformaron su control de parking.</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100">
+                <div className="flex text-amber-400 mb-4">
+                  {"★★★★★"}
+                </div>
+                <p className="text-slate-700 italic mb-6">&quot;Antes perdíamos el control de cuánto debía cobrar cada operario. Ahora la facturación es transparente y las estadísticas semanales nos ayudan a proyectar gastos e ingresos con total precisión.&quot;</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">DR</div>
+                  <div>
+                    <p className="font-bold text-slate-900">Diego Ramírez</p>
+                    <p className="text-sm text-slate-500">Parqueadero Central S.A.S</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100">
+                <div className="flex text-amber-400 mb-4">
+                  {"★★★★★"}
+                </div>
+                <p className="text-slate-700 italic mb-6">&quot;El sistema en la nube nos permite tener un control a distancia de nuestras 3 sucursales. El cierre automático de caja fue un alivio total. La interfaz es intuitiva hasta para el personal de mayor edad.&quot;</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold">SM</div>
+                  <div>
+                    <p className="font-bold text-slate-900">Sandra Muñoz</p>
+                    <p className="text-sm text-slate-500">Multiparqueos Colombia</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* About Section (Mission/Vision) */}
         <section id="about" className="py-24 bg-slate-900 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -76,7 +76,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     }
     
     setLoading(false);
-  }, [parkingLotId, page, searchTerm]);
+  }, [parkingLotId, page, searchTerm, filterType, filterStatus, dateFrom, dateTo]);
 
   useEffect(() => {
     // Debounce search
@@ -88,7 +88,6 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
 
   // Reset page when search changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchTerm]);
 
