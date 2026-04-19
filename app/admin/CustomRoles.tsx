@@ -51,9 +51,8 @@ export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) 
         .order("created_at", { ascending: false });
       
       if (error) {
-        if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('Could not find the table') || error.message.includes('column "parking_lot_id" does not exist')) {
+        if (error.code === '42P01' || error.code === 'PGRST205' || error.message?.includes('does not exist')) {
           setRoles([]);
-          setError("La tabla 'custom_roles' no existe o está desactualizada.");
           setShowSqlScript(true);
         } else {
           throw error;
@@ -64,7 +63,11 @@ export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) 
       }
     } catch (err: any) {
       console.error("Error fetching roles:", err);
-      setError(err.message || "Error al cargar los roles.");
+      if (err.code === '42P01' || err.code === 'PGRST205' || err.message?.includes('does not exist')) {
+        setShowSqlScript(true);
+      } else {
+        setError(err.message || "Error al cargar los roles.");
+      }
     } finally {
       setLoading(false);
     }
@@ -134,8 +137,7 @@ export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) 
       
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      if (err.code === '42P01') {
-        setError("La tabla 'custom_roles' no existe.");
+      if (err.code === '42P01' || err.code === 'PGRST205' || err.message?.includes('does not exist')) {
         setShowSqlScript(true);
       } else {
         setError(err.message || "Error al guardar el rol. Verifica que hayas ejecutado el script SQL.");
@@ -186,6 +188,50 @@ export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) 
 
   if (loading) return <div className="p-8 text-center text-slate-500">Cargando roles...</div>;
 
+  if (showSqlScript) {
+    return (
+      <div className="space-y-6">
+        <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-red-100 rounded-xl text-red-600">
+              <X size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">¡Atención! Falta una tabla en la Base de Datos</h2>
+              <p className="text-sm font-medium opacity-90">La funcionalidad de Roles Personalizados necesita una actualización en tu base de datos.</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm">
+            <p className="mb-3 text-slate-800">Por favor, dirígete al <strong>SQL Editor</strong> de tu proyecto en Supabase, crea una "New query" y ejecuta el siguiente script exacto:</p>
+            <div className="relative">
+              <pre className="bg-slate-900 text-slate-50 p-5 rounded-xl overflow-x-auto text-xs font-mono shadow-inner border border-slate-700">
+                {SQL_SCRIPT}
+              </pre>
+              <button 
+                onClick={copySqlScript}
+                className="absolute top-3 right-3 p-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors flex items-center gap-2 text-xs font-bold"
+              >
+                <Copy size={16} /> Copiar Script
+              </button>
+            </div>
+          </div>
+          {success && <SuccessMessage message={success} />}
+          <div className="mt-4 flex justify-end">
+             <button
+                onClick={() => {
+                  setLoading(true);
+                  fetchRoles();
+                }}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors"
+             >
+                Ya ejecuté el script, recargar
+             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -210,22 +256,6 @@ export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) 
             <X size={20} />
             <p className="font-medium">{error}</p>
           </div>
-          {showSqlScript && (
-            <div className="mt-2 text-sm">
-              <p className="mb-2">Por favor, ejecuta el siguiente script en el editor SQL de Supabase:</p>
-              <div className="relative">
-                <pre className="bg-slate-900 text-slate-50 p-4 rounded-lg overflow-x-auto text-xs">
-                  {SQL_SCRIPT}
-                </pre>
-                <button 
-                  onClick={copySqlScript}
-                  className="absolute top-2 right-2 p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors flex items-center gap-1 text-xs"
-                >
-                  <Copy size={14} /> Copiar
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

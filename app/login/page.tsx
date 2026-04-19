@@ -66,29 +66,54 @@ function LoginContent() {
           return;
         }
 
-        const { data: profile, error: profileError } = await supabase
+        let profileData = null;
+        let profileError = null;
+        
+        // Try to fetch with is_suspended first
+        const { data: profileWithSuspended, error: errWithSuspended } = await supabase
           .from("profiles")
           .select("role, parking_lot_id, parking_lots(is_suspended)")
           .eq("id", data.user.id)
           .single();
+          
+        if (errWithSuspended && errWithSuspended.message.includes("is_suspended")) {
+          // Fallback if column is missing
+          const { data: profileFallback, error: errFallback } = await supabase
+            .from("profiles")
+            .select("role, parking_lot_id, parking_lots(id)")
+            .eq("id", data.user.id)
+            .single();
+            
+          profileData = profileFallback;
+          profileError = errFallback;
+        } else {
+          profileData = profileWithSuspended;
+          profileError = errWithSuspended;
+        }
 
         if (profileError) {
-          setError("Error al obtener perfil de usuario");
+          console.error("Profile fetch error:", profileError);
+          if (profileError.code === "PGRST116") {
+            setError("No se encontró un perfil asociado a esta cuenta. Verifica tu registro o contacta al administrador.");
+          } else {
+            setError("Error al obtener perfil de usuario: " + profileError.message);
+          }
+          await supabase.auth.signOut();
           setLoading(false);
           return;
         }
         
         // Check suspension
-        if (profile.parking_lots && (profile.parking_lots as any).is_suspended) {
+        if (profileData && profileData.parking_lots && (profileData.parking_lots as any).is_suspended) {
           await supabase.auth.signOut();
           setError("La plataforma está suspendida para este parqueadero. Por favor renueva tu suscripción.");
           setLoading(false);
           return;
         }
 
-        if (profile.role === "admin") router.push("/admin");
-        else if (profile.role === "employee") router.push("/employee");
-        else if (profile.role === "superadmin") router.push("/superadmin");
+        if (profileData && profileData.role === "admin") router.push("/admin");
+        else if (profileData && profileData.role === "employee") router.push("/employee");
+        else if (profileData && profileData.role === "superadmin") router.push("/superadmin");
         else router.push("/");
 
       } else {

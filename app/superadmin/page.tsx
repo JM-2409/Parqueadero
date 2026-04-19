@@ -234,6 +234,26 @@ export default function SuperAdminPage() {
     setIsCreatingAdmin(false);
   };
 
+  const handleUpdateSubscription = async (lotId: string, subscriptionEnd: string | null, isSuspended: boolean) => {
+    setError("");
+    setSuccess("");
+    const { error: updateError } = await supabase
+      .from("parking_lots")
+      .update({
+        subscription_end_date: subscriptionEnd,
+        is_suspended: isSuspended,
+      })
+      .eq("id", lotId);
+      
+    if (updateError) {
+      setError("Error al actualizar la suscripción: " + updateError.message);
+    } else {
+      setSuccess("Suscripción actualizada exitosamente");
+      fetchParkingLots();
+      setTimeout(() => setSuccess(""), 3000);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50">Cargando panel...</div>;
   }
@@ -433,9 +453,37 @@ export default function SuperAdminPage() {
                               )}
                             </div>
                             
-                            <div className="pt-4 border-t border-slate-200 flex justify-between text-xs text-slate-500 font-medium">
+                            <div className="pt-4 border-t border-slate-200 mt-4">
+                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Suscripción y Acceso</h4>
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-[11px] font-medium text-slate-500 mb-1">Fecha de Expiración</label>
+                                  <input
+                                    type="date"
+                                    value={lot.subscription_end_date ? new Date(lot.subscription_end_date).toISOString().split('T')[0] : ""}
+                                    onChange={(e) => {
+                                      const newDate = e.target.value ? new Date(e.target.value).toISOString() : null;
+                                      handleUpdateSubscription(lot.id, newDate, lot.is_suspended || false);
+                                    }}
+                                    className="w-full px-2 py-1.5 border border-slate-200 rounded-lg outline-none text-sm bg-white focus:border-indigo-500"
+                                  />
+                                </div>
+                                
+                                <label className="flex items-center gap-2 cursor-pointer p-2 border border-slate-200 rounded-lg hover:bg-white transition-colors bg-white/50">
+                                  <input
+                                    type="checkbox"
+                                    checked={lot.is_suspended || false}
+                                    onChange={(e) => handleUpdateSubscription(lot.id, lot.subscription_end_date, e.target.checked)}
+                                    className="w-4 h-4 text-red-600 rounded border-slate-300 focus:ring-red-500"
+                                  />
+                                  <span className="text-slate-700 font-medium text-[13px]">Bloquear Servicio (Suspendido)</span>
+                                </label>
+                              </div>
+                            </div>
+                            
+                            <div className="pt-4 border-t border-slate-200 flex justify-between text-[11px] text-slate-400 font-medium mt-3">
                               <span>Capacidad: {lot.capacity}</span>
-                              <span>{new Date(lot.created_at).toLocaleDateString()}</span>
+                              <span>Creado: {new Date(lot.created_at).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>

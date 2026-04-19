@@ -122,11 +122,28 @@ export default function EmployeePage() {
         return;
       }
 
-      const { data: profileData, error: profileError } = await supabase
+      let profileData = null;
+      let profileError = null;
+
+      const { data: profileWithLots, error: errWithLots } = await supabase
         .from("profiles")
         .select("*, parking_lots(*)")
         .eq("id", session.user.id)
         .single();
+        
+      if (errWithLots && (errWithLots.message.includes("is_suspended") || errWithLots.message.includes("subscription_end_date"))) {
+         const { data: fallbackProfile, error: errFallback } = await supabase
+           .from("profiles")
+           .select("*, parking_lots(id, name, nit, address, capacity, allowed_vehicles, show_revenue, created_at)")
+           .eq("id", session.user.id)
+           .single();
+           
+         profileData = fallbackProfile;
+         profileError = errFallback;
+      } else {
+         profileData = profileWithLots;
+         profileError = errWithLots;
+      }
 
       if (profileError || profileData?.role !== "employee") {
         router.push("/");
@@ -316,6 +333,10 @@ export default function EmployeePage() {
   };
 
   const handleExit = async (sessionId: string) => {
+    if (!window.confirm("¿Estás seguro de que deseas registrar la salida de este vehículo?")) {
+      return;
+    }
+
     if (isSubmittingExit === sessionId) return;
     setIsSubmittingExit(sessionId);
     setError("");

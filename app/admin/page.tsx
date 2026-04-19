@@ -186,11 +186,29 @@ export default function AdminPage() {
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
+      let profile = null;
+      let profileError = null;
+
+      const { data: profileWithLots, error: errWithLots } = await supabase
         .from("profiles")
         .select("*, parking_lots(*)")
         .eq("id", session.user.id)
         .single();
+        
+      if (errWithLots && (errWithLots.message.includes("is_suspended") || errWithLots.message.includes("subscription_end_date"))) {
+         // Fallback selection picking only fields that exist originally
+         const { data: fallbackProfile, error: errFallback } = await supabase
+           .from("profiles")
+           .select("*, parking_lots(id, name, nit, address, capacity, allowed_vehicles, show_revenue, created_at)")
+           .eq("id", session.user.id)
+           .single();
+           
+         profile = fallbackProfile;
+         profileError = errFallback;
+      } else {
+         profile = profileWithLots;
+         profileError = errWithLots;
+      }
 
       if (profileError || profile?.role !== "admin") {
         router.push("/");
@@ -242,9 +260,7 @@ export default function AdminPage() {
         allowed_vehicles: allowedVehicles,
         custom_fields: customFields,
         nit: parkingLot?.nit,
-        address: parkingLot?.address,
-        subscription_end_date: parkingLot?.subscription_end_date,
-        is_suspended: parkingLot?.is_suspended
+        address: parkingLot?.address
       })
       .eq("id", parkingLot.id);
 
@@ -719,32 +735,26 @@ export default function AdminPage() {
                     <div className="flex justify-between items-center mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900">Estado de Suscripción</h3>
-                        <p className="text-sm text-slate-500">Administra la fecha límite del servicio local (Demostración de Control)</p>
+                        <p className="text-sm text-slate-500">Información sobre su plan actual</p>
                       </div>
                     </div>
                     <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
                        <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Expiración</label>
-                          <input
-                            type="date"
-                            value={parkingLot?.subscription_end_date ? new Date(parkingLot.subscription_end_date).toISOString().split('T')[0] : ""}
-                            onChange={(e) => {
-                              const newDate = e.target.value ? new Date(e.target.value).toISOString() : null;
-                              setParkingLot({ ...parkingLot, subscription_end_date: newDate })
-                            }}
-                            className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
-                          />
+                          <div className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-600 cursor-not-allowed">
+                            {parkingLot?.subscription_end_date 
+                              ? new Date(parkingLot.subscription_end_date).toLocaleDateString()
+                              : "No especificada (Suscripción Inactiva o Ilimitada)"}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-2">Contacte al dueño para renovar su plan.</p>
                        </div>
-                       <div className="flex flex-col justify-end">
-                         <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-white transition-colors bg-white/50">
-                           <input
-                             type="checkbox"
-                             checked={parkingLot?.is_suspended || false}
-                             onChange={(e) => setParkingLot({ ...parkingLot, is_suspended: e.target.checked })}
-                             className="w-5 h-5 text-red-600 rounded border-slate-300 focus:ring-red-500"
-                           />
-                           <span className="text-slate-700 font-medium text-sm">Suspender Plataforma Manualmente</span>
-                         </label>
+                       <div className="flex flex-col justify-center">
+                         <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl bg-white">
+                           <div className={`w-3 h-3 rounded-full ${parkingLot?.is_suspended ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+                           <span className="text-slate-700 font-medium text-sm">
+                             Estado: <span className={parkingLot?.is_suspended ? 'text-red-600' : 'text-emerald-600'}>{parkingLot?.is_suspended ? 'Suspendido' : 'Activo'}</span>
+                           </span>
+                         </div>
                        </div>
                     </div>
                   </div>

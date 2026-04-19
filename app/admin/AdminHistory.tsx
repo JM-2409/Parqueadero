@@ -100,6 +100,10 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   };
 
   const handleExit = async (sessionToExit: any) => {
+    if (!window.confirm("¿Estás seguro de que deseas registrar la salida de este vehículo desde el panel de administrador?")) {
+      return;
+    }
+    
     if (isSubmittingExit === sessionToExit.id) return;
     setIsSubmittingExit(sessionToExit.id);
     
