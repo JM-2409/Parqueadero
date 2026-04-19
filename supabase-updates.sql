@@ -14,6 +14,8 @@ ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS allow_employee_view_revenue BO
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS receipt_sequence INTEGER DEFAULT 0;
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS nit TEXT;
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAMP WITH TIME ZONE;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS tariffs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -46,7 +48,7 @@ CREATE TABLE IF NOT EXISTS custom_roles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  permissions JSONB DEFAULT '[]',
+  permissions JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -61,9 +63,6 @@ CREATE TABLE IF NOT EXISTS private_parking_spaces (
   space_number TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAMP WITH TIME ZONE;
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS invite_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

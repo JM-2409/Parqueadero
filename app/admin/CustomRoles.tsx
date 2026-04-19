@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS custom_roles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  permissions JSONB DEFAULT '[]',
+  permissions JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

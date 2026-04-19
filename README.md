@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS app_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insertar configuraciones por defecto
+-- Insertar configuraciones por defecto de forma segura
 INSERT INTO app_settings (app_name, logo_url)
 SELECT 'Sistema de Parqueaderos', ''
 WHERE NOT EXISTS (SELECT 1 FROM app_settings);
@@ -50,12 +50,15 @@ ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS receipt_sequence INTEGER DEFAU
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS allow_employee_view_revenue BOOLEAN DEFAULT false;
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS nit TEXT;
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAMP WITH TIME ZONE;
+ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT false;
+
 ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS receipt_number TEXT;
 ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS total_charged NUMERIC DEFAULT 0;
 ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 0;
 ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS custom_fields_data JSONB DEFAULT '{}'::jsonb;
 
--- 4. Cerrar Caja
+-- 3. Cerrar Caja
 CREATE TABLE IF NOT EXISTS cash_closures (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   parking_lot_id UUID REFERENCES parking_lots(id),
@@ -64,7 +67,7 @@ CREATE TABLE IF NOT EXISTS cash_closures (
   closed_by UUID REFERENCES profiles(id)
 );
 
--- 5. Crear tabla de roles personalizados
+-- 4. Crear tabla de roles personalizados
 CREATE TABLE IF NOT EXISTS custom_roles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
@@ -73,7 +76,7 @@ CREATE TABLE IF NOT EXISTS custom_roles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Añadir columna de rol personalizado a perfiles
+-- Añadir columna de rol personalizado a perfiles
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_role_id UUID REFERENCES custom_roles(id) ON DELETE SET NULL;
 
 -- 5. Crear tabla de parqueaderos privados
@@ -87,9 +90,23 @@ CREATE TABLE IF NOT EXISTS private_parking_spaces (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 6. Habilitar o deshabilitar RLS según convenga (Deshabilitado para asegurar el prototipo rápido, pero recomendable habilitar en producción con políticas)
+-- 6. Crear Sistema de Suscripciones (Opcional si usas invites)
+CREATE TABLE IF NOT EXISTS invite_codes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  code TEXT UNIQUE NOT NULL,
+  role TEXT NOT NULL,
+  parking_lot_id UUID REFERENCES parking_lots(id),
+  used_at TIMESTAMP WITH TIME ZONE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 7. Deshabilitar RLS temporalmente en las nuevas tablas
 ALTER TABLE custom_roles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE private_parking_spaces DISABLE ROW LEVEL SECURITY;
+ALTER TABLE cash_closures DISABLE ROW LEVEL SECURITY;
+ALTER TABLE invite_codes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE app_settings DISABLE ROW LEVEL SECURITY;
 ```
 
 ## Estructura de Roles
