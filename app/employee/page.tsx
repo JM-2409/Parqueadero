@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  Car, LogOut, LogIn, Search, CheckCircle2, DollarSign, Clock, Receipt, User, History, Menu, X
+  Car, LogOut, LogIn, Search, CheckCircle2, DollarSign, Clock, Receipt, User, History, Menu, X, Home
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import EmployeeHistory from "./EmployeeHistory";
+import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
 import { calculateFee } from "@/lib/pricing";
 
@@ -519,6 +520,13 @@ export default function EmployeePage() {
             <History size={20} />
             <span className="font-medium">Historial</span>
           </button>
+          <button
+            onClick={() => { setActiveTab("private"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "private" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <Home size={20} />
+            <span className="font-medium">Parq. Privados</span>
+          </button>
         </nav>
         
         <div className="p-4 mt-auto border-t border-slate-800">
@@ -810,6 +818,13 @@ export default function EmployeePage() {
           {activeTab === "history" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <EmployeeHistory parkingLotId={parkingLot.id} showRevenue={parkingLot.show_revenue} />
+            </div>
+          )}
+
+          {/* TAB: PRIVATE SPACES */}
+          {activeTab === "private" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <PrivateSpaces parkingLotId={parkingLot.id} />
             </div>
           )}
 

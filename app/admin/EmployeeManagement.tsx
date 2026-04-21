@@ -9,15 +9,13 @@ import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function EmployeeManagement({ 
   parkingLotId, 
-  customRoles,
   initialEmployees 
 }: { 
   parkingLotId: string, 
-  customRoles: any[],
   initialEmployees: any[]
 }) {
   const [employees, setEmployees] = useState<any[]>(initialEmployees);
-  const [newEmployee, setNewEmployee] = useState({ username: "", password: "", confirmPassword: "", customRoleId: "" });
+  const [newEmployee, setNewEmployee] = useState({ username: "", password: "", confirmPassword: "" });
   const [isCreatingEmployee, setIsCreatingEmployee] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -93,21 +91,13 @@ export default function EmployeeManagement({
       
       if (!result.success) throw new Error(result.error);
       
-      if (newEmployee.customRoleId && result.user?.id) {
-        // Update user with custom role
-        await supabase
-          .from("profiles")
-          .update({ custom_role_id: newEmployee.customRoleId })
-          .eq("id", result.user.id);
-      }
-
       setSuccess("Empleado creado exitosamente");
-      setNewEmployee({ username: "", password: "", confirmPassword: "", customRoleId: "" });
+      setNewEmployee({ username: "", password: "", confirmPassword: "" });
       
       // Refresh employees list local
       const { data } = await supabase
         .from("profiles")
-        .select("*, custom_roles(name)")
+        .select("*")
         .eq("parking_lot_id", parkingLotId)
         .eq("role", "employee");
         
@@ -214,19 +204,6 @@ export default function EmployeeManagement({
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Rol Personalizado (Opcional)</label>
-            <select
-              value={newEmployee.customRoleId}
-              onChange={(e) => setNewEmployee({ ...newEmployee, customRoleId: e.target.value })}
-              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-            >
-              <option value="">Empleado Estándar</option>
-              {customRoles.map(role => (
-                <option key={role.id} value={role.id}>{role.name}</option>
-              ))}
-            </select>
-          </div>
           <button
             type="submit"
             disabled={isCreatingEmployee}
@@ -259,7 +236,7 @@ export default function EmployeeManagement({
                   <div>
                     <p className="font-medium text-slate-900">{emp.email.replace('@parkingapp.local', '')}</p>
                     <p className="text-xs text-slate-500">
-                      Rol: {emp.custom_roles?.name || "Empleado Estándar"}
+                      Rol: Empleado
                     </p>
                   </div>
                 </div>

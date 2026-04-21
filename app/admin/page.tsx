@@ -38,6 +38,7 @@ export default function AdminPage() {
   const [showRevenue, setShowRevenue] = useState(false);
   const [allowedVehicles, setAllowedVehicles] = useState<string[]>([]);
   const [customFields, setCustomFields] = useState<{name: string, required: boolean}[]>([]);
+  const [privateCustomFields, setPrivateCustomFields] = useState<{name: string, required: boolean, visible: boolean}[]>([]);
 
   // Employee creation states
   const [newEmployee, setNewEmployee] = useState({ username: "", password: "", customRoleId: "" });
@@ -58,6 +59,7 @@ export default function AdminPage() {
       setShowRevenue(data.show_revenue || false);
       setAllowedVehicles(data.allowed_vehicles || []);
       setCustomFields(data.custom_fields || []);
+      setPrivateCustomFields(data.private_custom_fields || []);
     }
   }, []);
 
@@ -93,20 +95,11 @@ export default function AdminPage() {
   const fetchEmployees = useCallback(async (parkingLotId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("*, custom_roles(name)")
+      .select("*")
       .eq("parking_lot_id", parkingLotId)
       .eq("role", "employee");
     if (data) {
       setEmployees(data);
-    }
-    
-    // Fetch custom roles for this parking lot
-    const { data: rolesData } = await supabase
-      .from("custom_roles")
-      .select("*")
-      .eq("parking_lot_id", parkingLotId);
-    if (rolesData) {
-      setCustomRoles(rolesData);
     }
     
     // Fetch last closure
@@ -262,6 +255,7 @@ export default function AdminPage() {
         show_revenue: showRevenue,
         allowed_vehicles: allowedVehicles,
         custom_fields: customFields,
+        private_custom_fields: privateCustomFields,
         nit: parkingLot?.nit,
         address: parkingLot?.address
       })
@@ -335,6 +329,24 @@ export default function AdminPage() {
     setCustomFields(customFields.filter((_, i) => i !== index));
   };
 
+  const addPrivateCustomField = () => {
+    setPrivateCustomFields([...privateCustomFields, { name: "", required: false, visible: true }]);
+  };
+
+  const updatePrivateCustomField = (index: number, key: 'name' | 'required' | 'visible', value: any) => {
+    const newFields = [...privateCustomFields];
+    if (key === 'name' && typeof value === 'string') {
+      newFields[index] = { ...newFields[index], [key]: sanitizeInput(value) };
+    } else {
+      newFields[index] = { ...newFields[index], [key]: value };
+    }
+    setPrivateCustomFields(newFields);
+  };
+
+  const removePrivateCustomField = (index: number) => {
+    setPrivateCustomFields(privateCustomFields.filter((_, i) => i !== index));
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">Cargando panel...</div>;
 
   return (
@@ -388,13 +400,6 @@ export default function AdminPage() {
           >
             <Users size={20} />
             <span className="font-medium">Empleados</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab("roles"); setIsMobileMenuOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "roles" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
-          >
-            <Shield size={20} />
-            <span className="font-medium">Roles</span>
           </button>
           <button
             onClick={() => { setActiveTab("private_parking"); setIsMobileMenuOpen(false); }}
@@ -582,16 +587,8 @@ export default function AdminPage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <EmployeeManagement 
                 parkingLotId={parkingLot.id} 
-                customRoles={customRoles} 
                 initialEmployees={employees} 
               />
-            </div>
-          )}
-
-          {/* TAB: ROLES */}
-          {activeTab === "roles" && parkingLot && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <CustomRoles parkingLotId={parkingLot.id} />
             </div>
           )}
 
@@ -777,6 +774,72 @@ export default function AdminPage() {
                               <button
                                 type="button"
                                 onClick={() => removeCustomField(idx)}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Eliminar campo"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-8">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">Campos Parqueadero Privado</h3>
+                        <p className="text-sm text-slate-500">Datos extra a pedir o mostrar para los registros de parqueo privado (Ej. Placa, Teléfono)</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addPrivateCustomField}
+                        className="flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-lg transition-colors"
+                      >
+                        <Plus size={16} />
+                        Añadir Campo Privado
+                      </button>
+                    </div>
+
+                    {privateCustomFields.length === 0 ? (
+                      <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-sm">
+                        No hay campos personalizados configurados para parqueaderos privados.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {privateCustomFields.map((field, idx) => (
+                          <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <input
+                              type="text"
+                              value={field.name}
+                              onChange={(e) => updatePrivateCustomField(idx, 'name', e.target.value)}
+                              placeholder="Nombre del campo (Ej. Placa)"
+                              className="flex-1 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                              required
+                            />
+                            <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                                <input
+                                  type="checkbox"
+                                  checked={field.required}
+                                  onChange={(e) => updatePrivateCustomField(idx, 'required', e.target.checked)}
+                                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                                />
+                                Obligatorio
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                                <input
+                                  type="checkbox"
+                                  checked={field.visible}
+                                  onChange={(e) => updatePrivateCustomField(idx, 'visible', e.target.checked)}
+                                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                                />
+                                Visible (Vigilante)
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => removePrivateCustomField(idx)}
                                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Eliminar campo"
                               >

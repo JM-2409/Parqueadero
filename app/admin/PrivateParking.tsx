@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Plus, Trash2, Save, X, Home, Search, Edit2 } from "lucide-react";
+import { Plus, Trash2, Save, X, Home, Search, Edit2, Upload, Download } from "lucide-react";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { Spinner } from "@/components/ui/Spinner";
 
+import Papa from 'papaparse';
+
 export default function PrivateParking({ parkingLotId }: { parkingLotId: string }) {
   const [spaces, setSpaces] = useState<any[]>([]);
+  const [configFields, setConfigFields] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -22,9 +25,21 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
     owner_name: "",
     space_number: ""
   });
+  
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, string>>({});
 
   const fetchSpaces = useCallback(async () => {
     try {
+      const { data: lotData } = await supabase
+        .from("parking_lots")
+        .select("private_custom_fields")
+        .eq("id", parkingLotId)
+        .single();
+      
+      if (lotData && lotData.private_custom_fields) {
+        setConfigFields(lotData.private_custom_fields);
+      }
+
       const { data, error } = await supabase
         .from("private_parking_spaces")
         .select("*")
@@ -36,6 +51,10 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
           setSpaces([]);
           setError("La tabla 'private_parking_spaces' no existe. Por favor, ejecuta el script SQL de actualización.");
         } else {
+          try {
+            // Intento crear la columna si no existe, o simplemente la ignoramos en el tipado si no usamos RPC
+            const { error: columnError } = await supabase.rpc('add_private_fields_column');
+          } catch(e) {}
           throw error;
         }
       } else {
@@ -85,7 +104,8 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
             block: spaceData.block.trim(),
             house_or_apartment: spaceData.house_or_apartment.trim(),
             owner_name: spaceData.owner_name.trim(),
-            space_number: spaceData.space_number.trim()
+            space_number: spaceData.space_number.trim(),
+            custom_fields_data: customFieldsData,
           })
           .eq("id", editingSpaceId);
           
@@ -112,7 +132,8 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
             block: spaceData.block.trim(),
             house_or_apartment: spaceData.house_or_apartment.trim(),
             owner_name: spaceData.owner_name.trim(),
-            space_number: spaceData.space_number.trim()
+            space_number: spaceData.space_number.trim(),
+            custom_fields_data: customFieldsData,
           }]);
           
         if (error) throw error;
@@ -120,6 +141,7 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
       }
       
       setSpaceData({ block: "", house_or_apartment: "", owner_name: "", space_number: "" });
+      setCustomFieldsData({});
       setIsCreating(false);
       setEditingSpaceId(null);
       fetchSpaces();
@@ -158,6 +180,7 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
       owner_name: space.owner_name || "",
       space_number: space.space_number || ""
     });
+    setCustomFieldsData(space.custom_fields_data || {});
     setIsCreating(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -166,6 +189,117 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
     setIsCreating(false);
     setEditingSpaceId(null);
     setSpaceData({ block: "", house_or_apartment: "", owner_name: "", space_number: "" });
+    setCustomFieldsData({});
+  };
+
+  const handleExportCSV = () => {
+    // Generate CSV data from spaces
+    const dataToExport = spaces.map(space => {
+      const baseData: any = {
+        'Número de Parqueadero': space.space_number || '',
+        'Propietario': space.owner_name || '',
+        'Bloque': space.block || '',
+        'Apartamento': space.house_or_apartment || '',
+      };
+
+      // Extract custom fields if available
+      if (space.custom_fields_data) {
+        configFields.forEach(field => {
+          baseData[field.name] = space.custom_fields_data[field.name] || '';
+        });
+      }
+
+      return baseData;
+    });
+
+    const csvStr = Papa.unparse(dataToExport);
+    const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'parqueaderos_privados.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const rows = results.data as any[];
+          
+          let count = 0;
+          for (const row of rows) {
+            const spaceNum = row['Número de Parqueadero'];
+            if (!spaceNum) continue;
+
+            // Extract custom data logic
+            const dynamicFields: Record<string, string> = {};
+            configFields.forEach(field => {
+              if (row[field.name] !== undefined) {
+                dynamicFields[field.name] = row[field.name];
+              }
+            });
+
+            // Upsert based on space_number
+            // In supabase, we have UNIQUE(parking_lot_id, space_number), so if it exists we can update it or ignore
+            
+            const { data: existingSpace } = await supabase
+              .from("private_parking_spaces")
+              .select("id")
+              .eq("parking_lot_id", parkingLotId)
+              .eq("space_number", String(spaceNum).trim())
+              .maybeSingle();
+
+            if (existingSpace) {
+               await supabase
+                .from("private_parking_spaces")
+                .update({
+                  block: row['Bloque'] ? String(row['Bloque']).trim() : "",
+                  house_or_apartment: row['Apartamento'] ? String(row['Apartamento']).trim() : "",
+                  owner_name: row['Propietario'] ? String(row['Propietario']).trim() : "",
+                  custom_fields_data: dynamicFields
+                })
+                .eq("id", existingSpace.id);
+            } else {
+               await supabase
+                .from("private_parking_spaces")
+                .insert([{
+                  parking_lot_id: parkingLotId,
+                  space_number: String(spaceNum).trim(),
+                  block: row['Bloque'] ? String(row['Bloque']).trim() : "",
+                  house_or_apartment: row['Apartamento'] ? String(row['Apartamento']).trim() : "",
+                  owner_name: row['Propietario'] ? String(row['Propietario']).trim() : "",
+                  custom_fields_data: dynamicFields
+                }]);
+            }
+            count++;
+          }
+          
+          setSuccess(`Se importaron ${count} parqueaderos correctamente.`);
+          fetchSpaces();
+        } catch (err: any) {
+          setError(`Error importando CSV: ${err.message}`);
+        } finally {
+          setIsImporting(false);
+          // reset input
+          e.target.value = '';
+        }
+      },
+      error: (err) => {
+        setError("Error leyendo archivo CSV.");
+        setIsImporting(false);
+      }
+    });
   };
 
   const filteredSpaces = spaces.filter(space => {
@@ -190,13 +324,34 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
           <p className="text-sm text-slate-500">Gestiona los espacios asignados a residentes o propietarios</p>
         </div>
         {!isCreating && (
-          <button
-            onClick={() => setIsCreating(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
-          >
-            <Plus size={18} />
-            Nuevo Espacio
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportCSV}
+              className="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2"
+              title="Exportar archivo CSV con los datos actuales"
+            >
+              <Download size={18} />
+              Exportar
+            </button>
+            <label className="cursor-pointer px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+              {isImporting ? <Spinner size={18} /> : <Upload size={18} />}
+              Importar
+              <input 
+                type="file" 
+                accept=".csv" 
+                className="hidden" 
+                onChange={handleImportCSV} 
+                disabled={isImporting}
+              />
+            </label>
+            <button
+              onClick={() => setIsCreating(true)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            >
+              <Plus size={18} />
+              Nuevo Espacio
+            </button>
+          </div>
         )}
       </div>
 
@@ -255,6 +410,26 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
                   placeholder="ej. Apto 301"
                 />
               </div>
+              
+              {/* Renderizar campos configurables */}
+              {configFields && configFields.map((field) => (
+                <div key={field.name}>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    {field.name} {field.required ? '*' : ''}
+                  </label>
+                  <input
+                    type="text"
+                    value={customFieldsData[field.name] || ""}
+                    onChange={(e) => setCustomFieldsData({
+                      ...customFieldsData,
+                      [field.name]: e.target.value
+                    })}
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    placeholder={`ej. ${field.name}`}
+                    required={field.required}
+                  />
+                </div>
+              ))}
             </div>
             
             <div className="flex gap-3 pt-2">
