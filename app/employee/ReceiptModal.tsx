@@ -55,6 +55,18 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
             <span className="text-slate-500">Tipo</span>
             <span className="font-medium text-slate-900 capitalize">{session.vehicles.type}</span>
           </div>
+
+          {session.extra_data && Object.keys(session.extra_data).length > 0 && (
+            <div className="border-t border-slate-100 pt-4 mt-4 space-y-2">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Datos Adicionales</span>
+              {Object.entries(session.extra_data).map(([key, value]) => (
+                <div key={key} className="flex justify-between items-start gap-4">
+                  <span className="text-slate-500 capitalize min-w-[80px]">{key}</span>
+                  <span className="font-medium text-slate-900 text-right break-words">{value as string}</span>
+                </div>
+              ))}
+            </div>
+          )}
           
           <div className="border-t border-slate-100 pt-4 mt-4 space-y-2">
             <div className="flex justify-between items-center">

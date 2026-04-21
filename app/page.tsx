@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Car, ShieldCheck, Clock, MapPin, CheckCircle2, Mail, Phone, ArrowRight } from "lucide-react";
+import { Car, ShieldCheck, Clock, MapPin, CheckCircle2, Mail, Phone, ArrowRight, X } from "lucide-react";
 
 export default function Home() {
   return (
@@ -227,7 +227,7 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Básico</h3>
                 <p className="text-slate-500 text-sm mb-6">Para un solo parqueadero pequeño.</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-slate-900">$29.000</span>
+                  <span className="text-4xl font-extrabold text-slate-900">$50.000</span>
                   <span className="text-slate-500 font-medium">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">
@@ -237,15 +237,15 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Hasta 2 Empleados</span>
+                    <span>Empleados Ilimitados</span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
                     <span>Tarifas Básicas</span>
                   </li>
-                  <li className="flex items-start gap-3 text-slate-600">
-                    <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Soporte por Email</span>
+                  <li className="flex items-start gap-3 text-slate-400">
+                    <X size={20} className="text-slate-300 shrink-0" />
+                    <span>Sin Roles Personalizados</span>
                   </li>
                 </ul>
                 <a href="#contact" className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium rounded-xl text-center transition-colors">
@@ -258,16 +258,16 @@ export default function Home() {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-400 to-orange-400 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider shadow-sm">
                   Más Popular
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Profesional</h3>
+                <h3 className="text-xl font-bold text-white mb-2">Premium</h3>
                 <p className="text-indigo-200 text-sm mb-6">Para operaciones en crecimiento.</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-white">$69.000</span>
+                  <span className="text-4xl font-extrabold text-white">$120.000</span>
                   <span className="text-indigo-200 font-medium">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">
                   <li className="flex items-start gap-3 text-indigo-50">
                     <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
-                    <span>Hasta 3 Parqueaderos</span>
+                    <span>1 Parqueadero</span>
                   </li>
                   <li className="flex items-start gap-3 text-indigo-50">
                     <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
@@ -275,15 +275,15 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-3 text-indigo-50">
                     <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
-                    <span>Tarifas Día/Noche</span>
+                    <span>Roles Personalizados (Cajero, etc.)</span>
                   </li>
                   <li className="flex items-start gap-3 text-indigo-50">
                     <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
-                    <span>Campos Personalizados</span>
+                    <span>Gestión de Abonados Mensuales</span>
                   </li>
                   <li className="flex items-start gap-3 text-indigo-50">
                     <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
-                    <span>Historial y CSV Analytics</span>
+                    <span>Soporte Prioritario</span>
                   </li>
                 </ul>
                 <a href="#contact" className="w-full py-3 px-4 bg-white hover:bg-slate-50 text-indigo-600 font-bold rounded-xl text-center transition-colors shadow-sm">
@@ -293,28 +293,28 @@ export default function Home() {
 
               {/* Enterprise Plan */}
               <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm hover:shadow-xl transition-shadow flex flex-col">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Empresarial</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Multi-Sede (Avanzado)</h3>
                 <p className="text-slate-500 text-sm mb-6">Para grandes redes de parqueaderos.</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-slate-900">$149.000</span>
+                  <span className="text-4xl font-extrabold text-slate-900">$250.000</span>
                   <span className="text-slate-500 font-medium">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Parqueaderos Ilimitados</span>
+                    <span>Hasta 5 Parqueaderos</span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Cierres de Caja Avanzados</span>
+                    <span>Administrador Multi-Sede</span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Roles de Admin, Supervisor...</span>
+                    <span>Todas las funciones Premium</span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-600">
                     <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                    <span>Soporte y Entregas Prioritarias</span>
+                    <span>Campos Personalizados Ilimitados</span>
                   </li>
                 </ul>
                 <a href="#contact" className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium rounded-xl text-center transition-colors">

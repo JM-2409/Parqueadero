@@ -95,6 +95,16 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
       return;
     }
 
+    if (isCompleted) {
+      const entry = new Date(`${entryDate}T${entryTime}`);
+      const exit = new Date(`${exitDate}T${exitTime}`);
+      if (exit <= entry) {
+        setError("La fecha y hora de salida deben ser posteriores a la de entrada");
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       // 1. Check if vehicle exists or create it
       let vehicleId = null;

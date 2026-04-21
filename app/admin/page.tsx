@@ -11,6 +11,9 @@ import AdminHistory from "./AdminHistory";
 import ManualEntry from "./ManualEntry";
 import CustomRoles from "./CustomRoles";
 import PrivateParking from "./PrivateParking";
+import Blacklist from "./Blacklist";
+import MonthlySubscribers from "./MonthlySubscribers";
+import EmployeeManagement from "./EmployeeManagement";
 import { FileEdit, Shield } from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
 
@@ -191,7 +194,7 @@ export default function AdminPage() {
 
       const { data: profileWithLots, error: errWithLots } = await supabase
         .from("profiles")
-        .select("*, parking_lots(*)")
+        .select("*, parking_lots(*, subscription_plans(*))")
         .eq("id", session.user.id)
         .single();
         
@@ -401,6 +404,20 @@ export default function AdminPage() {
             <span className="font-medium">Parqueaderos Privados</span>
           </button>
           <button
+            onClick={() => { setActiveTab("subscribers"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "subscribers" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <Users size={20} />
+            <span className="font-medium">Abonados (Mensual)</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab("blacklist"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "blacklist" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <Shield size={20} className="text-red-400" />
+            <span className="font-medium">Lista Negra</span>
+          </button>
+          <button
             onClick={() => { setActiveTab("settings"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "settings" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
@@ -546,92 +563,28 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* TAB: ABONADOS MENSUALES */}
+          {activeTab === "subscribers" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <MonthlySubscribers parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
+          {/* TAB: LISTA NEGRA */}
+          {activeTab === "blacklist" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Blacklist parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
           {/* TAB: EMPLEADOS */}
-          {activeTab === "employees" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
-                    <UserPlus size={24} />
-                  </div>
-                  <h2 className="text-xl font-semibold text-slate-900">Crear Empleado</h2>
-                </div>
-
-                <form onSubmit={handleCreateEmployee} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Usuario</label>
-                    <input
-                      type="text"
-                      value={newEmployee.username}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, username: e.target.value })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      placeholder="ej. empleado1"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
-                    <input
-                      type="password"
-                      value={newEmployee.password}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      placeholder="Mínimo 6 caracteres"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Rol Personalizado (Opcional)</label>
-                    <select
-                      value={newEmployee.customRoleId}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, customRoleId: e.target.value })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                    >
-                      <option value="">Empleado Estándar</option>
-                      {customRoles.map(role => (
-                        <option key={role.id} value={role.id}>{role.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isCreatingEmployee}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-2"
-                  >
-                    {isCreatingEmployee ? (
-                      <Spinner size={20} className="text-white" />
-                    ) : (
-                      <UserPlus size={20} />
-                    )}
-                    {isCreatingEmployee ? "Creando..." : "Crear Empleado"}
-                  </button>
-                </form>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-                <h2 className="text-xl font-semibold text-slate-900 mb-6">Empleados Registrados</h2>
-                {employees.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    No hay empleados registrados aún.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {employees.map((emp) => (
-                      <div key={emp.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors bg-slate-50/50">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">
-                            {emp.email.replace('@parkingapp.local', '').charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-medium text-slate-900">{emp.email.replace('@parkingapp.local', '')}</p>
-                            <p className="text-xs text-slate-500">
-                              Rol: {emp.custom_roles?.name || "Empleado Estándar"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+          {activeTab === "employees" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <EmployeeManagement 
+                parkingLotId={parkingLot.id} 
+                customRoles={customRoles} 
+                initialEmployees={employees} 
+              />
             </div>
           )}
 
@@ -734,27 +687,47 @@ export default function AdminPage() {
                   <div className="border-t border-slate-200 pt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Estado de Suscripción</h3>
-                        <p className="text-sm text-slate-500">Información sobre su plan actual</p>
+                        <h3 className="text-lg font-semibold text-slate-900">Estado del Software y Plan</h3>
+                        <p className="text-sm text-slate-500">Información sobre su plan actual y capacidades</p>
                       </div>
                     </div>
                     <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                       <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Expiración</label>
-                          <div className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-600 cursor-not-allowed">
-                            {parkingLot?.subscription_end_date 
-                              ? new Date(parkingLot.subscription_end_date).toLocaleDateString()
-                              : "No especificada (Suscripción Inactiva o Ilimitada)"}
+                       <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Expiración</label>
+                            <div className="w-full p-2.5 border border-slate-200 rounded-xl bg-white text-slate-600 font-mono text-sm cursor-not-allowed">
+                              {parkingLot?.subscription_end_date 
+                                ? new Date(parkingLot.subscription_end_date).toLocaleDateString()
+                                : "No especificada (Suscripción Ilimitada o Pendiente)"}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Contacte al proveedor para renovar.</p>
                           </div>
-                          <p className="text-xs text-slate-500 mt-2">Contacte al dueño para renovar su plan.</p>
                        </div>
-                       <div className="flex flex-col justify-center">
+                       
+                       <div className="flex flex-col justify-center gap-4">
                          <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl bg-white">
                            <div className={`w-3 h-3 rounded-full ${parkingLot?.is_suspended ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
                            <span className="text-slate-700 font-medium text-sm">
-                             Estado: <span className={parkingLot?.is_suspended ? 'text-red-600' : 'text-emerald-600'}>{parkingLot?.is_suspended ? 'Suspendido' : 'Activo'}</span>
+                             Estado: <span className={parkingLot?.is_suspended ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}>
+                               {parkingLot?.is_suspended ? 'Suspendido' : 'Operativo (Activo)'}
+                             </span>
                            </span>
                          </div>
+                         
+                         {parkingLot?.subscription_plans ? (
+                           <div className="p-3 border border-slate-200 rounded-xl bg-white space-y-1">
+                             <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Plan Actual</div>
+                             <div className="text-sm font-bold text-violet-700">{parkingLot.subscription_plans.name}</div>
+                             <div className="flex gap-2 text-xs text-slate-600 mt-2">
+                               {parkingLot.subscription_plans.allow_custom_roles && <span className="bg-slate-100 px-2 py-0.5 rounded">Roles Pers.</span>}
+                               {parkingLot.subscription_plans.allow_monthly_subscribers && <span className="bg-slate-100 px-2 py-0.5 rounded">Abonados</span>}
+                             </div>
+                           </div>
+                         ) : (
+                           <div className="p-3 border border-amber-200 bg-amber-50 rounded-xl text-sm text-amber-700">
+                             Sin plan específico configurado.
+                           </div>
+                         )}
                        </div>
                     </div>
                   </div>

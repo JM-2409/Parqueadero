@@ -197,22 +197,8 @@ export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) 
               <X size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold">¡Atención! Falta una tabla en la Base de Datos</h2>
-              <p className="text-sm font-medium opacity-90">La funcionalidad de Roles Personalizados necesita una actualización en tu base de datos.</p>
-            </div>
-          </div>
-          <div className="mt-4 text-sm">
-            <p className="mb-3 text-slate-800">Por favor, dirígete al <strong>SQL Editor</strong> de tu proyecto en Supabase, crea una "New query" y ejecuta el siguiente script exacto:</p>
-            <div className="relative">
-              <pre className="bg-slate-900 text-slate-50 p-5 rounded-xl overflow-x-auto text-xs font-mono shadow-inner border border-slate-700">
-                {SQL_SCRIPT}
-              </pre>
-              <button 
-                onClick={copySqlScript}
-                className="absolute top-3 right-3 p-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors flex items-center gap-2 text-xs font-bold"
-              >
-                <Copy size={16} /> Copiar Script
-              </button>
+              <h2 className="text-xl font-bold">¡Atención! Faltan tablas en la Base de Datos</h2>
+              <p className="mt-1 opacity-90">Por favor, asegúrate de que el administrador general (SuperAdmin) haya ejecutado el archivo de base de datos SQL actualizado (`supabase-schema.sql`) para habilitar el sistema de roles.</p>
             </div>
           </div>
           {success && <SuccessMessage message={success} />}
@@ -224,7 +210,7 @@ export default function CustomRoles({ parkingLotId }: { parkingLotId: string }) 
                 }}
                 className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors"
              >
-                Ya ejecuté el script, recargar
+                Recargar
              </button>
           </div>
         </div>

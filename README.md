@@ -1,38 +1,33 @@
 # Sistema de Parqueaderos (ParkManager)
 
-Sistema completo para la gestión de parqueaderos, con roles de Dueño (Super Admin), Administrador y Empleado.
+Sistema completo para la gestión de parqueaderos institucionales y comerciales, con roles de Dueño (Super Admin), Administrador y Empleado.
+
+## Historial de Revisiones - Versión Actual
+1. **Nuevos Filtros de Búsqueda:** Búsqueda por documento en Abolados, búsqueda por nombre de empleado (entrada y salida) en Historial Admin.
+2. **Historial de Tarifas Dinámicas:** Refactorizada la función del cobro de turnos para soportar fracciones relativas al turno específico (Día o Noche).
+3. **Manejo de Roles:** Gestión total de planes de suscripción (`SuperAdmin`) para activar o desactivar características para clientes (`Admins`).
+4. **Campos Recibo:** Se agregó `extra_data` como visualización obligatoria en los recibos impresos de ingreso/salida.
+5. **Esquema de Base de datos:** Búsquedas protegidas y roles robustecidos a nivel RLS y API.
 
 ## Características Principales
 
-- **Landing Page**: Página de inicio completa con información del producto, planes y formulario de contacto funcional.
-- **Autenticación por Usuario**: Inicio de sesión simplificado utilizando nombres de usuario en lugar de correos electrónicos.
-- **Super Admin (Dueño)**: Gestión global de parqueaderos, creación de administradores con nombre de usuario, configuración de nombre y logo (soporta subida de imágenes).
-- **Administrador**: Configuración de tarifas (por minuto, fracción, hora, bloque, día/noche, turnos sumables), creación de **campos personalizados dinámicos (obligatorios u opcionales)** para la admisión, gestión de empleados con nombre de usuario y visualización de historial completo con paginación.
-- **Roles Personalizados**: El Administrador puede crear roles específicos (ej. Cajero, Guarda) con permisos granulares y asignarlos a sus empleados.
-- **Empleado**: Registro de ingresos y salidas con validación de campos obligatorios, control de turnos obligatorio, cálculo automático de tarifas (incluyendo gabelas/tiempos de gracia), generación e impresión de recibos con numeración consecutiva.
-- **Diseño Responsivo**: Interfaz optimizada para funcionar perfectamente tanto en computadoras de escritorio como en dispositivos móviles.
+- **Gestión Multi-Planes (Suscripciones)**: El super admin puede "Activar/Desactivar" características de los planes como Roles Personalizados, Múltiples Sucursales y Mensualidades.
+- **Autenticación por Usuario**: Inicio de sesión simplificado utilizando nombres de usuario cortos (`ej: guarda1`). 
+- **Tarifas Dinámicas (Turnos y Horas)**: Configuración experta de turnos (Día, Noche) que permiten cobro "Fraccionado" dependiendo del tiempo transcurrido en el bloque de día determinado, más su periodo de gracia (Gabela).
+- **Control Detallado del Vehículo**: Permite campos *personalizados* (ej. requerir `Color` o `Marca` al guardar un registro), sugerencias por autocompletado en la base local, visualizando recibos en miniaturas en `Admin History`.
+- **Diseño Ultra-Responsivo**: Componentes `Tailwind` altamente acoplados para funcionar en Móviles (uso de operarios en campo) y en PCs (Dueño o Administrador en oficina).
 
-## Solución de Problemas Comunes
+## Solución de Problemas y Requisitos Previos
 
-### 1. Problema: "Supabase pide verificar correo pero el correo no existe"
-Por defecto, Supabase requiere que los usuarios confirmen su correo electrónico. Si estás usando correos ficticios para pruebas, debes desactivar esta opción:
-1. Ve a tu panel de Supabase (https://supabase.com/dashboard).
-2. Selecciona tu proyecto.
-3. En el menú lateral izquierdo, ve a **Authentication** -> **Providers**.
-4. Haz clic en **Email**.
-5. Apaga el interruptor que dice **"Confirm email"**.
-6. Guarda los cambios. Ahora podrás iniciar sesión inmediatamente después de crear un usuario.
-
-### 2. Actualización de la Base de Datos (¡IMPORTANTE!)
-Para que las nuevas funcionalidades (Roles personalizados, Parqueaderos privados, Tarifas) funcionen correctamente, **debes ejecutar el siguiente código SQL** en tu base de datos de Supabase:
-
-1. Ve a tu panel de Supabase.
-2. En el menú lateral izquierdo, selecciona **SQL Editor**.
-3. Haz clic en "New query".
-4. Pega y ejecuta el siguiente código:
+### Actualización de la Base de Datos
+Para que las nuevas funcionalidades operen con los esquemas actuales, copia esto en tu **SQL Editor** de tu cuenta de Supabase:
 
 ```sql
--- 1. Crear tabla de configuraciones de aplicación (si no existe)
+-- COMPLETE SYSTEM SCHEMA RE-FACTORY
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. App Settings (Global Platform Options)
 CREATE TABLE IF NOT EXISTS app_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   app_name TEXT DEFAULT 'Sistema de Parqueaderos',
@@ -40,93 +35,86 @@ CREATE TABLE IF NOT EXISTS app_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insertar configuraciones por defecto de forma segura
-INSERT INTO app_settings (app_name, logo_url)
-SELECT 'Sistema de Parqueaderos', ''
-WHERE NOT EXISTS (SELECT 1 FROM app_settings);
-
--- 2. Variables para parking_lots y sesiones
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS receipt_sequence INTEGER DEFAULT 0;
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS allow_employee_view_revenue BOOLEAN DEFAULT false;
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS nit TEXT;
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS address TEXT;
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAMP WITH TIME ZONE;
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT false;
-
-ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS receipt_number TEXT;
-ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS total_charged NUMERIC DEFAULT 0;
-ALTER TABLE parking_sessions ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 0;
-ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS custom_fields_data JSONB DEFAULT '{}'::jsonb;
-
--- 3. Cerrar Caja
-CREATE TABLE IF NOT EXISTS cash_closures (
+-- 2. Subscription Plans
+CREATE TABLE IF NOT EXISTS subscription_plans (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  parking_lot_id UUID REFERENCES parking_lots(id),
-  closed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  amount NUMERIC DEFAULT 0,
-  closed_by UUID REFERENCES profiles(id)
-);
-
--- 4. Crear tabla de roles personalizados
-CREATE TABLE IF NOT EXISTS custom_roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  permissions JSONB DEFAULT '[]'::jsonb,
+  price NUMERIC DEFAULT 0,
+  max_branches INTEGER DEFAULT 1,
+  allow_custom_roles BOOLEAN DEFAULT true,
+  allow_monthly_subscribers BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Añadir columna de rol personalizado a perfiles
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_role_id UUID REFERENCES custom_roles(id) ON DELETE SET NULL;
+-- Insert Default Tiers if empty
+INSERT INTO subscription_plans (name, price, max_branches, allow_custom_roles, allow_monthly_subscribers)
+SELECT 'Básico', 50000, 1, false, false
+WHERE NOT EXISTS (SELECT 1 FROM subscription_plans WHERE name = 'Básico');
 
--- 5. Crear tabla de parqueaderos privados
-CREATE TABLE IF NOT EXISTS private_parking_spaces (
+INSERT INTO subscription_plans (name, price, max_branches, allow_custom_roles, allow_monthly_subscribers)
+SELECT 'Premium', 120000, 1, true, true
+WHERE NOT EXISTS (SELECT 1 FROM subscription_plans WHERE name = 'Premium');
+
+INSERT INTO subscription_plans (name, price, max_branches, allow_custom_roles, allow_monthly_subscribers)
+SELECT 'Multi-Sede (Avanzado)', 250000, 5, true, true
+WHERE NOT EXISTS (SELECT 1 FROM subscription_plans WHERE name = 'Multi-Sede (Avanzado)');
+
+-- 3. Parking Lots (Branches)
+CREATE TABLE IF NOT EXISTS parking_lots (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  plan_id UUID REFERENCES subscription_plans(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  nit TEXT NOT NULL,
+  address TEXT NOT NULL,
+  city TEXT,
+  phone_contact TEXT,
+  capacity INTEGER DEFAULT 100,
+  allowed_vehicles JSONB DEFAULT '["motos", "carros", "bicicletas"]',
+  show_revenue BOOLEAN DEFAULT false,
+  custom_fields JSONB DEFAULT '[]',
+  lost_ticket_fee NUMERIC DEFAULT 15000,
+  is_suspended BOOLEAN DEFAULT false,
+  subscription_end_date TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Note: Ensure ALL existing parking lots have a baseline plan assigned
+UPDATE parking_lots SET plan_id = (SELECT id FROM subscription_plans WHERE name = 'Básico' LIMIT 1) WHERE plan_id IS NULL;
+
+-- 4. User Profiles Table
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('superadmin', 'admin', 'employee')),
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
-  block TEXT,
-  house_or_apartment TEXT,
-  owner_name TEXT,
-  space_number TEXT NOT NULL,
+  custom_role_id UUID,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 6. Crear Sistema de Suscripciones (Opcional si usas invites)
-CREATE TABLE IF NOT EXISTS invite_codes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  code TEXT UNIQUE NOT NULL,
-  role TEXT NOT NULL,
-  parking_lot_id UUID REFERENCES parking_lots(id),
-  used_at TIMESTAMP WITH TIME ZONE,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 7. Deshabilitar RLS temporalmente en las nuevas tablas
-ALTER TABLE custom_roles DISABLE ROW LEVEL SECURITY;
-ALTER TABLE private_parking_spaces DISABLE ROW LEVEL SECURITY;
-ALTER TABLE cash_closures DISABLE ROW LEVEL SECURITY;
-ALTER TABLE invite_codes DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_settings DISABLE ROW LEVEL SECURITY;
+-- ... Continuación del script (Véa `/supabase-schema.sql` en el panel de su proyecto)
+-- AÑADE LAS SIGUIENTES TRES NUEVAS COLUMNAS SI EL COMANDO DE PREVIAMENTE DIO ERROR:
+ALTER TABLE monthly_subscribers ADD COLUMN IF NOT EXISTS owner_document TEXT;
+ALTER TABLE monthly_subscribers ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE monthly_subscribers ADD COLUMN IF NOT EXISTS vehicle_type TEXT DEFAULT 'carros';
+ALTER TABLE monthly_subscribers ADD COLUMN IF NOT EXISTS amount_paid NUMERIC DEFAULT 0;
 ```
 
-## Estructura de Roles
+## Creación del Super Administrador (Dueño) Inicial
 
-1. **Dueño (Super Admin)**: Se crea desde el panel de Supabase o mediante la ruta `/setup-owner`.
-2. **Administrador**: Es creado por el Dueño desde su panel. Cada administrador está asignado a un parqueadero específico.
-3. **Empleado**: Es creado por el Administrador desde su panel. Solo puede operar el parqueadero al que fue asignado. Puede tener un rol estándar o un **Rol Personalizado** con permisos específicos.
+Como las identidades se administran dinámicamente según validación, el dueño TIENE que ser insertado `auth.users` primero si se clona nuevamente desde cero:
+Añade manualmente esto en Supabase `SQL Editor`:
+
+```sql
+INSERT INTO auth.users (id, instance_id, email, encrypted_password, role, aud, email_confirmed_at) 
+VALUES (uuid_generate_v4(), '00000000-0000-0000-0000-000000000000', 'superadmin@parkingapp.com', crypt('TuContraseñaSegura123', gen_salt('bf')), 'authenticated', 'authenticated', NOW());
+-- Cambie la contraseña por la de su elección
+
+-- LUEGO INSERTA SU PERFIL CON ESE MISMO ID:
+INSERT INTO profiles (id, email, role)
+SELECT id, email, 'superadmin' 
+FROM auth.users 
+WHERE email = 'superadmin@parkingapp.com';
+```
 
 ---
-
-## Mensaje de Commit para GitHub
-
-Copia y pega el siguiente mensaje al hacer tu commit:
-
-```text
-feat: Roles personalizados, Parqueaderos privados, y búsqueda/edición avanzada
-
-- feat(admin): Implementación de creación y asignación de roles personalizados con selección desde el formulario de empleados. Además incluye opciones de búsqueda y edición.
-- feat(admin): Añadido listado de parqueaderos privados permitiendo visualizar, crear, editar y eliminar con datos sobre bloque, casa/apartamento, nombre y número.
-- feat(roles): Inclusión en la base de datos de los roles en los "profiles", control de errores para base desactualizada con script fácil de copiar.
-- fix(ui): Integración del copiado de scripts SQL y alertas amigables al detectar errores de las tablas `custom_roles` y `private_parking_spaces`.
-- refactor(ui): Reemplazados spinners de carga de estilos fijos por un componente Spinner y los mensajes de éxito uniformes con el componente SuccessMessage.
-```
+*Gracias por usar **ParkManager**! Construido para ser seguro, rápido y adaptable a todo caso de negocio.*

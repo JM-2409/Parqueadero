@@ -12,6 +12,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -45,6 +46,10 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       // Search by plate
       query = query.ilike('vehicles.plate', `%${searchTerm}%`);
     }
+    if (employeeSearchTerm) {
+      // Search by employee name (entry or exit)
+      query = query.or(`entry_employee_name.ilike.%${employeeSearchTerm}%,exit_employee_name.ilike.%${employeeSearchTerm}%`);
+    }
     if (filterType !== "all") {
       query = query.eq("vehicles.type", filterType);
     }
@@ -76,7 +81,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     }
     
     setLoading(false);
-  }, [parkingLotId, page, searchTerm, filterType, filterStatus, dateFrom, dateTo]);
+  }, [parkingLotId, page, searchTerm, employeeSearchTerm, filterType, filterStatus, dateFrom, dateTo]);
 
   useEffect(() => {
     // Debounce search
@@ -89,7 +94,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   // Reset page when search changes
   useEffect(() => {
     setPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, employeeSearchTerm]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -178,7 +183,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       }
 
       // Generate CSV content
-      const headers = ["Placa", "Tipo", "Marca", "Color", "Propietario", "Ingreso", "Salida", "Atendido Por (Ingreso)", "Atendido Por (Salida)", "Estado", "Valor Cobrado", "Extras"];
+      const headers = ["Ticket", "Placa", "Tipo", "Marca", "Color", "Propietario", "Ingreso", "Salida", "Atendido Por (Ingreso)", "Atendido Por (Salida)", "Estado", "Valor Cobrado", "Extras"];
       
       const csvRows = [headers.join(",")];
       
@@ -193,6 +198,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
         }
 
         const csvRow = [
+          `"${row.receipt_number || '-'}"`,
           `"${row.vehicles.plate}"`,
           `"${row.vehicles.type}"`,
           `"${row.vehicles.brand || ''}"`,
@@ -252,7 +258,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
@@ -260,6 +266,16 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
             placeholder="Placa..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
+          />
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input
+            type="text"
+            placeholder="Operario..."
+            value={employeeSearchTerm}
+            onChange={(e) => setEmployeeSearchTerm(e.target.value)}
             className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
           />
         </div>
@@ -307,7 +323,9 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
-                <th className="p-4 font-medium rounded-tl-xl">Placa</th>
+                <th className="p-4 font-medium rounded-tl-xl">Ticket</th>
+                <th className="p-4 font-medium">Placa</th>
+                <th className="p-4 font-medium">Propietario</th>
                 <th className="p-4 font-medium">Tipo</th>
                 <th className="p-4 font-medium">Ingreso</th>
                 <th className="p-4 font-medium">Salida</th>
@@ -325,7 +343,9 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                 
                 return (
                   <tr key={session.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-4 text-slate-600 font-mono text-sm">{session.receipt_number || '-'}</td>
                     <td className="p-4 font-bold text-slate-900">{session.vehicles.plate}</td>
+                    <td className="p-4 text-slate-600">{session.vehicles.owner_name || 'N/A'}</td>
                     <td className="p-4 capitalize text-slate-600">{session.vehicles.type}</td>
                     <td className="p-4 text-slate-600">
                       {new Date(session.entry_time).toLocaleString()}

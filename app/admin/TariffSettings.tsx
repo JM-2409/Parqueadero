@@ -156,7 +156,7 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
           >
             <option value="segundo">Por Segundo</option>
             <option value="minuto">Por Minuto</option>
-            <option value="fraccion">Por Fracción (15 min)</option>
+            <option value="fraccion">Por Fracción</option>
             <option value="hora">Por Hora</option>
             <option value="12_horas">Cada 12 Horas</option>
             <option value="24_horas">Cada 24 Horas</option>
@@ -165,6 +165,20 @@ function TariffForm({ vehicleType, initialData, initialMode, onSave, saving }: a
           </select>
         </div>
       </div>
+
+      {data.charge_type === "fraccion" && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de la Fracción</label>
+          <input
+            type="number"
+            value={data.fraction_minutes !== undefined ? data.fraction_minutes : 15}
+            onChange={(e) => setData({ ...data, fraction_minutes: Number(e.target.value) })}
+            className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+            min="1"
+          />
+          <p className="text-xs text-slate-500 mt-1">Ej. 15 minutos, 30 minutos</p>
+        </div>
+      )}
 
       {data.charge_type === "turnos" && (
         <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl">

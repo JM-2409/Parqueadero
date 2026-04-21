@@ -28,6 +28,7 @@ export default function EmployeePage() {
   const [parkingLot, setParkingLot] = useState<any>(null);
   const [appSettings, setAppSettings] = useState<any>(null);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
+  const [subscribers, setSubscribers] = useState<any[]>([]);
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -114,6 +115,18 @@ export default function EmployeePage() {
     setActiveSessions(data || []);
   }, []);
 
+  const fetchSubscribers = useCallback(async (parkingLotId: string) => {
+    const { data } = await supabase
+      .from("monthly_subscribers")
+      .select("*")
+      .eq("parking_lot_id", parkingLotId)
+      .eq("is_active", true)
+      .gte("end_date", new Date().toISOString().split('T')[0])
+      .lte("start_date", new Date().toISOString().split('T')[0]);
+    
+    if (data) setSubscribers(data);
+  }, []);
+
   const checkUser = useCallback(async () => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -166,23 +179,24 @@ export default function EmployeePage() {
       setProfile(profileData);
       fetchParkingLot(profileData.parking_lot_id);
       fetchActiveSessions(profileData.parking_lot_id);
+      fetchSubscribers(profileData.parking_lot_id);
     } catch (err) {
       console.error("Error checking user:", err);
       router.push("/login");
     }
-  }, [router, fetchParkingLot, fetchActiveSessions]);
+  }, [router, fetchParkingLot, fetchActiveSessions, fetchSubscribers]);
 
   useEffect(() => {
     // Check for saved shift
     const savedShift = sessionStorage.getItem("shiftName");
-    if (savedShift) {
+    if (savedShift && !isShiftSet) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShiftName(savedShift);
       setIsShiftSet(true);
     }
     
     checkUser();
-  }, [checkUser]);
+  }, [checkUser, isShiftSet]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedPlate(plate), 300);
@@ -243,6 +257,20 @@ export default function EmployeePage() {
     // Check capacity
     if (activeSessions.length >= parkingLot.capacity) {
       setError("El parqueadero está lleno");
+      setIsSubmittingEntry(false);
+      return;
+    }
+
+    // Check blacklist
+    const { data: blacklistedItem } = await supabase
+      .from("blacklisted_vehicles")
+      .select("reason")
+      .eq("parking_lot_id", parkingLot.id)
+      .eq("plate", plate.toUpperCase())
+      .maybeSingle();
+
+    if (blacklistedItem) {
+      setError(`Entrada Denegada: Vehículo vetado. Motivo: ${blacklistedItem.reason}`);
       setIsSubmittingEntry(false);
       return;
     }
@@ -352,9 +380,22 @@ export default function EmployeePage() {
     const exitTime = new Date();
     const tariff = tariffs.find(t => t.vehicle_type === sessionToExit.vehicles.type);
     
+    // Check if the user is an active monthly subscriber
+    const { data: subscriber } = await supabase
+      .from("monthly_subscribers")
+      .select("id")
+      .eq("parking_lot_id", parkingLot.id)
+      .eq("plate", sessionToExit.vehicles.plate)
+      .eq("is_active", true)
+      .gte("end_date", new Date().toISOString().split('T')[0])
+      .lte("start_date", new Date().toISOString().split('T')[0])
+      .maybeSingle();
+
     // Auto-calculate fee if not manually entered
     let finalFee = Number(fee);
-    if (exitPlate !== sessionId || !fee || isNaN(finalFee)) {
+    if (subscriber) {
+      finalFee = 0;
+    } else if (exitPlate !== sessionId || !fee || isNaN(finalFee)) {
       finalFee = calculateFee(entryTime, exitTime, tariff);
     }
 
@@ -658,7 +699,12 @@ export default function EmployeePage() {
                               {session.vehicles.plate}
                             </div>
                             <div>
-                              <p className="font-semibold text-slate-900 capitalize">{session.vehicles.type}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-semibold text-slate-900 capitalize">{session.vehicles.type}</p>
+                                {subscribers.some(sub => sub.plate === session.vehicles.plate) && (
+                                  <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Abonado</span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
                                 <Clock size={14} />
                                 <span>{new Date(session.entry_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -674,9 +720,16 @@ export default function EmployeePage() {
                               <span className="absolute left-3 top-2.5 text-slate-500 font-medium">$</span>
                               <input
                                 type="number"
-                                value={exitPlate === session.id ? fee : calculateFee(new Date(session.entry_time), new Date(), tariffs.find(t => t.vehicle_type === session.vehicles.type)).toString()}
+                                value={
+                                  exitPlate === session.id 
+                                    ? fee 
+                                    : (subscribers.some(sub => sub.plate === session.vehicles.plate)
+                                        ? "0"
+                                        : calculateFee(new Date(session.entry_time), new Date(), tariffs.find(t => t.vehicle_type === session.vehicles.type)).toString()
+                                      )
+                                }
                                 placeholder="Cobro"
-                                className="w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium bg-white"
+                                className={`w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium bg-white ${subscribers.some(sub => sub.plate === session.vehicles.plate) ? 'text-emerald-600 bg-emerald-50' : ''}`}
                                 onChange={(e) => {
                                   setExitPlate(session.id);
                                   setFee(e.target.value);

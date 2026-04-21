@@ -31,7 +31,7 @@ function LoginContent() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setError("La plataforma ha sido suspendida para este parqueadero.");
     } else if (errParam === "expired") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setError("Tu suscripción ha expirado. Por favor, contacta a ventas o actualiza tu suscripción.");
     }
   }, [searchParams]);
