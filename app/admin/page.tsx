@@ -39,6 +39,18 @@ export default function AdminPage() {
   const [allowedVehicles, setAllowedVehicles] = useState<string[]>([]);
   const [customFields, setCustomFields] = useState<{name: string, required: boolean}[]>([]);
   const [privateCustomFields, setPrivateCustomFields] = useState<{name: string, required: boolean, visible: boolean}[]>([]);
+  const [defaultFieldsConfig, setDefaultFieldsConfig] = useState<any>({
+    visitors: {
+      brand: { visible: true, required: false, label: "Marca" },
+      color: { visible: true, required: false, label: "Color" },
+      owner_name: { visible: true, required: false, label: "Propietario" }
+    },
+    private: {
+      owner_name: { visible: true, required: false, label: "Propietario" },
+      block: { visible: true, required: false, label: "Bloque/Torre" },
+      house_or_apartment: { visible: true, required: false, label: "Apto/Casa" }
+    }
+  });
 
   // Employee creation states
   const [newEmployee, setNewEmployee] = useState({ username: "", password: "", customRoleId: "" });
@@ -60,6 +72,9 @@ export default function AdminPage() {
       setAllowedVehicles(data.allowed_vehicles || []);
       setCustomFields(data.custom_fields || []);
       setPrivateCustomFields(data.private_custom_fields || []);
+      if (data.default_fields_config) {
+        setDefaultFieldsConfig(data.default_fields_config);
+      }
     }
   }, []);
 
@@ -256,6 +271,7 @@ export default function AdminPage() {
         allowed_vehicles: allowedVehicles,
         custom_fields: customFields,
         private_custom_fields: privateCustomFields,
+        default_fields_config: defaultFieldsConfig,
         nit: parkingLot?.nit,
         address: parkingLot?.address
       })
@@ -345,6 +361,18 @@ export default function AdminPage() {
 
   const removePrivateCustomField = (index: number) => {
     setPrivateCustomFields(privateCustomFields.filter((_, i) => i !== index));
+  };
+
+  const updateDefaultField = (category: 'visitors' | 'private', fieldKey: string, key: 'label' | 'required' | 'visible', value: any) => {
+    const updated = { ...defaultFieldsConfig };
+    if (!updated[category]) updated[category] = {};
+    if (!updated[category][fieldKey]) updated[category][fieldKey] = { visible: true, required: false, label: "" };
+    
+    updated[category][fieldKey] = {
+      ...updated[category][fieldKey],
+      [key]: value
+    };
+    setDefaultFieldsConfig(updated);
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">Cargando panel...</div>;
@@ -732,7 +760,7 @@ export default function AdminPage() {
                   <div className="border-t border-slate-200 pt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Campos Personalizados</h3>
+                        <h3 className="text-lg font-semibold text-slate-900">Campos Personalizados (Visitantes)</h3>
                         <p className="text-sm text-slate-500">Datos extra a pedir al ingresar un vehículo (Ej. Casco, Teléfono)</p>
                       </div>
                       <button
@@ -745,6 +773,45 @@ export default function AdminPage() {
                       </button>
                     </div>
 
+                    <div className="space-y-3 mt-4 mb-6">
+                       <h4 className="text-sm font-semibold text-slate-700">Campos del Sistema</h4>
+                       {/* Visitors System fields */}
+                       {defaultFieldsConfig?.visitors && Object.entries(defaultFieldsConfig.visitors).map(([key, config]: [string, any]) => (
+                          <div key={`sys-vis-${key}`} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl opacity-90 shadow-sm relative">
+                             <div className="absolute top-0 left-0 bottom-0 w-1 bg-indigo-300 rounded-l-xl"></div>
+                              <input
+                                  type="text"
+                                  value={config.label || ""}
+                                  onChange={(e) => updateDefaultField('visitors', key, 'label', e.target.value)}
+                                  className="flex-1 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-50"
+                                  placeholder={key}
+                                  required
+                                />
+                              <div className="flex items-center justify-between w-full sm:w-auto gap-4 pl-3">
+                                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                                  <input
+                                    type="checkbox"
+                                    checked={config.required || false}
+                                    onChange={(e) => updateDefaultField('visitors', key, 'required', e.target.checked)}
+                                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                                  />
+                                  Obligatorio
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                                  <input
+                                    type="checkbox"
+                                    checked={config.visible !== false}
+                                    onChange={(e) => updateDefaultField('visitors', key, 'visible', e.target.checked)}
+                                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                                  />
+                                  Visible
+                                </label>
+                              </div>
+                          </div>
+                       ))}
+                    </div>
+
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Nuevos Campos</h4>
                     {customFields.length === 0 ? (
                       <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-sm">
                         No hay campos personalizados configurados.
@@ -786,7 +853,7 @@ export default function AdminPage() {
                     )}
                   </div>
 
-                  <div className="border-t border-slate-200 pt-8">
+                  <div className="border-t border-slate-200 pt-8 mt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900">Campos Parqueadero Privado</h3>
@@ -802,6 +869,45 @@ export default function AdminPage() {
                       </button>
                     </div>
 
+                    <div className="space-y-3 mt-4 mb-6">
+                       <h4 className="text-sm font-semibold text-slate-700">Campos del Sistema</h4>
+                       {/* Private System fields */}
+                       {defaultFieldsConfig?.private && Object.entries(defaultFieldsConfig.private).map(([key, config]: [string, any]) => (
+                          <div key={`sys-priv-${key}`} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl opacity-90 shadow-sm relative">
+                             <div className="absolute top-0 left-0 bottom-0 w-1 bg-emerald-300 rounded-l-xl"></div>
+                              <input
+                                  type="text"
+                                  value={config.label || ""}
+                                  onChange={(e) => updateDefaultField('private', key, 'label', e.target.value)}
+                                  className="flex-1 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-slate-50"
+                                  placeholder={key}
+                                  required
+                                />
+                              <div className="flex items-center justify-between w-full sm:w-auto gap-4 pl-3">
+                                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                                  <input
+                                    type="checkbox"
+                                    checked={config.required || false}
+                                    onChange={(e) => updateDefaultField('private', key, 'required', e.target.checked)}
+                                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                                  />
+                                  Obligatorio
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                                  <input
+                                    type="checkbox"
+                                    checked={config.visible !== false}
+                                    onChange={(e) => updateDefaultField('private', key, 'visible', e.target.checked)}
+                                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                                  />
+                                  Visible (Vigilante)
+                                </label>
+                              </div>
+                          </div>
+                       ))}
+                    </div>
+
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Nuevos Campos</h4>
                     {privateCustomFields.length === 0 ? (
                       <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-sm">
                         No hay campos personalizados configurados para parqueaderos privados.

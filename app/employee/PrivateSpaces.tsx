@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/Spinner";
 export default function PrivateSpaces({ parkingLotId }: { parkingLotId: string }) {
   const [spaces, setSpaces] = useState<any[]>([]);
   const [configFields, setConfigFields] = useState<any[]>([]);
+  const [defaultConfig, setDefaultConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,12 +17,17 @@ export default function PrivateSpaces({ parkingLotId }: { parkingLotId: string }
     try {
       const { data: lotData } = await supabase
         .from("parking_lots")
-        .select("private_custom_fields")
+        .select("private_custom_fields, default_fields_config")
         .eq("id", parkingLotId)
         .single();
       
-      if (lotData && lotData.private_custom_fields) {
-        setConfigFields(lotData.private_custom_fields.filter((f: any) => f.visible));
+      if (lotData) {
+        if (lotData.private_custom_fields) {
+          setConfigFields(lotData.private_custom_fields.filter((f: any) => f.visible));
+        }
+        if (lotData.default_fields_config?.private) {
+          setDefaultConfig(lotData.default_fields_config.private);
+        }
       }
 
       const { data, error } = await supabase
@@ -94,9 +100,15 @@ export default function PrivateSpaces({ parkingLotId }: { parkingLotId: string }
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-4 py-3">Parqueadero</th>
-                  <th className="px-4 py-3">Propietario</th>
-                  <th className="px-4 py-3">Bloque/Torre</th>
-                  <th className="px-4 py-3">Apto/Casa</th>
+                  {defaultConfig?.owner_name?.visible !== false && (
+                    <th className="px-4 py-3">{defaultConfig?.owner_name?.label || 'Propietario'}</th>
+                  )}
+                  {defaultConfig?.block?.visible !== false && (
+                    <th className="px-4 py-3">{defaultConfig?.block?.label || 'Bloque/Torre'}</th>
+                  )}
+                  {defaultConfig?.house_or_apartment?.visible !== false && (
+                    <th className="px-4 py-3">{defaultConfig?.house_or_apartment?.label || 'Apto/Casa'}</th>
+                  )}
                   {configFields.map(field => (
                     <th key={field.name} className="px-4 py-3">{field.name}</th>
                   ))}
@@ -106,9 +118,15 @@ export default function PrivateSpaces({ parkingLotId }: { parkingLotId: string }
                 {filteredSpaces.map((space) => (
                   <tr key={space.id} className="border-b border-slate-100 hover:bg-slate-50/50">
                     <td className="px-4 py-3 font-medium text-slate-900">{space.space_number}</td>
-                    <td className="px-4 py-3 text-slate-600">{space.owner_name || '-'}</td>
-                    <td className="px-4 py-3 text-slate-600">{space.block || '-'}</td>
-                    <td className="px-4 py-3 text-slate-600">{space.house_or_apartment || '-'}</td>
+                    {defaultConfig?.owner_name?.visible !== false && (
+                      <td className="px-4 py-3 text-slate-600">{space.owner_name || '-'}</td>
+                    )}
+                    {defaultConfig?.block?.visible !== false && (
+                      <td className="px-4 py-3 text-slate-600">{space.block || '-'}</td>
+                    )}
+                    {defaultConfig?.house_or_apartment?.visible !== false && (
+                      <td className="px-4 py-3 text-slate-600">{space.house_or_apartment || '-'}</td>
+                    )}
                     {configFields.map(field => (
                       <td key={field.name} className="px-4 py-3 text-slate-600">
                         {space.custom_fields_data?.[field.name] || '-'}

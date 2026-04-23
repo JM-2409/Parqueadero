@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { DollarSign, Save, CheckCircle2 } from "lucide-react";
+import { DollarSign, Save, CheckCircle2, History, X } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
@@ -11,6 +11,27 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [tariffHistory, setTariffHistory] = useState<any[]>([]);
+
+  const fetchHistory = useCallback(async () => {
+    const { data: histData } = await supabase
+      .from("tariff_history")
+      .select("*")
+      .eq("parking_lot_id", parkingLotId)
+      .order("created_at", { ascending: false });
+    
+    if (histData) {
+      setTariffHistory(histData);
+    }
+  }, [parkingLotId]);
+
+  useEffect(() => {
+    if (showHistory) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchHistory();
+    }
+  }, [showHistory, fetchHistory]);
 
   const fetchTariffs = useCallback(async () => {
     setLoading(true);
@@ -56,6 +77,15 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
         .insert([{ ...tariffData, parking_lot_id: parkingLotId, vehicle_type: vehicleType }]);
     }
 
+    // Insert history record
+    await supabase
+      .from("tariff_history")
+      .insert([{
+        parking_lot_id: parkingLotId,
+        vehicle_type: vehicleType,
+        ...tariffData
+      }]);
+
     await fetchTariffs();
     setSaving(false);
     setSuccess(`Tarifa de ${vehicleType} guardada exitosamente`);
@@ -65,15 +95,24 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
   if (loading) return <div className="py-8 text-center text-slate-500">Cargando tarifas...</div>;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
-          <DollarSign size={24} />
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+            <DollarSign size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Configuración de Tarifas</h2>
+            <p className="text-sm text-slate-500">Define cómo se cobra por cada tipo de vehículo</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">Configuración de Tarifas</h2>
-          <p className="text-sm text-slate-500">Define cómo se cobra por cada tipo de vehículo</p>
-        </div>
+        <button
+          onClick={() => setShowHistory(true)}
+          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors flex items-center gap-2"
+        >
+          <History size={18} />
+          <span className="hidden sm:inline">Historial de Cambios</span>
+        </button>
       </div>
 
       {success && <SuccessMessage message={success} />}
@@ -116,6 +155,69 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
               />
             );
           })}
+        </div>
+      )}
+
+      {/* History Modal */}
+      {showHistory && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-4xl max-h-[85vh] rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                  <History size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">Historial de Tarifas</h3>
+              </div>
+              <button 
+                onClick={() => setShowHistory(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-4 sm:p-6 overflow-y-auto bg-slate-50 flex-1">
+              {tariffHistory.length === 0 ? (
+                <p className="text-center text-slate-500 py-10">No hay historial de cambios en las tarifas.</p>
+              ) : (
+                <div className="overflow-x-auto bg-white border border-slate-200 rounded-xl">
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3">Fecha</th>
+                        <th className="px-4 py-3 uppercase">Vehículo</th>
+                        <th className="px-4 py-3">Tipo Cobro</th>
+                        <th className="px-4 py-3">Tarifa Día</th>
+                        <th className="px-4 py-3">Inicio Día</th>
+                        <th className="px-4 py-3">Tarifa Noche</th>
+                        <th className="px-4 py-3">Inicio Noche</th>
+                        <th className="px-4 py-3">Fracción (Min)</th>
+                        <th className="px-4 py-3">Horas Bloque</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {tariffHistory.map(hist => (
+                        <tr key={hist.id} className="hover:bg-slate-50/50">
+                          <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                            {new Date(hist.created_at).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 uppercase font-medium">{hist.vehicle_type}</td>
+                          <td className="px-4 py-3 capitalize">{hist.charge_type}</td>
+                          <td className="px-4 py-3 text-emerald-600 font-medium">${hist.day_rate}</td>
+                          <td className="px-4 py-3 text-slate-600">{hist.day_start_time}</td>
+                          <td className="px-4 py-3 text-indigo-600 font-medium">${hist.night_rate}</td>
+                          <td className="px-4 py-3 text-slate-600">{hist.night_start_time}</td>
+                          <td className="px-4 py-3 text-slate-600">{hist.free_minutes} min</td>
+                          <td className="px-4 py-3 text-slate-600">{hist.block_hours} hrs</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

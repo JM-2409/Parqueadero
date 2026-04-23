@@ -286,6 +286,26 @@ export default function EmployeePage() {
         }
       }
     }
+    
+    // Validate default configured fields
+    const defConfig = parkingLot?.default_fields_config?.visitors;
+    if (defConfig) {
+       if (defConfig.brand?.required && !brand.trim()) {
+           setError(`El campo ${defConfig.brand.label || 'Marca'} es obligatorio`);
+           setIsSubmittingEntry(false);
+           return;
+       }
+       if (defConfig.color?.required && !color.trim()) {
+           setError(`El campo ${defConfig.color.label || 'Color'} es obligatorio`);
+           setIsSubmittingEntry(false);
+           return;
+       }
+       if (defConfig.owner_name?.required && !ownerName.trim()) {
+           setError(`El campo ${defConfig.owner_name.label || 'Propietario'} es obligatorio`);
+           setIsSubmittingEntry(false);
+           return;
+       }
+    }
 
     let vehicleId = null;
 
@@ -626,29 +646,38 @@ export default function EmployeePage() {
                   ))}
 
                   <div className="pt-2 border-t border-slate-100 mt-4">
-                    <p className="text-xs text-slate-500 mb-3 font-semibold uppercase tracking-wider">Datos Opcionales</p>
+                    <p className="text-xs text-slate-500 mb-3 font-semibold uppercase tracking-wider">Datos del Sistema</p>
                     <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={brand}
-                        onChange={(e) => setBrand(e.target.value)}
-                        className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                        placeholder="Marca (Ej. Toyota)"
-                      />
-                      <input
-                        type="text"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                        className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                        placeholder="Color (Ej. Rojo)"
-                      />
-                      <input
-                        type="text"
-                        value={ownerName}
-                        onChange={(e) => setOwnerName(e.target.value)}
-                        className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                        placeholder="Propietario"
-                      />
+                      {parkingLot?.default_fields_config?.visitors?.brand?.visible !== false && (
+                        <input
+                          type="text"
+                          value={brand}
+                          onChange={(e) => setBrand(e.target.value)}
+                          className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                          placeholder={parkingLot?.default_fields_config?.visitors?.brand?.label || "Marca (Ej. Toyota)"}
+                          required={parkingLot?.default_fields_config?.visitors?.brand?.required}
+                        />
+                      )}
+                      {parkingLot?.default_fields_config?.visitors?.color?.visible !== false && (
+                        <input
+                          type="text"
+                          value={color}
+                          onChange={(e) => setColor(e.target.value)}
+                          className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                          placeholder={parkingLot?.default_fields_config?.visitors?.color?.label || "Color (Ej. Rojo)"}
+                          required={parkingLot?.default_fields_config?.visitors?.color?.required}
+                        />
+                      )}
+                      {parkingLot?.default_fields_config?.visitors?.owner_name?.visible !== false && (
+                        <input
+                          type="text"
+                          value={ownerName}
+                          onChange={(e) => setOwnerName(e.target.value)}
+                          className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                          placeholder={parkingLot?.default_fields_config?.visitors?.owner_name?.label || "Propietario"}
+                          required={parkingLot?.default_fields_config?.visitors?.owner_name?.required}
+                        />
+                      )}
                     </div>
                   </div>
 
