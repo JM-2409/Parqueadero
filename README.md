@@ -63,19 +63,24 @@ ALTER TABLE tariff_history ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public Access Tariff History" ON tariff_history;
 CREATE POLICY "Public Access Tariff History" ON tariff_history FOR ALL USING (true) WITH CHECK (true);
 
--- 3. Configuración centralizada de campos del sistema para el Admin
-ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS default_fields_config JSONB DEFAULT '{}';
+-- 3. Consolidación de campos nativos a variables dinámicas en JSONB
+-- Para Visitantes (Marca, Color, Propietario por defecto)
+UPDATE parking_lots
+SET custom_fields = '[{"name": "Marca", "required": false}, {"name": "Color", "required": false}, {"name": "Propietario", "required": false}]'::jsonb
+WHERE jsonb_array_length(custom_fields) = 0 OR custom_fields IS NULL;
 
-UPDATE parking_lots SET default_fields_config = '{
-  "visitors": {
-    "brand": { "visible": true, "required": false, "label": "Marca" },
-    "color": { "visible": true, "required": false, "label": "Color" },
-    "owner_name": { "visible": true, "required": false, "label": "Propietario" }
-  },
-  "private": {
-    "owner_name": { "visible": true, "required": false, "label": "Propietario/Residente" },
-    "block": { "visible": true, "required": false, "label": "Bloque/Torre" },
-    "house_or_apartment": { "visible": true, "required": false, "label": "Apto/Casa" }
-  }
-}' WHERE default_fields_config = '{}' OR default_fields_config IS NULL;
+-- Para Privados (Propietario, Bloque, Apto/Casa por defecto)
+UPDATE parking_lots
+SET private_custom_fields = '[{"name": "Propietario", "required": false, "visible": true}, {"name": "Bloque", "required": false, "visible": true}, {"name": "Apto/Casa", "required": false, "visible": true}]'::jsonb
+WHERE jsonb_array_length(private_custom_fields) = 0 OR private_custom_fields IS NULL;
+
+-- 4. Migración de datos existentes de "private_parking_spaces" al nuevo formato JSONB
+UPDATE private_parking_spaces
+SET custom_fields_data = COALESCE(custom_fields_data, '{}'::jsonb) 
+    || jsonb_build_object('Propietario', COALESCE(NULLIF(owner_name, ''), '')) 
+    || jsonb_build_object('Bloque', COALESCE(NULLIF(block, ''), '')) 
+    || jsonb_build_object('Apto/Casa', COALESCE(NULLIF(house_or_apartment, ''), ''))
+WHERE (owner_name IS NOT NULL AND owner_name != '')
+   OR (block IS NOT NULL AND block != '')
+   OR (house_or_apartment IS NOT NULL AND house_or_apartment != '');
 ```

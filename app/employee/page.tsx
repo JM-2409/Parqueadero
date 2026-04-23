@@ -43,9 +43,6 @@ export default function EmployeePage() {
   const [plate, setPlate] = useState("");
   const [debouncedPlate, setDebouncedPlate] = useState("");
   const [type, setType] = useState("carros");
-  const [brand, setBrand] = useState("");
-  const [color, setColor] = useState("");
-  const [ownerName, setOwnerName] = useState("");
   const [isNewVehicle, setIsNewVehicle] = useState(true);
   const [extraData, setExtraData] = useState<Record<string, string>>({});
 
@@ -215,9 +212,6 @@ export default function EmployeePage() {
 
         if (data) {
           setType(data.type);
-          setBrand(data.brand || "");
-          setColor(data.color || "");
-          setOwnerName(data.owner_name || "");
           if (data.custom_fields_data) setExtraData(data.custom_fields_data);
           setIsNewVehicle(false);
         } else {
@@ -286,26 +280,6 @@ export default function EmployeePage() {
         }
       }
     }
-    
-    // Validate default configured fields
-    const defConfig = parkingLot?.default_fields_config?.visitors;
-    if (defConfig) {
-       if (defConfig.brand?.required && !brand.trim()) {
-           setError(`El campo ${defConfig.brand.label || 'Marca'} es obligatorio`);
-           setIsSubmittingEntry(false);
-           return;
-       }
-       if (defConfig.color?.required && !color.trim()) {
-           setError(`El campo ${defConfig.color.label || 'Color'} es obligatorio`);
-           setIsSubmittingEntry(false);
-           return;
-       }
-       if (defConfig.owner_name?.required && !ownerName.trim()) {
-           setError(`El campo ${defConfig.owner_name.label || 'Propietario'} es obligatorio`);
-           setIsSubmittingEntry(false);
-           return;
-       }
-    }
 
     let vehicleId = null;
 
@@ -315,9 +289,9 @@ export default function EmployeePage() {
         .insert([{
             plate: sanitizeInput(plate.toUpperCase()),
             type,
-            brand: sanitizeInput(brand),
-            color: sanitizeInput(color),
-            owner_name: sanitizeInput(ownerName),
+            brand: sanitizeInput(extraData['Marca'] || extraData['brand'] || ""),
+            color: sanitizeInput(extraData['Color'] || extraData['color'] || ""),
+            owner_name: sanitizeInput(extraData['Propietario'] || extraData['owner_name'] || ""),
             custom_fields_data: extraData
         }])
         .select()
@@ -369,9 +343,6 @@ export default function EmployeePage() {
         setSuccess("Ingreso registrado exitosamente");
         setPlate("");
         setDebouncedPlate("");
-        setBrand("");
-        setColor("");
-        setOwnerName("");
         setExtraData({});
         setIsNewVehicle(true);
         await fetchActiveSessions(parkingLot.id);
@@ -644,42 +615,6 @@ export default function EmployeePage() {
                       />
                     </div>
                   ))}
-
-                  <div className="pt-2 border-t border-slate-100 mt-4">
-                    <p className="text-xs text-slate-500 mb-3 font-semibold uppercase tracking-wider">Datos del Sistema</p>
-                    <div className="space-y-3">
-                      {parkingLot?.default_fields_config?.visitors?.brand?.visible !== false && (
-                        <input
-                          type="text"
-                          value={brand}
-                          onChange={(e) => setBrand(e.target.value)}
-                          className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                          placeholder={parkingLot?.default_fields_config?.visitors?.brand?.label || "Marca (Ej. Toyota)"}
-                          required={parkingLot?.default_fields_config?.visitors?.brand?.required}
-                        />
-                      )}
-                      {parkingLot?.default_fields_config?.visitors?.color?.visible !== false && (
-                        <input
-                          type="text"
-                          value={color}
-                          onChange={(e) => setColor(e.target.value)}
-                          className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                          placeholder={parkingLot?.default_fields_config?.visitors?.color?.label || "Color (Ej. Rojo)"}
-                          required={parkingLot?.default_fields_config?.visitors?.color?.required}
-                        />
-                      )}
-                      {parkingLot?.default_fields_config?.visitors?.owner_name?.visible !== false && (
-                        <input
-                          type="text"
-                          value={ownerName}
-                          onChange={(e) => setOwnerName(e.target.value)}
-                          className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                          placeholder={parkingLot?.default_fields_config?.visitors?.owner_name?.label || "Propietario"}
-                          required={parkingLot?.default_fields_config?.visitors?.owner_name?.required}
-                        />
-                      )}
-                    </div>
-                  </div>
 
                   <button
                     type="submit"

@@ -20,29 +20,22 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
   
   const [spaceData, setSpaceData] = useState({
-    block: "",
-    house_or_apartment: "",
-    owner_name: "",
     space_number: ""
   });
   
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, string>>({});
-  const [defaultConfig, setDefaultConfig] = useState<any>(null);
 
   const fetchSpaces = useCallback(async () => {
     try {
       const { data: lotData } = await supabase
         .from("parking_lots")
-        .select("private_custom_fields, default_fields_config")
+        .select("private_custom_fields")
         .eq("id", parkingLotId)
         .single();
       
       if (lotData) {
         if (lotData.private_custom_fields) {
           setConfigFields(lotData.private_custom_fields);
-        }
-        if (lotData.default_fields_config?.private) {
-          setDefaultConfig(lotData.default_fields_config.private);
         }
       }
 
@@ -107,9 +100,9 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
         const { error } = await supabase
           .from("private_parking_spaces")
           .update({
-            block: spaceData.block.trim(),
-            house_or_apartment: spaceData.house_or_apartment.trim(),
-            owner_name: spaceData.owner_name.trim(),
+            owner_name: customFieldsData['Propietario'] || customFieldsData['Propietario/Residente'] || "",
+            block: customFieldsData['Bloque'] || customFieldsData['Bloque/Torre'] || "",
+            house_or_apartment: customFieldsData['Apto'] || customFieldsData['Apto/Casa'] || customFieldsData['Apartamento'] || "",
             space_number: spaceData.space_number.trim(),
             custom_fields_data: customFieldsData,
           })
@@ -135,9 +128,9 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
           .from("private_parking_spaces")
           .insert([{
             parking_lot_id: parkingLotId,
-            block: spaceData.block.trim(),
-            house_or_apartment: spaceData.house_or_apartment.trim(),
-            owner_name: spaceData.owner_name.trim(),
+            owner_name: customFieldsData['Propietario'] || customFieldsData['Propietario/Residente'] || "",
+            block: customFieldsData['Bloque'] || customFieldsData['Bloque/Torre'] || "",
+            house_or_apartment: customFieldsData['Apto'] || customFieldsData['Apto/Casa'] || customFieldsData['Apartamento'] || "",
             space_number: spaceData.space_number.trim(),
             custom_fields_data: customFieldsData,
           }]);
@@ -146,7 +139,7 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
         setSuccess("Espacio creado exitosamente");
       }
       
-      setSpaceData({ block: "", house_or_apartment: "", owner_name: "", space_number: "" });
+      setSpaceData({ space_number: "" });
       setCustomFieldsData({});
       setIsCreating(false);
       setEditingSpaceId(null);
@@ -181,9 +174,6 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
   const handleEditClick = (space: any) => {
     setEditingSpaceId(space.id);
     setSpaceData({
-      block: space.block || "",
-      house_or_apartment: space.house_or_apartment || "",
-      owner_name: space.owner_name || "",
       space_number: space.space_number || ""
     });
     setCustomFieldsData(space.custom_fields_data || {});
@@ -194,7 +184,7 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
   const cancelEdit = () => {
     setIsCreating(false);
     setEditingSpaceId(null);
-    setSpaceData({ block: "", house_or_apartment: "", owner_name: "", space_number: "" });
+    setSpaceData({ space_number: "" });
     setCustomFieldsData({});
   };
 
@@ -386,51 +376,6 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
                   required
                 />
               </div>
-              {defaultConfig?.owner_name?.visible !== false && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {defaultConfig?.owner_name?.label || 'Nombre del Propietario/Residente'} {defaultConfig?.owner_name?.required ? '*' : ''}
-                  </label>
-                  <input
-                    type="text"
-                    value={spaceData.owner_name}
-                    onChange={(e) => setSpaceData({...spaceData, owner_name: e.target.value})}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="ej. Juan Pérez"
-                    required={defaultConfig?.owner_name?.required}
-                  />
-                </div>
-              )}
-              {defaultConfig?.block?.visible !== false && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {defaultConfig?.block?.label || 'Bloque / Torre'} {defaultConfig?.block?.required ? '*' : ''}
-                  </label>
-                  <input
-                    type="text"
-                    value={spaceData.block}
-                    onChange={(e) => setSpaceData({...spaceData, block: e.target.value})}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="ej. Torre A"
-                    required={defaultConfig?.block?.required}
-                  />
-                </div>
-              )}
-              {defaultConfig?.house_or_apartment?.visible !== false && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {defaultConfig?.house_or_apartment?.label || 'Casa / Apartamento'} {defaultConfig?.house_or_apartment?.required ? '*' : ''}
-                  </label>
-                  <input
-                    type="text"
-                    value={spaceData.house_or_apartment}
-                    onChange={(e) => setSpaceData({...spaceData, house_or_apartment: e.target.value})}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="ej. Apto 301"
-                    required={defaultConfig?.house_or_apartment?.required}
-                  />
-                </div>
-              )}
               
               {/* Renderizar campos configurables */}
               {configFields && configFields.map((field) => (
@@ -505,15 +450,6 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
                 <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-4 py-3">Parqueadero</th>
-                    {defaultConfig?.owner_name?.visible !== false && (
-                      <th className="px-4 py-3">{defaultConfig?.owner_name?.label || 'Propietario'}</th>
-                    )}
-                    {defaultConfig?.block?.visible !== false && (
-                      <th className="px-4 py-3">{defaultConfig?.block?.label || 'Bloque/Torre'}</th>
-                    )}
-                    {defaultConfig?.house_or_apartment?.visible !== false && (
-                      <th className="px-4 py-3">{defaultConfig?.house_or_apartment?.label || 'Apto/Casa'}</th>
-                    )}
                     {configFields && configFields.map(cf => (
                         <th key={cf.name} className="px-4 py-3">{cf.name}</th>
                     ))}
@@ -524,15 +460,6 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
                   {filteredSpaces.map((space) => (
                     <tr key={space.id} className="border-b border-slate-100 hover:bg-slate-50/50">
                       <td className="px-4 py-3 font-medium text-slate-900">{space.space_number}</td>
-                      {defaultConfig?.owner_name?.visible !== false && (
-                        <td className="px-4 py-3 text-slate-600">{space.owner_name || '-'}</td>
-                      )}
-                      {defaultConfig?.block?.visible !== false && (
-                        <td className="px-4 py-3 text-slate-600">{space.block || '-'}</td>
-                      )}
-                      {defaultConfig?.house_or_apartment?.visible !== false && (
-                        <td className="px-4 py-3 text-slate-600">{space.house_or_apartment || '-'}</td>
-                      )}
                       {configFields && configFields.map(cf => (
                           <td key={cf.name} className="px-4 py-3 text-slate-600">{space.custom_fields_data?.[cf.name] || '-'}</td>
                       ))}
