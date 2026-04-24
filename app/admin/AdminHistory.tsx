@@ -27,7 +27,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     
     // Fetch tariffs
     const { data: tariffData } = await supabase
-      .from("tariffs")
+      .from("tariffs_v2")
       .select("*")
       .eq("parking_lot_id", parkingLotId);
     if (tariffData) setTariffs(tariffData);
@@ -115,8 +115,8 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     try {
       const entryTime = new Date(sessionToExit.entry_time);
       const exitTime = new Date();
-      const tariff = tariffs.find(t => t.vehicle_type === sessionToExit.vehicles.type);
-      const finalFee = calculateFee(entryTime, exitTime, tariff);
+      const rules = tariffs.filter(t => t.vehicle_type === sessionToExit.vehicles.type);
+      const finalFee = calculateFee(entryTime, exitTime, rules);
 
       const { data: lotData } = await supabase.from('parking_lots').select('receipt_sequence').eq('id', parkingLotId).single();
       const nextSeq = (lotData?.receipt_sequence || 0) + 1;
@@ -152,9 +152,9 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     
     const entryTime = new Date(session.entry_time);
     const exitTime = new Date(); // Current time
-    const tariff = tariffs.find(t => t.vehicle_type === session.vehicles.type);
+    const rules = tariffs.filter(t => t.vehicle_type === session.vehicles.type);
     
-    return calculateFee(entryTime, exitTime, tariff);
+    return calculateFee(entryTime, exitTime, rules);
   };
 
   const exportToCSV = async () => {

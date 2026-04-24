@@ -1,42 +1,33 @@
-export function calculateFee(entryTime: Date, exitTime: Date, tariff: any): number {
-  if (!tariff) return 0;
+export interface TariffRule {
+  vehicle_type: string;
+  rate_type: string; // 'dia', 'noche', 'hora', 'minuto', 'segundo', 'mes'
+  amount: number;
+}
+
+export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[]): number {
+  if (!rules || !Array.isArray(rules) || rules.length === 0) return 0;
 
   const entryMs = entryTime.getTime();
   const exitMs = exitTime.getTime();
   const durationMs = exitMs - entryMs;
-  
   if (durationMs <= 0) return 0;
 
-  const totalMinutes = Math.floor(durationMs / 60000);
-
-  // Free time check
-  if (totalMinutes <= (tariff.free_minutes || 0)) {
-    return 0;
-  }
-
-  const billableExitMs = exitMs;
-  let currentMs = entryMs + ((tariff.free_minutes || 0) * 60000);
-
-  const dayStartHour = parseInt(tariff.day_start_time?.split(':')[0] || '6');
-  const dayStartMin = parseInt(tariff.day_start_time?.split(':')[1] || '0');
-  const nightStartHour = parseInt(tariff.night_start_time?.split(':')[0] || '18');
-  const nightStartMin = parseInt(tariff.night_start_time?.split(':')[1] || '0');
-
-  // Accumulate minutes spent in day and night periods
-  let dayMinutes = 0;
-  let nightMinutes = 0;
+  // Global settings
+  const dayStartHour = 6;
+  const dayStartMin = 0;
+  const nightStartHour = 18;
+  const nightStartMin = 0;
+  const gracePeriodMs = 15 * 60000;
   
-  // We need the number of shifts touched for "turnos" mode
-  let shiftsTouched = [];
-  let currentShiftFeeAccumulator = 0;
+  if (durationMs <= gracePeriodMs) return 0;
 
-  const gracePeriodMins = tariff.grace_period_minutes !== undefined ? tariff.grace_period_minutes : 15;
-  const gracePeriodMs = gracePeriodMins * 60000;
+  let currentMs = entryMs;
+  let totalFee = 0;
 
   let iterations = 0;
-  const maxIterations = 365 * 3; // Safety cap
+  const maxIterations = 365 * 3;
 
-  while (currentMs < billableExitMs && iterations < maxIterations) {
+  while (currentMs < exitMs && iterations < maxIterations) {
     iterations++;
     const currentDate = new Date(currentMs);
     
@@ -65,79 +56,52 @@ export function calculateFee(entryTime: Date, exitTime: Date, tariff: any): numb
       isDayShift = false;
     }
 
-    const timeInThisShiftMs = Math.min(billableExitMs, currentShiftEndMs) - currentMs;
+    const timeInThisShiftMs = Math.min(exitMs, currentShiftEndMs) - currentMs;
     const timeInThisShiftMins = Math.floor(timeInThisShiftMs / 60000);
 
-    if (isDayShift) {
-      dayMinutes += timeInThisShiftMins;
-    } else {
-      nightMinutes += timeInThisShiftMins;
+    // Filter rules
+    const rateMinuto = rules.find(r => r.rate_type === 'minuto')?.amount;
+    const rateHora = rules.find(r => r.rate_type === 'hora')?.amount;
+    const rateSegundo = rules.find(r => r.rate_type === 'segundo')?.amount;
+    const rateShift = isDayShift 
+      ? rules.find(r => r.rate_type === 'dia')?.amount 
+      : rules.find(r => r.rate_type === 'noche')?.amount;
+
+    let baseCost = Infinity;
+    let anyBaseRule = false;
+
+    if (rateMinuto !== undefined) {
+      baseCost = Math.min(baseCost, timeInThisShiftMins * rateMinuto);
+      anyBaseRule = true;
+    }
+    if (rateHora !== undefined) {
+      const hours = Math.ceil(timeInThisShiftMins / 60);
+      baseCost = Math.min(baseCost, hours * rateHora);
+      anyBaseRule = true;
+    }
+    if (rateSegundo !== undefined) {
+      const seconds = timeInThisShiftMins * 60;
+      baseCost = Math.min(baseCost, seconds * rateSegundo);
+      anyBaseRule = true;
     }
 
-    // Turnos Mode Evaluation
-    let chargeThisShift = true;
-    // 1. If this is the FIRST shift touched, and they entered near the END of it (within grace period)
-    if (currentMs === (entryMs + ((tariff.free_minutes || 0) * 60000)) && timeInThisShiftMs <= gracePeriodMs) {
-      chargeThisShift = false;
-    }
-    // 2. If this is the LAST shift touched, and they exited near the START of it (within grace period)
-    if (currentShiftEndMs >= billableExitMs && timeInThisShiftMs <= gracePeriodMs) {
-      chargeThisShift = false;
-    }
-    
-    if (chargeThisShift) {
-      shiftsTouched.push({
-        isDay: isDayShift,
-        rate: isDayShift ? (tariff.day_rate || 0) : (tariff.night_rate || 0)
-      });
+    if (!anyBaseRule) {
+      baseCost = 0;
     }
 
+    let segmentCost = baseCost;
+
+    if (rateShift !== undefined) {
+       if (anyBaseRule) {
+          segmentCost = Math.min(baseCost, rateShift);
+       } else {
+          segmentCost = rateShift;
+       }
+    }
+
+    totalFee += segmentCost;
     currentMs = currentShiftEndMs;
   }
 
-  const totalBillableMinutes = dayMinutes + nightMinutes;
-  const dayRate = tariff.day_rate || 0;
-  const nightRate = tariff.night_rate || 0;
-
-  // Si no hay diferenciación estricta de precios (el cliente usa solo un campo)
-  // O en modos normales, usamos tarifa ponderada
-  
-  if (tariff.charge_type === 'segundo') {
-    const daySecs = dayMinutes * 60;
-    const nightSecs = nightMinutes * 60;
-    return (daySecs * dayRate) + (nightSecs * nightRate);
-  } else if (tariff.charge_type === 'minuto') {
-    return (dayMinutes * dayRate) + (nightMinutes * nightRate);
-  } else if (tariff.charge_type === 'fraccion') {
-    const fractionMins = tariff.fraction_minutes || 15;
-    // Calculate total fractions
-    const dayFractions = dayMinutes / fractionMins;
-    const nightFractions = nightMinutes / fractionMins;
-    
-    // We sum fractions and ceil at the end, OR ceil independently? 
-    // Usually, you ceil the total fractions, but proportional.
-    // If it's pure proportionate: 
-    if (dayRate === nightRate) {
-      return Math.ceil(totalBillableMinutes / fractionMins) * dayRate;
-    }
-    // CEIL independently (e.g. 1 fraction of day, 1 fraction of night)
-    return (Math.ceil(dayFractions) * dayRate) + (Math.ceil(nightFractions) * nightRate);
-  } else if (tariff.charge_type === 'hora') {
-    if (dayRate === nightRate) {
-      return Math.ceil(totalBillableMinutes / 60) * dayRate;
-    }
-    return (Math.ceil(dayMinutes / 60) * dayRate) + (Math.ceil(nightMinutes / 60) * nightRate);
-  } else if (tariff.charge_type === '12_horas') {
-    return Math.ceil(totalBillableMinutes / (12 * 60)) * dayRate;
-  } else if (tariff.charge_type === '24_horas') {
-    return Math.ceil(totalBillableMinutes / (24 * 60)) * dayRate;
-  } else if (tariff.charge_type === 'bloque') {
-    const blockHours = tariff.block_hours || 12;
-    return Math.ceil(totalBillableMinutes / (blockHours * 60)) * dayRate;
-  } else if (tariff.charge_type === 'turnos') {
-    // Calculamos los turnos tocados válidos
-    return shiftsTouched.reduce((sum, shift) => sum + shift.rate, 0);
-  }
-
-  return 0;
+  return totalFee;
 }

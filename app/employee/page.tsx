@@ -97,7 +97,7 @@ export default function EmployeePage() {
     const { data: appData } = await supabase.from("app_settings").select("*").limit(1).maybeSingle();
     if (appData) setAppSettings(appData);
 
-    const { data: tariffData } = await supabase.from("tariffs").select("*").eq("parking_lot_id", id);
+    const { data: tariffData } = await supabase.from("tariffs_v2").select("*").eq("parking_lot_id", id);
     if (tariffData) setTariffs(tariffData);
 
     setLoading(false);
@@ -370,7 +370,7 @@ export default function EmployeePage() {
 
     const entryTime = new Date(sessionToExit.entry_time);
     const exitTime = new Date();
-    const tariff = tariffs.find(t => t.vehicle_type === sessionToExit.vehicles.type);
+    const rules = tariffs.filter(t => t.vehicle_type === sessionToExit.vehicles.type);
     
     // Check if the user is an active monthly subscriber
     const { data: subscriber } = await supabase
@@ -388,7 +388,7 @@ export default function EmployeePage() {
     if (subscriber) {
       finalFee = 0;
     } else if (exitPlate !== sessionId || !fee || isNaN(finalFee)) {
-      finalFee = calculateFee(entryTime, exitTime, tariff);
+      finalFee = calculateFee(entryTime, exitTime, rules);
     }
 
     // Generar consecutivo usando sequence property si se quiere, o autocalculado
@@ -697,7 +697,7 @@ export default function EmployeePage() {
                                     ? fee 
                                     : (subscribers.some(sub => sub.plate === session.vehicles.plate)
                                         ? "0"
-                                        : calculateFee(new Date(session.entry_time), new Date(), tariffs.find(t => t.vehicle_type === session.vehicles.type)).toString()
+                                        : calculateFee(new Date(session.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === session.vehicles.type)).toString()
                                       )
                                 }
                                 placeholder="Cobro"
@@ -858,7 +858,7 @@ export default function EmployeePage() {
                       setViewingSession(null);
                       // Pre-fill the exit form logic
                       setExitPlate(sessionId);
-                      const currentFee = calculateFee(new Date(viewingSession.entry_time), new Date(), tariffs.find(t => t.vehicle_type === viewingSession.vehicles.type)).toString();
+                      const currentFee = calculateFee(new Date(viewingSession.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === viewingSession.vehicles.type)).toString();
                       setFee(currentFee);
                       
                       // Focus the input if possible or handle exit directly? 

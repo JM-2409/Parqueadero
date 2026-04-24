@@ -83,4 +83,18 @@ SET custom_fields_data = COALESCE(custom_fields_data, '{}'::jsonb)
 WHERE (owner_name IS NOT NULL AND owner_name != '')
    OR (block IS NOT NULL AND block != '')
    OR (house_or_apartment IS NOT NULL AND house_or_apartment != '');
+
+-- 5. Sistema Avanzado de Tarifas por Reglas Múltiples (V2)
+CREATE TABLE IF NOT EXISTS tariffs_v2 (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
+  vehicle_type TEXT NOT NULL,
+  rate_type TEXT NOT NULL, 
+  amount INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE tariffs_v2 ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Access Tariffs V2" ON tariffs_v2;
+CREATE POLICY "Public Access Tariffs V2" ON tariffs_v2 FOR ALL USING (true) WITH CHECK (true);
 ```

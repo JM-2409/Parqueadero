@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Car, Clock, Calendar, CheckCircle2, X } from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
+import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
@@ -30,7 +31,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
   useEffect(() => {
     const fetchTariffs = async () => {
       const { data } = await supabase
-        .from("tariffs")
+        .from("tariffs_v2")
         .select("*")
         .eq("parking_lot_id", parkingLotId);
       if (data) setTariffs(data);
@@ -50,29 +51,11 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
     }
 
     const durationMs = exit.getTime() - entry.getTime();
-    const durationMinutes = Math.ceil(durationMs / (1000 * 60));
     
     const vehicleTariffs = tariffs.filter(t => t.vehicle_type === type);
     if (vehicleTariffs.length === 0) return;
 
-    let calculatedFee = 0;
-    
-    const monthlyTariff = vehicleTariffs.find(t => t.rate_type === "month");
-    const dailyTariff = vehicleTariffs.find(t => t.rate_type === "day");
-    const hourlyTariff = vehicleTariffs.find(t => t.rate_type === "hour");
-    const minuteTariff = vehicleTariffs.find(t => t.rate_type === "minute");
-
-    if (monthlyTariff && durationMinutes >= 30 * 24 * 60) {
-      calculatedFee = Math.ceil(durationMinutes / (30 * 24 * 60)) * monthlyTariff.amount;
-    } else if (dailyTariff && durationMinutes >= 24 * 60) {
-      calculatedFee = Math.ceil(durationMinutes / (24 * 60)) * dailyTariff.amount;
-    } else if (hourlyTariff && durationMinutes >= 60) {
-      calculatedFee = Math.ceil(durationMinutes / 60) * hourlyTariff.amount;
-    } else if (minuteTariff) {
-      calculatedFee = durationMinutes * minuteTariff.amount;
-    } else if (hourlyTariff) {
-      calculatedFee = hourlyTariff.amount; // fallback to 1 hour if less than an hour and no minute tariff
-    }
+    const calculatedFee = calculateFee(entry, exit, vehicleTariffs);
 
     setTotalFee(calculatedFee.toString());
   }, [entryDate, entryTime, exitDate, exitTime, type, tariffs, isSpecialFee, isCompleted]);
@@ -93,6 +76,17 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
       setError("Fecha, hora de salida y tarifa son obligatorios para registros completados");
       setLoading(false);
       return;
+    }
+
+    // Validar campos personalizados obligatorios
+    if (customFields && customFields.length > 0) {
+      for (const field of customFields) {
+        if (field.required && !extraData[field.name]?.trim()) {
+          setError(`El campo ${field.name} es obligatorio`);
+          setLoading(false);
+          return;
+        }
+      }
     }
 
     if (isCompleted) {
