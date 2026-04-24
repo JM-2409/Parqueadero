@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  Car, LogOut, LogIn, Search, CheckCircle2, DollarSign, Clock, Receipt, User, History, Menu, X, Home
+  Car, LogOut, LogIn, Search, CheckCircle2, DollarSign, Clock, Receipt, User, History, Menu, X, Home, Camera
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import EmployeeHistory from "./EmployeeHistory";
@@ -434,7 +434,19 @@ export default function EmployeePage() {
     router.push("/");
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">Cargando...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+      <div className="hidden md:flex flex-col w-64 bg-slate-900 min-h-screen animate-pulse"></div>
+      <div className="flex-1 p-8 grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 bg-white p-6 rounded-2xl h-96 animate-pulse"></div>
+        <div className="lg:col-span-2 space-y-4">
+           <div className="bg-white p-6 rounded-2xl h-32 animate-pulse"></div>
+           <div className="bg-white p-6 rounded-2xl h-32 animate-pulse"></div>
+           <div className="bg-white p-6 rounded-2xl h-32 animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  );
 
   // SHIFT MODAL
   if (!isShiftSet) {
@@ -567,17 +579,38 @@ export default function EmployeePage() {
                 <form onSubmit={handleEntry} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Placa *</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={plate}
-                        onChange={(e) => handleSearchPlate(e.target.value)}
-                        className="w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono text-lg"
-                        placeholder="ABC-123"
-                        maxLength={7}
-                        required
-                      />
-                      <Search className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                    <div className="relative flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          value={plate}
+                          onChange={(e) => handleSearchPlate(e.target.value)}
+                          className="w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono text-lg"
+                          placeholder="ABC-123"
+                          maxLength={7}
+                          required
+                        />
+                        <Search className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (navigator.mediaDevices) {
+                            navigator.mediaDevices.getUserMedia({ video: true })
+                              .then(stream => {
+                                alert("Cámara iniciada (Módulo de OCR pendiente de integración)");
+                                stream.getTracks().forEach(t => t.stop());
+                              })
+                              .catch(() => alert("No se pudo acceder a la cámara"));
+                          } else {
+                            alert("Cámara no soportada en este dispositivo");
+                          }
+                        }}
+                        className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors"
+                        title="Escanear placa"
+                      >
+                        <Camera size={24} />
+                      </button>
                     </div>
                     {!isNewVehicle && plate.length >= 5 && (
                       <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">

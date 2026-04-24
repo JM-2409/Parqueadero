@@ -19,12 +19,13 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
 
   const fetchTariffs = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("tariffs_v2")
       .select("*")
       .eq("parking_lot_id", parkingLotId)
       .order("created_at", { ascending: false });
     
+    if (error) console.error("Error fetching tariffs:", error);
     if (data) setTariffs(data);
     setLoading(false);
   }, [parkingLotId]);
@@ -48,8 +49,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
     setIsAdding(true);
     setSuccess("");
 
-    // Create the rule
-    await supabase
+    const { error } = await supabase
       .from("tariffs_v2")
       .insert([{
         parking_lot_id: parkingLotId,
@@ -57,6 +57,13 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
         rate_type: rateType,
         amount: parseInt(amount)
       }]);
+
+    if (error) {
+      console.error("Error al guardar tarifa:", error);
+      alert("Error al guardar: " + error.message);
+      setIsAdding(false);
+      return;
+    }
 
     await fetchTariffs();
     setAmount("");
