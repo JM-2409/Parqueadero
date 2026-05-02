@@ -13,9 +13,12 @@ if (supabaseUrl && !supabaseUrl.startsWith('http')) {
   supabaseUrl = `https://${supabaseUrl}`;
 }
 
+const FALLBACK_URL = "https://eicnazdxzkqlckpixhym.supabase.co";
+const FALLBACK_SERVICE_KEY = "sb_secret_LJXPNHzU2oJ4vnUbS1c0Cg_ssjUo9nB";
+
 const supabaseAdmin = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseServiceKey || 'placeholder_key',
+  supabaseUrl || FALLBACK_URL,
+  supabaseServiceKey || FALLBACK_SERVICE_KEY,
   {
     auth: {
       autoRefreshToken: false,

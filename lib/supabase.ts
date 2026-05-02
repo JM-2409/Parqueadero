@@ -13,8 +13,10 @@ if (supabaseUrl && !supabaseUrl.startsWith('http')) {
 
 export const isSupabaseConfigured = supabaseUrl.length > 0 && supabaseUrl !== 'https://placeholder.supabase.co';
 
+const FALLBACK_URL = "https://eicnazdxzkqlckpixhym.supabase.co";
+
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseUrl || FALLBACK_URL,
   supabaseAnonKey || 'placeholder_key',
   {
     auth: {
