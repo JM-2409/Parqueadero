@@ -16,6 +16,8 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
   const [vehicleType, setVehicleType] = useState(allowedVehicles[0] || "");
   const [rateType, setRateType] = useState("hora");
   const [amount, setAmount] = useState("");
+  const [startTime, setStartTime] = useState("06:00");
+  const [endTime, setEndTime] = useState("18:00");
   const [isAdding, setIsAdding] = useState(false);
 
   const fetchTariffs = useCallback(async () => {
@@ -101,6 +103,8 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
 
     setIsAdding(true);
     setSuccess("");
+    
+    const isShiftRate = rateType === 'dia' || rateType === 'noche';
 
     const { error } = await supabase
       .from("tariffs_v2")
@@ -108,7 +112,9 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
         parking_lot_id: parkingLotId,
         vehicle_type: vehicleType,
         rate_type: rateType,
-        amount: parsedAmount
+        amount: parsedAmount,
+        start_time: isShiftRate ? startTime : null,
+        end_time: isShiftRate ? endTime : null
       }]);
 
     if (error) {
@@ -152,7 +158,8 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
     'hora': 'Por Hora',
     'minuto': 'Por Minuto',
     'segundo': 'Por Segundo',
-    'mes': 'Mensualidad'
+    'mes': 'Mensualidad',
+    'bloque_12h': 'Bloque (12 horas)'
   };
 
   if (loading) return <div className="py-8 text-center text-slate-500">Cargando tarifas...</div>;
@@ -187,8 +194,8 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
           
           <form onSubmit={handleAdd} className="bg-slate-50 p-5 rounded-xl border border-slate-200">
             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">Agregar Nueva Tarifa</h3>
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <div className="flex-1 w-full">
+            <div className="flex flex-col md:flex-row gap-4 items-end flex-wrap">
+              <div className="flex-1 min-w-[200px]">
                 <label className="block text-xs font-medium text-slate-500 mb-1">Tipo de Vehículo</label>
                 <select
                   value={vehicleType}
@@ -202,7 +209,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
                 </select>
               </div>
 
-              <div className="flex-1 w-full">
+              <div className="flex-1 min-w-[200px]">
                 <label className="block text-xs font-medium text-slate-500 mb-1">Tipo de Tarifa</label>
                 <select
                   value={rateType}
@@ -212,14 +219,40 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
                 >
                   <option value="dia">Día (Tope Máximo o Turno Día)</option>
                   <option value="noche">Noche (Tope Máximo o Turno Noche)</option>
+                  <option value="bloque_12h">Bloque de 12 horas</option>
                   <option value="hora">Por Hora</option>
                   <option value="minuto">Por Minuto</option>
                   <option value="segundo">Por Segundo</option>
                   <option value="mes">Mensualidad (Abonados)</option>
                 </select>
               </div>
+              
+              {(rateType === "dia" || rateType === "noche") && (
+                <>
+                  <div className="w-full md:w-32 relative">
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Hora Inicio</label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-mono"
+                      required
+                    />
+                  </div>
+                  <div className="w-full md:w-32 relative">
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Hora Fin</label>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-mono"
+                      required
+                    />
+                  </div>
+                </>
+              )}
 
-              <div className="flex-1 w-full relative">
+              <div className="flex-1 min-w-[150px] relative">
                 <label className="block text-xs font-medium text-slate-500 mb-1">Valor ($)</label>
                 <span className="absolute left-3 top-9 text-slate-500 font-medium">$</span>
                 <input
@@ -257,6 +290,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
                     <tr>
                       <th className="px-4 py-3">Vehículo</th>
                       <th className="px-4 py-3">Tipo Tarifa</th>
+                      <th className="px-4 py-3">Horario</th>
                       <th className="px-4 py-3 text-right">Valor</th>
                       <th className="px-4 py-3 text-center">Acciones</th>
                     </tr>
@@ -271,6 +305,9 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
                           <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium">
                             {RATE_LABELS[t.rate_type] || t.rate_type}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-500 text-xs font-mono">
+                          {t.start_time && t.end_time ? `${t.start_time.substring(0,5)} - ${t.end_time.substring(0,5)}` : '-'}
                         </td>
                         <td className="px-4 py-3 font-semibold text-emerald-600 text-right">
                           ${t.amount.toLocaleString('es-CO')}

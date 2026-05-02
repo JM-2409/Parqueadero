@@ -522,38 +522,16 @@ export default function EmployeePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-20">
-        <div className="flex items-center gap-2 font-bold text-lg">
-          <Car size={24} className="text-indigo-400" />
-          <span className="truncate max-w-[150px]">{parkingLot?.name}</span>
-        </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Sidebar Overlay for Mobile */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden" 
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:sticky top-0 left-0 z-40 transition-transform duration-300 flex flex-col w-64 bg-slate-900 text-slate-300 flex-shrink-0 h-screen md:min-h-screen`}>
+      <div className="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col min-h-[100px] md:min-h-screen">
         <div className="p-6 flex items-center justify-between md:justify-start gap-3 flex-wrap border-b border-slate-800">
           <div className="flex items-center gap-3 font-bold text-xl text-white">
             <Car size={28} className="text-indigo-400" />
             <span>Operación</span>
           </div>
-          <button className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-            <X size={24} className="text-slate-400" />
-          </button>
         </div>
         
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 border-b border-slate-800 hidden md:block">
           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Turno Actual</p>
           <div className="flex items-center gap-2 text-white bg-slate-800 p-2 rounded-lg">
             <User size={16} className="text-indigo-400" />
@@ -561,31 +539,31 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        <nav className="p-4 space-y-2 flex-1">
+        <nav className="p-4 flex flex-row overflow-x-auto md:flex-col gap-2 flex-1 md:overflow-visible">
           <button
-            onClick={() => { setActiveTab("operation"); setIsMobileMenuOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "operation" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+            onClick={() => setActiveTab("operation")}
+            className={`flex-shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "operation" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
             <LogIn size={20} />
-            <span className="font-medium">Ingreso / Salida</span>
+            <span className="font-medium whitespace-nowrap">Ingreso / Salida</span>
           </button>
           <button
-            onClick={() => { setActiveTab("history"); setIsMobileMenuOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "history" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+            onClick={() => setActiveTab("history")}
+            className={`flex-shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "history" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
             <History size={20} />
-            <span className="font-medium">Historial</span>
+            <span className="font-medium whitespace-nowrap">Historial</span>
           </button>
           <button
-            onClick={() => { setActiveTab("private"); setIsMobileMenuOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "private" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+            onClick={() => setActiveTab("private")}
+            className={`flex-shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "private" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
             <Home size={20} />
-            <span className="font-medium">Parq. Privados</span>
+            <span className="font-medium whitespace-nowrap">Parq. Privados</span>
           </button>
         </nav>
         
-        <div className="p-4 mt-auto border-t border-slate-800">
+        <div className="p-4 mt-auto border-t border-slate-800 hidden md:block">
           <div className="mb-4 px-2">
             <p className="text-xs text-slate-500 mb-1">Ocupación</p>
             <div className="w-full bg-slate-800 rounded-full h-2.5">
