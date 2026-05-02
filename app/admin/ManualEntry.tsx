@@ -10,6 +10,7 @@ import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function ManualEntry({ parkingLotId, allowedVehicles, customFields }: { parkingLotId: string, allowedVehicles: string[], customFields: any[] }) {
   const [plate, setPlate] = useState("");
+  const [debouncedPlate, setDebouncedPlate] = useState("");
   const [type, setType] = useState(allowedVehicles[0] || "carros");
   const [entryDate, setEntryDate] = useState("");
   const [entryTime, setEntryTime] = useState("");
@@ -24,6 +25,39 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedPlate(plate), 300);
+    return () => clearTimeout(timer);
+  }, [plate]);
+
+  useEffect(() => {
+    const searchVehicle = async () => {
+      if (debouncedPlate.length >= 5) {
+        const { data } = await supabase
+          .from("vehicles")
+          .select("*")
+          .eq("plate", debouncedPlate.toUpperCase())
+          .maybeSingle();
+
+        if (data) {
+          if (allowedVehicles.includes(data.type)) {
+            setType(data.type);
+          }
+          
+          const newExtraData = { ...(data.custom_fields_data || {}) };
+          if (data.brand && !newExtraData['Marca'] && !newExtraData['brand']) newExtraData['Marca'] = data.brand;
+          if (data.color && !newExtraData['Color'] && !newExtraData['color']) newExtraData['Color'] = data.color;
+          if (data.owner_name && !newExtraData['Propietario'] && !newExtraData['owner_name']) newExtraData['Propietario'] = data.owner_name;
+          
+          setExtraData(newExtraData);
+        }
+      } else {
+        setExtraData({});
+      }
+    };
+    searchVehicle();
+  }, [debouncedPlate, allowedVehicles]);
 
   useEffect(() => {
     const fetchTariffs = async () => {

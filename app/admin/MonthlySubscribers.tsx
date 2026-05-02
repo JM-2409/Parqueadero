@@ -21,7 +21,34 @@ export default function MonthlySubscribers({ parkingLotId }: { parkingLotId: str
     start_date: new Date().toISOString().split('T')[0],
     end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]
   });
+  const [debouncedSubPlate, setDebouncedSubPlate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSubPlate(newSub.plate), 300);
+    return () => clearTimeout(timer);
+  }, [newSub.plate]);
+
+  useEffect(() => {
+    const searchVehicleForSub = async () => {
+      if (debouncedSubPlate.length >= 5) {
+        const { data } = await supabase
+          .from("vehicles")
+          .select("*")
+          .eq("plate", debouncedSubPlate.toUpperCase())
+          .maybeSingle();
+
+        if (data) {
+          setNewSub(prev => ({
+            ...prev,
+            vehicle_type: data.type || prev.vehicle_type,
+            owner_name: prev.owner_name ? prev.owner_name : (data.owner_name || data.custom_fields_data?.['Propietario'] || data.custom_fields_data?.['owner_name'] || "")
+          }));
+        }
+      }
+    };
+    searchVehicleForSub();
+  }, [debouncedSubPlate]);
 
   const fetchSubscribers = useCallback(async () => {
     setLoading(true);

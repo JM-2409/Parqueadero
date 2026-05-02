@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TariffSettings from "./TariffSettings";
 import AdminHistory from "./AdminHistory";
+import CashClosuresHistory from "./CashClosuresHistory";
 import ManualEntry from "./ManualEntry";
 import CustomRoles from "./CustomRoles";
 import PrivateParking from "./PrivateParking";
@@ -153,10 +154,23 @@ export default function AdminPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
+      // Fetch last closure to determine opened_at
+      const { data: lastClosure } = await supabase
+        .from("cash_closures")
+        .select("closed_at")
+        .eq("parking_lot_id", parkingLot.id)
+        .order("closed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const opened_at = lastClosure ? lastClosure.closed_at : new Date(new Date().setHours(0,0,0,0)).toISOString();
+
       const { error } = await supabase.from("cash_closures").insert([{
         parking_lot_id: parkingLot.id,
-        amount: currentShiftRevenue,
-        closed_by: session?.user?.id
+        total_revenue: currentShiftRevenue,
+        closed_by: session?.user?.id,
+        opened_at: opened_at,
+        notes: `Cierre de caja - Admin`
       }]);
 
       if (error) throw error;
@@ -391,7 +405,14 @@ export default function AdminPage() {
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "dashboard" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
             <LayoutDashboard size={20} />
-            <span className="font-medium whitespace-nowrap text-left">Historial</span>
+            <span className="font-medium whitespace-nowrap text-left">Resumen</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab("cash_closures"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "cash_closures" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <DollarSign size={20} />
+            <span className="font-medium whitespace-nowrap text-left">Historial de Cajas</span>
           </button>
           <button
             onClick={() => { setActiveTab("manual_entry"); setIsMobileMenuOpen(false); }}
@@ -562,6 +583,12 @@ export default function AdminPage() {
           )}
 
           {/* TAB: INGRESO MANUAL */}
+          {activeTab === "cash_closures" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CashClosuresHistory parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
           {activeTab === "manual_entry" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <ManualEntry 

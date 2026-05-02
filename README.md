@@ -146,9 +146,10 @@ CREATE TABLE IF NOT EXISTS private_parking_spaces (
 CREATE TABLE IF NOT EXISTS cash_closures (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
+  opened_at TIMESTAMP WITH TIME ZONE,
   closed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  closed_by TEXT NOT NULL,
-  total_revenue INTEGER NOT NULL,
+  closed_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  total_revenue INTEGER NOT NULL DEFAULT 0,
   total_vehicles INTEGER DEFAULT 0,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -177,6 +178,7 @@ CREATE POLICY "Public Cash Closures" ON cash_closures FOR ALL USING (true) WITH 
 ```
 
 ## Correcciones e Interacciones Recientes 🔄
-- **Autocompletado Inteligente**: Al digitar una placa de vehículo registrado previamente en el sistema de la sucursal (o general), los campos extra (`Marca`, `Color`, etc) se mapean y populán automáticamente minimizando el tiempo de ingreso del personal.
+- **Autocompletado Inteligente**: Al digitar una placa de vehículo registrado previamente en el sistema de la sucursal (o general), los campos extra (`Marca`, `Color`, etc) se mapean y populán automáticamente (Ahora extendido a Ingreso Manual y Registro de Abonados Mensuales).
+- **Historial de Cierres de Caja**: Nueva pestaña en el panel administrador que muestra un registro exacto de la hora de apertura y cierre de cada turno/caja, y el recaudo final de ese período.
 - **Transiciones de Múltiples Operarios**: Inclusión de un botón "Cambiar" en el panel de control del empleado, evitando el cierre de sesión de la cuenta máster. Permite rotación de turnos (cambio de nombre de operario) de manera fluida y rápida en la misma estación de trabajo.
 - **Gestión Unificada de Tarifas**: Control de visualización V3 con botones de eliminar bloqueantes intermedios para evitar clics dobles, y prevención estricta de políticas de seguridad para simplificar la corrección de errores en la eliminación.
