@@ -174,50 +174,50 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-3xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
-          <Clock size={24} />
+    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 max-w-3xl mx-auto">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+          <Clock size={28} />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Ingreso Manual (Histórico)</h2>
-          <p className="text-sm text-slate-500">Añade registros de vehículos del pasado</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Ingreso Manual (Histórico)</h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">Añade registros de vehículos del pasado</p>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
-          <X size={20} />
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 font-medium text-sm">
+          <X size={20} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
       )}
 
       {success && <SuccessMessage message={success} />}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Vehicle Info */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-slate-900 border-b pb-2">Datos del Vehículo</h3>
+          <div className="space-y-5">
+            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-3 text-lg tracking-tight">Datos del Vehículo</h3>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Placa *</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Placa *</label>
               <input
                 type="text"
                 value={plate}
                 onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold uppercase transition-all"
                 placeholder="ABC-123"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Vehículo</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tipo de Vehículo</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none capitalize"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium capitalize transition-all"
               >
                 {allowedVehicles.map(v => (
                   <option key={v} value={v}>{v}</option>
@@ -227,7 +227,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
 
             {customFields?.map((field, idx) => (
               <div key={idx}>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                   {field.name} {field.required && "*"}
                 </label>
                 <input
@@ -235,49 +235,49 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
                   value={extraData[field.name] || ""}
                   onChange={(e) => setExtraData({...extraData, [field.name]: e.target.value})}
                   required={field.required}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                 />
               </div>
             ))}
           </div>
 
           {/* Time Info */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-slate-900 border-b pb-2">Datos de Tiempo</h3>
+          <div className="space-y-5">
+            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-3 text-lg tracking-tight">Datos de Tiempo</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Fecha Entrada *</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Fecha Entrada *</label>
                 <input
                   type="date"
                   value={entryDate}
                   onChange={(e) => setEntryDate(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Hora Entrada *</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Entrada *</label>
                 <input
                   type="time"
                   value={entryTime}
                   onChange={(e) => setEntryTime(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                   required
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mt-4 mb-2">
+            <div className="flex items-center gap-3 mt-6 mb-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
               <input
                 type="checkbox"
                 id="isCompleted"
                 checked={isCompleted}
                 onChange={(e) => setIsCompleted(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
               />
-              <label htmlFor="isCompleted" className="text-sm font-medium text-slate-700">
-                El vehículo ya salió (Registro completado)
+              <label htmlFor="isCompleted" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
+                El vehículo ya salió (Completado)
               </label>
             </div>
 
@@ -285,50 +285,50 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Fecha Salida *</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Fecha Salida *</label>
                     <input
                       type="date"
                       value={exitDate}
                       onChange={(e) => setExitDate(e.target.value)}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                       required={isCompleted}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Hora Salida *</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Salida *</label>
                     <input
                       type="time"
                       value={exitTime}
                       onChange={(e) => setExitTime(e.target.value)}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                       required={isCompleted}
                     />
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="mt-6">
+                  <div className="flex items-center gap-3 mb-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <input
                       type="checkbox"
                       id="isSpecialFee"
                       checked={isSpecialFee}
                       onChange={(e) => setIsSpecialFee(e.target.checked)}
-                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
                     />
-                    <label htmlFor="isSpecialFee" className="text-sm font-medium text-slate-700">
+                    <label htmlFor="isSpecialFee" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
                       Tarifa especial (Ingresar valor manualmente)
                     </label>
                   </div>
                   
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Tarifa Cobrada ($) *</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4 ml-1">Tarifa Cobrada ($) *</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
                     <input
                       type="number"
                       value={totalFee}
                       onChange={(e) => setTotalFee(e.target.value)}
                       disabled={!isSpecialFee}
-                      className={`w-full p-3 pl-8 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none ${!isSpecialFee ? 'bg-slate-100 text-slate-600' : ''}`}
+                      className={`w-full text-base rounded-xl px-4 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? 'bg-slate-100/50 text-slate-500 border border-slate-100' : 'bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-indigo-500 shadow-sm shadow-indigo-100/50'}`}
                       placeholder="0.00"
                       min="0"
                       step="0.01"
@@ -336,7 +336,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
                     />
                   </div>
                   {!isSpecialFee && (
-                    <p className="text-xs text-slate-500 mt-1">El valor se calcula automáticamente según las tarifas. Marca &quot;Tarifa especial&quot; para modificarlo.</p>
+                    <p className="text-xs font-medium text-slate-400 mt-2 ml-1">El valor se calcula automáticamente según las tarifas. Marca <span className="font-bold text-slate-500">&quot;Tarifa especial&quot;</span> para modificarlo.</p>
                   )}
                 </div>
               </>
@@ -344,20 +344,22 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-lg mt-6"
-        >
-          {loading ? (
-            <Spinner size={24} className="text-white" />
-          ) : (
-            <>
-              <Car size={24} />
-              Guardar Registro
-            </>
-          )}
-        </button>
+        <div className="pt-4 border-t border-slate-100">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition-all shadow-sm shadow-indigo-200 flex items-center justify-center gap-3 text-lg mx-auto"
+          >
+            {loading ? (
+              <Spinner size={24} className="text-white" />
+            ) : (
+              <>
+                <Car size={24} />
+                Guardar Registro Histórico
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );

@@ -15,7 +15,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [searchTerm, setSearchTerm] = useState("");
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("active");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
@@ -258,22 +258,22 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
 
   return (
     <>
-      <div className="bg-white p-6 rounded-2xl shadow-sm mt-8 relative">
+      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mt-8 relative group hover:border-indigo-100 transition-all">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
-              <History size={24} />
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+              <History size={28} />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Historial de Vehículos</h2>
-              <p className="text-sm text-slate-500">Registro de ingresos y salidas</p>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Historial de Vehículos</h2>
+              <p className="text-sm font-medium text-slate-500 mt-1">Registro de ingresos y salidas</p>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <button
               onClick={exportToCSV}
               disabled={isExporting || sessions.length === 0}
-              className="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+              className="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm text-sm"
             >
               <FileText size={18} />
               {isExporting ? "Exportando..." : "Exportar CSV"}
@@ -281,88 +281,105 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
           </div>
         </div>
 
+        {/* Status Tabs */}
+        <div className="flex gap-2 border-b border-slate-100 mb-6 overflow-x-auto hide-scrollbar pb-1">
+          <button 
+            onClick={() => setFilterStatus("active")}
+            className={`px-6 py-2.5 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${filterStatus === 'active' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+          >
+            En Sistema
+          </button>
+          <button 
+            onClick={() => setFilterStatus("completed")}
+            className={`px-6 py-2.5 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${filterStatus === 'completed' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+          >
+            Salieron (Completados)
+          </button>
+          <button 
+            onClick={() => setFilterStatus("all")}
+            className={`px-6 py-2.5 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${filterStatus === 'all' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+          >
+            Todos
+          </button>
+        </div>
+
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 bg-slate-50/50 p-2 sm:p-4 rounded-3xl border border-slate-100/50">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
               placeholder="Placa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full font-bold uppercase transition-all shadow-sm"
             />
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
               placeholder="Operario..."
               value={employeeSearchTerm}
               onChange={(e) => setEmployeeSearchTerm(e.target.value)}
-              className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full transition-all shadow-sm"
             />
           </div>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
-          >
-            <option value="all">Tipos (Todos)</option>
-            <option value="motos">Motos</option>
-            <option value="carros">Carros</option>
-            <option value="bicicletas">Bicicletas</option>
-            <option value="camionetas">Camionetas</option>
-            <option value="camiones">Camiones</option>
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white"
-          >
-            <option value="all">Estado (Todos)</option>
-            <option value="active">Activos</option>
-            <option value="completed">Completados</option>
-          </select>
+          <div className="relative">
+            <Car className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full appearance-none transition-all shadow-sm"
+            >
+              <option value="all">Todos los vehículos</option>
+              <option value="motos">Motos</option>
+              <option value="carros">Carros</option>
+              <option value="bicicletas">Bicicletas</option>
+              <option value="camionetas">Camionetas</option>
+              <option value="camiones">Camiones</option>
+            </select>
+            <ChevronLeft size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none -rotate-90" />
+          </div>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white text-slate-600"
+            className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full text-slate-600 transition-all shadow-sm font-medium"
             title="Fecha Inicio"
           />
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-full bg-white text-slate-600"
+            className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full text-slate-600 transition-all shadow-sm font-medium"
             title="Fecha Fin"
           />
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-3">
-            <Spinner />
-            <span>Cargando historial...</span>
+          <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-4">
+            <Spinner className="text-indigo-500 w-8 h-8" />
+            <span className="font-medium text-sm tracking-wide">Cargando historial...</span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
+          <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm bg-white">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                 <tr>
-                  <th className="p-4 font-medium rounded-tl-xl">Ticket</th>
-                  <th className="p-4 font-medium">Placa</th>
-                  <th className="p-4 font-medium hidden md:table-cell">Tipo</th>
-                  <th className="p-4 font-medium">Ingreso</th>
-                  <th className="p-4 font-medium">Salida</th>
-                  <th className="p-4 font-medium hidden lg:table-cell">Atendido Por</th>
-                  <th className="p-4 font-medium hidden md:table-cell">Datos Extra</th>
-                  <th className="p-4 font-medium">Estado</th>
-                  <th className="p-4 font-medium">Valor</th>
-                  <th className="p-4 font-medium rounded-tr-xl">Acciones</th>
+                  <th className="p-5 font-bold">Ticket</th>
+                  <th className="p-5 font-bold">Placa</th>
+                  <th className="p-5 font-bold hidden md:table-cell">Tipo</th>
+                  <th className="p-5 font-bold">Ingreso</th>
+                  <th className="p-5 font-bold">Salida</th>
+                  <th className="p-5 font-bold hidden lg:table-cell">Operador</th>
+                  <th className="p-5 font-bold hidden md:table-cell">Extra</th>
+                  <th className="p-5 font-bold">Estado</th>
+                  <th className="p-5 font-bold">Valor</th>
+                  <th className="p-5 font-bold text-center">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {sessions.map((session) => {
                   const isCompleted = session.status === "completed";
                   const currentFee = calculateCurrentFee(session);
@@ -370,68 +387,76 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                   return (
                     <React.Fragment key={session.id}>
                       <tr 
-                        className={`hover:bg-slate-50 transition-colors cursor-pointer ${expandedRow === session.id ? 'bg-indigo-50/50' : ''}`}
+                        className={`hover:bg-slate-50/80 transition-colors cursor-pointer group ${expandedRow === session.id ? 'bg-indigo-50/30' : ''}`}
                         onClick={() => setExpandedRow(expandedRow === session.id ? null : session.id)}
                       >
-                        <td className="p-4 text-slate-600 font-mono text-xs">{session.receipt_number || '-'}</td>
-                        <td className="p-4 font-bold text-slate-900">
-                          {session.vehicles.plate}
+                        <td className="p-5 text-slate-500 font-mono text-xs font-medium">{session.receipt_number || '-'}</td>
+                        <td className="p-5">
+                          <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md inline-block">{session.vehicles.plate}</span>
                           {expandedRow !== session.id && (
-                            <div className="text-[10px] text-indigo-500 font-medium md:hidden mt-1">Toca para ver detalles</div>
+                            <div className="text-[10px] text-indigo-500 font-bold uppercase tracking-wider md:hidden mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Ver más</div>
                           )}
                         </td>
-                        <td className="p-4 capitalize text-slate-600 hidden md:table-cell">{session.vehicles.type}</td>
-                        <td className="p-4 text-slate-600">
-                          {new Date(session.entry_time).toLocaleString()}
+                        <td className="p-5 text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest hidden md:table-cell">{session.vehicles.type}</td>
+                        <td className="p-5 text-slate-600 font-medium">
+                          {new Date(session.entry_time).toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short'
+                          })}
                         </td>
-                        <td className="p-4 text-slate-600">
-                          {isCompleted ? new Date(session.exit_time).toLocaleString() : "-"}
+                        <td className="p-5 text-slate-600 font-medium">
+                          {isCompleted ? new Date(session.exit_time).toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short'
+                          }) : <span className="text-slate-300">-</span>}
                         </td>
-                        <td className="p-4 text-slate-600 hidden lg:table-cell">
+                        <td className="p-5 text-slate-600 hidden lg:table-cell">
                           <div className="text-xs">
-                            <span className="font-semibold text-slate-500">In:</span> {session.entry_employee_name || 'N/A'}
+                            <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] mr-1">In:</span>
+                            <span className="font-medium text-slate-700">{session.entry_employee_name || 'N/A'}</span>
                           </div>
                           {isCompleted && (
-                            <div className="text-xs mt-1">
-                              <span className="font-semibold text-slate-500">Out:</span> {session.exit_employee_name || 'N/A'}
+                            <div className="text-xs mt-1.5">
+                              <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] mr-1">Out:</span> 
+                              <span className="font-medium text-slate-700">{session.exit_employee_name || 'N/A'}</span>
                             </div>
                           )}
                         </td>
-                        <td className="p-4 text-slate-600 hidden md:table-cell">
+                        <td className="p-5 text-slate-600 hidden md:table-cell">
                           {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-wrap gap-1.5 max-w-[150px]">
                               {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (
-                                <span key={k} className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 truncate max-w-[120px]" title={`${k}: ${v}`}>
-                                  <span className="font-medium">{k}:</span> {v as string}
+                                <span key={k} className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 px-1.5 py-1 rounded-md text-slate-500 truncate" title={`${k}: ${v}`}>
+                                  {k}: {v as string}
                                 </span>
                               ))}
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-400">-</span>
+                            <span className="text-slate-300 font-medium">-</span>
                           )}
                         </td>
-                        <td className="p-4">
+                        <td className="p-5">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
                               isCompleted
-                                ? "bg-slate-100 text-slate-600"
-                                : "bg-emerald-100 text-emerald-700"
+                                ? "bg-slate-100 text-slate-500"
+                                : "bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-100"
                             }`}
                           >
                             {isCompleted ? "Completado" : "En Sistema"}
                           </span>
                         </td>
-                        <td className="p-4 font-medium text-slate-900 text-sm">
+                        <td className="p-5 font-black text-slate-900 text-sm tracking-tight border-l border-slate-50 bg-slate-50/30">
                           {formatCurrency(currentFee)}
                         </td>
-                        <td className="p-4">
+                        <td className="p-5">
                           {!isCompleted && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleExit(session); }}
                               disabled={isSubmittingExit === session.id}
-                              className="px-3 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center min-w-[90px]"
+                              className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-indigo-200 disabled:opacity-50 flex items-center justify-center min-w-[100px] w-full"
                             >
-                              {isSubmittingExit === session.id ? <Spinner /> : "Salida Forzada"}
+                              {isSubmittingExit === session.id ? <Spinner className="w-4 h-4" /> : "Salida Forzada"}
                             </button>
                           )}
                         </td>

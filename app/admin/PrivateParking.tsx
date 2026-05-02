@@ -316,20 +316,20 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Parqueaderos Privados</h2>
-          <p className="text-sm text-slate-500">Gestiona los espacios asignados a residentes o propietarios</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Parqueaderos Privados</h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">Gestiona los espacios asignados a residentes o propietarios</p>
         </div>
         {!isCreating && (
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <button
               onClick={handleExportCSV}
-              className="flex-1 md:flex-none justify-center px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2"
+              className="flex-1 md:flex-none justify-center px-4 py-2.5 bg-white text-slate-700 border-2 border-slate-100 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-2"
               title="Exportar archivo CSV con los datos actuales"
             >
               <Download size={18} />
               Exportar
             </button>
-            <label className="flex-1 md:flex-none justify-center cursor-pointer px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+            <label className="flex-1 md:flex-none justify-center cursor-pointer px-4 py-2.5 bg-white text-slate-700 border-2 border-slate-100 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-2">
               {isImporting ? <Spinner size={18} /> : <Upload size={18} />}
               Importar
               <input 
@@ -342,36 +342,36 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
             </label>
             <button
               onClick={() => setIsCreating(true)}
-              className="flex-1 md:flex-none justify-center px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 max-w-full"
+              className="flex-1 md:flex-none justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm shadow-indigo-200"
             >
               <Plus size={18} />
-              Nuevo
+              Crear Nuevo
             </button>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
-          <X size={20} />
-          <p className="font-medium">{error}</p>
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 font-medium text-sm">
+          <X size={20} className="flex-shrink-0" />
+          <p>{error}</p>
         </div>
       )}
 
       {success && <SuccessMessage message={success} />}
 
       {isCreating && (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100 mb-6">
-          <h3 className="text-lg font-medium text-slate-900 mb-4">{editingSpaceId ? 'Editar Espacio' : 'Crear Nuevo Espacio'}</h3>
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-6">
+          <h3 className="text-lg font-bold text-slate-900 mb-6 tracking-tight">{editingSpaceId ? 'Editar Espacio' : 'Crear Nuevo Espacio'}</h3>
           <form onSubmit={handleSaveSpace} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Número de Parqueadero *</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Número de Parqueadero *</label>
                 <input
                   type="text"
                   value={spaceData.space_number}
                   onChange={(e) => setSpaceData({...spaceData, space_number: e.target.value})}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                   placeholder="ej. P-101"
                   required
                 />
@@ -380,7 +380,7 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
               {/* Renderizar campos configurables */}
               {configFields && configFields.map((field) => (
                 <div key={field.name}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                     {field.name} {field.required ? '*' : ''}
                   </label>
                   <input
@@ -390,7 +390,7 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
                       ...customFieldsData,
                       [field.name]: e.target.value
                     })}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                     placeholder={`ej. ${field.name}`}
                     required={field.required}
                   />
@@ -398,17 +398,17 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
               ))}
             </div>
             
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-4 border-t border-slate-100">
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="flex-1 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors"
+                className="flex-1 py-4 bg-white border-2 border-slate-100 hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm shadow-indigo-200"
               >
                 <Save size={20} />
                 {editingSpaceId ? 'Actualizar Espacio' : 'Guardar Espacio'}
@@ -419,62 +419,66 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
       )}
 
       {!isCreating && (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h3 className="text-lg font-medium text-slate-900">Listado de Espacios</h3>
-            <div className="relative w-full sm:w-64">
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Listado de Espacios</h3>
+            <div className="relative w-full sm:w-72">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar espacios..."
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-0 text-slate-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
               />
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             </div>
           </div>
           
           {spaces.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
-              <Home size={48} className="mx-auto text-slate-300 mb-4" />
-              <p className="text-slate-500 font-medium">No hay parqueaderos privados registrados.</p>
-              <p className="text-sm text-slate-400 mt-1">Crea espacios para llevar un control de los parqueaderos asignados.</p>
+            <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
+              <div className="w-16 h-16 bg-white border border-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-sm">
+                <Home size={32} />
+              </div>
+              <p className="text-slate-900 font-bold text-lg mb-1">No hay parqueaderos privados</p>
+              <p className="text-sm font-medium text-slate-500">Crea espacios para llevar un control de los parqueaderos asignados.</p>
             </div>
           ) : filteredSpaces.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              No se encontraron espacios que coincidan con &quot;{searchQuery}&quot;.
+            <div className="text-center py-12 text-slate-500 font-medium bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+              No se encontraron espacios que coincidan con &quot;<span className="text-slate-700 font-bold">{searchQuery}</span>&quot;.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+            <div className="overflow-x-auto rounded-2xl border border-slate-100">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                   <tr>
-                    <th className="px-4 py-3">Parqueadero</th>
+                    <th className="px-5 py-4 font-bold">Parqueadero</th>
                     {configFields && configFields.map(cf => (
-                        <th key={cf.name} className="px-4 py-3">{cf.name}</th>
+                        <th key={cf.name} className="px-5 py-4 font-bold">{cf.name}</th>
                     ))}
-                    <th className="px-4 py-3 text-right">Acciones</th>
+                    <th className="px-5 py-4 font-bold text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-50">
                   {filteredSpaces.map((space) => (
-                    <tr key={space.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                      <td className="px-4 py-3 font-medium text-slate-900">{space.space_number}</td>
+                    <tr key={space.id} className="hover:bg-slate-50/80 transition-colors group">
+                      <td className="px-5 py-4">
+                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md inline-block">{space.space_number}</span>
+                      </td>
                       {configFields && configFields.map(cf => (
-                          <td key={cf.name} className="px-4 py-3 text-slate-600">{space.custom_fields_data?.[cf.name] || '-'}</td>
+                          <td key={cf.name} className="px-5 py-4 text-slate-600 font-medium">{space.custom_fields_data?.[cf.name] || <span className="text-slate-300">-</span>}</td>
                       ))}
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleEditClick(space)}
-                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
                             title="Editar"
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteSpace(space.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
                             title="Eliminar"
                           >
                             <Trash2 size={16} />

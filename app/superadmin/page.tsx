@@ -410,8 +410,8 @@ export default function SuperAdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-20">
+      {/* Mobile Top Header */}
+      <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-30">
         <div className="flex items-center gap-2 font-bold text-lg">
           <ShieldCheck size={24} className="text-indigo-400" />
           <span>Dueño</span>
@@ -421,13 +421,26 @@ export default function SuperAdminPage() {
         </button>
       </div>
 
+      {/* Sidebar Overlay for Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
-        <div className="p-6 hidden md:flex items-center gap-3 font-bold text-xl text-white border-b border-slate-800">
-          <ShieldCheck size={28} className="text-indigo-400" />
-          <span>Panel Dueño</span>
+      <div className={`${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 transition-transform duration-300 w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col h-screen`}>
+        <div className="p-6 flex items-center justify-between gap-3 border-b border-slate-800">
+          <div className="flex items-center gap-3 font-bold text-xl text-white">
+            <ShieldCheck size={28} className="text-indigo-400" />
+            <span>Panel Dueño</span>
+          </div>
+          <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
+            <X size={24} />
+          </button>
         </div>
-        <nav className="p-4 space-y-2 flex-1">
+        <nav className="p-4 flex flex-col gap-2 flex-1 overflow-y-auto">
           <button
             onClick={() => { setActiveTab("lots"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "lots" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}

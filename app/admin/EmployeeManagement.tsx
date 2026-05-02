@@ -115,7 +115,7 @@ export default function EmployeeManagement({
   return (
     <div className="space-y-8">
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 font-medium text-sm">
           <X size={20} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
@@ -123,44 +123,47 @@ export default function EmployeeManagement({
 
       {success && <SuccessMessage message={success} />}
       
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
-            <UserPlus size={24} />
+      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+            <UserPlus size={28} />
           </div>
-          <h2 className="text-xl font-semibold text-slate-900">Crear Empleado</h2>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Crear Empleado</h2>
+            <p className="text-sm font-medium text-slate-500 mt-1">Registra nuevos operarios</p>
+          </div>
         </div>
 
-        <form onSubmit={handleCreateEmployee} className="space-y-5">
+        <form onSubmit={handleCreateEmployee} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Usuario</label>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Usuario</label>
             <input
               type="text"
               value={newEmployee.username}
               onChange={(e) => setNewEmployee({ ...newEmployee, username: e.target.value.toLowerCase().replace(/\s/g, "") })}
-              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
               placeholder="ej. empleado_1"
               required
             />
-            <p className="text-xs text-slate-500 mt-1">Solo minúsculas, números y guiones bajos. Mínimo 4 caracteres.</p>
+            <p className="text-xs text-slate-400 mt-2 font-medium">Solo minúsculas, números y guiones bajos. Mínimo 4 caracteres.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Contraseña</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={newEmployee.password}
                   onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
-                  className="w-full p-3 pr-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                   placeholder="Mínimo 8 caracteres"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -168,10 +171,10 @@ export default function EmployeeManagement({
               
               {/* Strength Indicator */}
               {newEmployee.password.length > 0 && (
-                <div className="mt-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-slate-500">Seguridad de la contraseña</span>
-                    <span className={`text-xs font-semibold ${getStrengthColor().replace('bg-', 'text-')}`}>{getStrengthLabel()}</span>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Seguridad</span>
+                    <span className={`text-[10px] font-black uppercase tracking-wider ${getStrengthColor().replace('bg-', 'text-')}`}>{getStrengthLabel()}</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
                     <div className={`h-full transition-all duration-300 ${getStrengthColor()}`} style={{ width: `${strength}%` }}></div>
@@ -181,24 +184,24 @@ export default function EmployeeManagement({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Confirmar Contraseña</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Confirmar Contraseña</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={newEmployee.confirmPassword}
                   onChange={(e) => setNewEmployee({ ...newEmployee, confirmPassword: e.target.value })}
-                  className={`w-full p-3 border rounded-xl focus:ring-2 outline-none transition-colors ${
+                  className={`w-full text-sm rounded-xl px-4 py-3 border-2 outline-none font-medium transition-all ${
                     newEmployee.confirmPassword 
                       ? newEmployee.password === newEmployee.confirmPassword 
-                        ? 'border-emerald-200 focus:ring-emerald-500 bg-emerald-50/10' 
-                        : 'border-red-200 focus:ring-red-500 bg-red-50/10'
-                      : 'border-slate-200 focus:ring-indigo-500'
+                        ? 'border-emerald-100 bg-emerald-50/30 focus:border-emerald-400 text-emerald-900' 
+                        : 'border-red-100 bg-red-50/30 focus:border-red-400 text-red-900'
+                      : 'bg-slate-50 border-transparent focus:border-indigo-500'
                   }`}
                   placeholder="Repita la contraseña"
                   required
                 />
                 {newEmployee.confirmPassword && newEmployee.password === newEmployee.confirmPassword && (
-                  <ShieldCheck size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
+                  <ShieldCheck size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" />
                 )}
               </div>
             </div>
@@ -207,7 +210,7 @@ export default function EmployeeManagement({
           <button
             type="submit"
             disabled={isCreatingEmployee}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 mt-4"
+            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition-all shadow-sm shadow-indigo-200 flex items-center justify-center gap-2 mt-4"
           >
             {isCreatingEmployee ? (
               <Spinner size={20} className="text-white" />
@@ -219,23 +222,24 @@ export default function EmployeeManagement({
         </form>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-        <h2 className="text-xl font-semibold text-slate-900 mb-6">Empleados Registrados</h2>
+      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
+        <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">Empleados Registrados</h2>
         {employees.length === 0 ? (
-          <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-            No hay empleados registrados aún.
-          </p>
+          <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
+            <UserPlus size={32} className="mx-auto text-slate-300 mb-3" />
+            <p className="font-medium text-slate-500">No hay empleados registrados aún.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {employees.map((emp) => (
-              <div key={emp.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors bg-slate-50/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">
+              <div key={emp.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-2xl hover:border-indigo-100 hover:shadow-sm transition-all bg-white group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black text-lg group-hover:bg-indigo-100 transition-colors">
                     {emp.email.replace('@parkingapp.local', '').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900">{emp.email.replace('@parkingapp.local', '')}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="font-bold text-slate-900">{emp.email.replace('@parkingapp.local', '')}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 hover:text-slate-500">
                       Rol: Empleado
                     </p>
                   </div>
