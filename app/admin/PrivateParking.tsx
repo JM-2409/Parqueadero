@@ -314,22 +314,22 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Parqueaderos Privados</h2>
           <p className="text-sm text-slate-500">Gestiona los espacios asignados a residentes o propietarios</p>
         </div>
         {!isCreating && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <button
               onClick={handleExportCSV}
-              className="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2"
+              className="flex-1 md:flex-none justify-center px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2"
               title="Exportar archivo CSV con los datos actuales"
             >
               <Download size={18} />
               Exportar
             </button>
-            <label className="cursor-pointer px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+            <label className="flex-1 md:flex-none justify-center cursor-pointer px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
               {isImporting ? <Spinner size={18} /> : <Upload size={18} />}
               Importar
               <input 
@@ -342,10 +342,10 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
             </label>
             <button
               onClick={() => setIsCreating(true)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+              className="flex-1 md:flex-none justify-center px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 max-w-full"
             >
               <Plus size={18} />
-              Nuevo Espacio
+              Nuevo
             </button>
           </div>
         )}

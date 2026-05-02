@@ -362,11 +362,24 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* Sidebar Overlay for Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
-        <div className="p-6 hidden md:flex items-center gap-3 font-bold text-xl text-white border-b border-slate-800">
-          <Settings size={28} className="text-indigo-400" />
-          <span>Panel Admin</span>
+      <div className={`${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:sticky top-0 left-0 z-40 transition-transform duration-300 flex flex-col w-64 bg-slate-900 text-slate-300 flex-shrink-0 h-screen md:min-h-screen`}>
+        <div className="p-6 flex items-center justify-between md:justify-start gap-3 flex-wrap"> 
+          <div className="flex items-center gap-3 font-bold text-xl text-white">
+            <Settings size={28} className="text-indigo-400" />
+            <span>Panel Admin</span>
+          </div>
+          <button className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+            <X size={24} className="text-slate-400" />
+          </button>
         </div>
         <div className="p-4 border-b border-slate-800">
           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Parqueadero</p>

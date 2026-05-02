@@ -193,8 +193,9 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
         const exitDate = isCompleted ? new Date(row.exit_time).toLocaleString() : "-";
         
         let extras = "";
-        if (row.extra_data) {
-          extras = Object.entries(row.extra_data).map(([k, v]) => `${k}: ${v}`).join(" | ");
+        const allExtras = { ...row.vehicles?.custom_fields_data, ...row.extra_data };
+        if (Object.keys(allExtras).length > 0) {
+          extras = Object.entries(allExtras).map(([k, v]) => `${k}: ${v}`).join(" | ");
         }
 
         const csvRow = [
@@ -364,9 +365,9 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                       )}
                     </td>
                     <td className="p-4 text-slate-600">
-                      {session.extra_data && Object.keys(session.extra_data).length > 0 ? (
+                      {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
                         <div className="flex flex-col gap-1">
-                          {Object.entries(session.extra_data).map(([k, v]) => (
+                          {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (
                             <span key={k} className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600 truncate max-w-[150px]" title={`${k}: ${v}`}>
                               <span className="font-medium">{k}:</span> {v as string}
                             </span>

@@ -82,3 +82,38 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_role_id UUID REFERENCES cus
 ## 🔒 Notas de Seguridad
 - La clave `SUPABASE_SERVICE_ROLE_KEY` tiene permisos de administrador para crear usuarios. **NUNCA** la expongas en el lado del cliente (navegador). Solo debe usarse en Server Actions o API Routes.
 - Una vez que hayas creado tus usuarios principales, se recomienda deshabilitar o proteger la pestaña de "Registrarse" en el login para evitar que personas no autorizadas creen cuentas.
+
+---
+
+## 📅 Actualizaciones SQL Requeridas
+
+Corre el siguiente script en tu editor SQL de Supabase para agregar la nueva funcionalidad de suscripciones mensuales y tareas automáticas:
+
+```sql
+-- 1. Agregar end_date a suscriptores mensuales
+ALTER TABLE monthly_subscribers ADD COLUMN IF NOT EXISTS end_date DATE;
+UPDATE monthly_subscribers SET end_date = start_date + INTERVAL '1 month' WHERE end_date IS NULL;
+
+-- 2. Tareas Automáticas (Cron)
+-- Habilitar extensión pg_cron (si aún no está habilitada)
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Crear una función para desactivar suscripciones vencidas 
+CREATE OR REPLACE FUNCTION deactivate_expired_subscribers()
+RETURNS void AS $$
+BEGIN
+  -- Desactivar aquellos que su end_date sea menor al día de hoy y sigan activos
+  UPDATE monthly_subscribers
+  SET is_active = false
+  WHERE end_date < CURRENT_DATE
+  AND is_active = true;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Programar para que corra todos los días a la medianoche (Hora Servidor)
+SELECT cron.schedule(
+  'deactivate-expired-subs',
+  '0 0 * * *',
+  'SELECT deactivate_expired_subscribers()'
+);
+```

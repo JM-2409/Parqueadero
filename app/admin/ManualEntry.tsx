@@ -11,9 +11,6 @@ import { SuccessMessage } from "@/components/ui/SuccessMessage";
 export default function ManualEntry({ parkingLotId, allowedVehicles, customFields }: { parkingLotId: string, allowedVehicles: string[], customFields: any[] }) {
   const [plate, setPlate] = useState("");
   const [type, setType] = useState(allowedVehicles[0] || "carros");
-  const [brand, setBrand] = useState("");
-  const [color, setColor] = useState("");
-  const [ownerName, setOwnerName] = useState("");
   const [entryDate, setEntryDate] = useState("");
   const [entryTime, setEntryTime] = useState("");
   const [exitDate, setExitDate] = useState("");
@@ -116,9 +113,10 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
           .insert([{
             plate: sanitizeInput(plate.toUpperCase()),
             type,
-            brand: sanitizeInput(brand),
-            color: sanitizeInput(color),
-            owner_name: sanitizeInput(ownerName),
+            brand: sanitizeInput(extraData['Marca'] || extraData['brand'] || ""),
+            color: sanitizeInput(extraData['Color'] || extraData['color'] || ""),
+            owner_name: sanitizeInput(extraData['Propietario'] || extraData['owner_name'] || ""),
+            custom_fields_data: extraData
           }])
           .select()
           .single();
@@ -164,9 +162,6 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
 
       setSuccess("Registro histórico añadido exitosamente");
       setPlate("");
-      setBrand("");
-      setColor("");
-      setOwnerName("");
       setTotalFee("");
       setExtraData({});
       
@@ -228,27 +223,6 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Marca</label>
-                <input
-                  type="text"
-                  value={brand}
-                  onChange={(e) => setBrand(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Color</label>
-                <input
-                  type="text"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
             </div>
 
             {customFields?.map((field, idx) => (

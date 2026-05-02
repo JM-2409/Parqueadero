@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { History, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { calculateFee } from "@/lib/pricing";
 
 const PAGE_SIZE = 20;
 
-export default function EmployeeHistory({ parkingLotId, showRevenue }: { parkingLotId: string, showRevenue: boolean }) {
+export default function EmployeeHistory({ parkingLotId, showRevenue, tariffs }: { parkingLotId: string, showRevenue: boolean, tariffs: any[] }) {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -116,6 +117,8 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
             <tbody className="divide-y divide-slate-100">
               {sessions.map((session) => {
                 const isCompleted = session.status === "completed";
+                const rules = tariffs?.filter(t => t.vehicle_type === session.vehicles?.type) || [];
+                const currentFee = !isCompleted ? calculateFee(new Date(session.entry_time), new Date(), rules) : 0;
                 
                 return (
                   <tr key={session.id} className="hover:bg-slate-50 transition-colors">
@@ -138,9 +141,9 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
                       )}
                     </td>
                     <td className="p-4 text-slate-600">
-                      {session.extra_data && Object.keys(session.extra_data).length > 0 ? (
+                      {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
                         <div className="flex flex-col gap-1">
-                          {Object.entries(session.extra_data).map(([k, v]) => (
+                          {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (
                             <span key={k} className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600 truncate max-w-[150px]" title={`${k}: ${v}`}>
                               <span className="font-medium">{k}:</span> {v as string}
                             </span>
@@ -163,7 +166,10 @@ export default function EmployeeHistory({ parkingLotId, showRevenue }: { parking
                     </td>
                     {showRevenue && (
                       <td className="p-4 font-medium text-slate-900">
-                        {isCompleted ? formatCurrency(session.fee || session.total_charged || 0) : "-"}
+                        {isCompleted 
+                          ? formatCurrency(session.fee || session.total_charged || 0) 
+                          : <span className="text-emerald-600 border border-emerald-200 bg-emerald-50 px-2 py-0.5 rounded text-xs">{formatCurrency(currentFee)}</span>
+                        }
                       </td>
                     )}
                   </tr>

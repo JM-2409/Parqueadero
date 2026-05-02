@@ -10,6 +10,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   
   // Form states
   const [vehicleType, setVehicleType] = useState(allowedVehicles[0] || "");
@@ -19,13 +20,21 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
 
   const fetchTariffs = useCallback(async () => {
     setLoading(true);
+    setErrorMsg("");
     const { data, error } = await supabase
       .from("tariffs_v2")
       .select("*")
       .eq("parking_lot_id", parkingLotId)
       .order("created_at", { ascending: false });
     
-    if (error) console.error("Error fetching tariffs:", error);
+    if (error) {
+      console.error("Error fetching tariffs:", error);
+      if (error.message.includes("Could not find the table") || error.message.includes("schema cache")) {
+        setErrorMsg("Falta la tabla 'tariffs_v2' en tu base de datos. Pídele al Dueño que ejecute el Código SQL que está en el README.md en la consola de Supabase. Alternativamente intenta recargar la página si ya lo hiciste.");
+      } else {
+        setErrorMsg("Error al obtener las tarifas. " + error.message);
+      }
+    }
     if (data) setTariffs(data);
     setLoading(false);
   }, [parkingLotId]);
@@ -46,6 +55,50 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
     e.preventDefault();
     if (!vehicleType || !rateType || !amount) return;
 
+    const parsedAmount = parseInt(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      alert("El valor de la tarifa debe ser un número positivo mayor a $0.");
+      return;
+    }
+
+    // Basic coherence validations
+    const existingVehicleTariffs = tariffs.filter(t => t.vehicle_type === vehicleType);
+    
+    if (rateType === 'hora') {
+      const minTariff = existingVehicleTariffs.find(t => t.rate_type === 'minuto');
+      if (minTariff && parsedAmount <= minTariff.amount) {
+        alert("Error de coherencia: La tarifa por hora debería ser mayor a la tarifa por minuto.");
+        return;
+      }
+      const dayTariff = existingVehicleTariffs.find(t => t.rate_type === 'dia');
+      if (dayTariff && parsedAmount >= dayTariff.amount) {
+        alert("Error de coherencia: La tarifa por hora no debería ser mayor o igual a la tarifa del día completo.");
+        return;
+      }
+    }
+    
+    if (rateType === 'dia') {
+      const hourTariff = existingVehicleTariffs.find(t => t.rate_type === 'hora');
+      if (hourTariff && parsedAmount <= hourTariff.amount) {
+        alert("Error de coherencia: La tarifa por día debería ser mayor a la tarifa por hora.");
+        return;
+      }
+    }
+
+    if (rateType === 'mes') {
+      const dayTariff = existingVehicleTariffs.find(t => t.rate_type === 'dia');
+      if (dayTariff && parsedAmount <= dayTariff.amount) {
+        alert("Error de coherencia: La tarifa mensual debería ser mayor a la tarifa de un día.");
+        return;
+      }
+    }
+
+    // Check if the rate type already exists for this vehicle
+    if (existingVehicleTariffs.some(t => t.rate_type === rateType)) {
+      alert(`Ya existe una tarifa de tipo "${RATE_LABELS[rateType] || rateType}" para ${vehicleType}. Elimínala primero si deseas actualizarla.`);
+      return;
+    }
+
     setIsAdding(true);
     setSuccess("");
 
@@ -55,7 +108,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
         parking_lot_id: parkingLotId,
         vehicle_type: vehicleType,
         rate_type: rateType,
-        amount: parseInt(amount)
+        amount: parsedAmount
       }]);
 
     if (error) {
@@ -76,7 +129,11 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
     if (!window.confirm(`¿Seguro que deseas eliminar la tarifa de ${RATE_LABELS[rate] || rate} para ${type}?`)) return;
     
     setSuccess("");
-    await supabase.from("tariffs_v2").delete().eq("id", id);
+    const { error } = await supabase.from("tariffs_v2").delete().eq("id", id);
+    if (error) {
+      setErrorMsg("Error al eliminar la tarifa: " + error.message);
+      return;
+    }
     await fetchTariffs();
     setSuccess("Tarifa eliminada");
     setTimeout(() => setSuccess(""), 3000);
@@ -95,7 +152,7 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
           <DollarSign size={24} />
         </div>
@@ -104,6 +161,13 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
           <p className="text-sm text-slate-500">Administra las reglas de cobro por vehículo. El sistema agrupará y calculará automáticamente.</p>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
+          <X size={20} className="flex-shrink-0" />
+          <p className="text-sm">{errorMsg}</p>
+        </div>
+      )}
 
       {success && <SuccessMessage message={success} />}
 

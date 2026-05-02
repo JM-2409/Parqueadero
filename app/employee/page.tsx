@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import EmployeeHistory from "./EmployeeHistory";
 import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
+import CameraOCR from "./CameraOCR";
 import { calculateFee } from "@/lib/pricing";
 
 import { sanitizeInput } from "@/lib/sanitize";
@@ -39,16 +40,19 @@ export default function EmployeePage() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [viewingSession, setViewingSession] = useState<any>(null);
 
-  // Entry form states
+  // Form states
   const [plate, setPlate] = useState("");
   const [debouncedPlate, setDebouncedPlate] = useState("");
   const [type, setType] = useState("carros");
   const [isNewVehicle, setIsNewVehicle] = useState(true);
   const [extraData, setExtraData] = useState<Record<string, string>>({});
+  const [blacklistAlert, setBlacklistAlert] = useState<{plate: string; reason: string} | null>(null);
 
   // Exit form states
   const [exitPlate, setExitPlate] = useState("");
   const [fee, setFee] = useState("");
+
+  const [showCamera, setShowCamera] = useState(false);
 
   const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
@@ -265,7 +269,7 @@ export default function EmployeePage() {
       .maybeSingle();
 
     if (blacklistedItem) {
-      setError(`Entrada Denegada: Vehículo vetado. Motivo: ${blacklistedItem.reason}`);
+      setBlacklistAlert({ plate: plate.toUpperCase(), reason: blacklistedItem.reason });
       setIsSubmittingEntry(false);
       return;
     }
@@ -480,6 +484,42 @@ export default function EmployeePage() {
     );
   }
 
+  // BLACKLIST MODAL
+  if (blacklistAlert) {
+    return (
+      <div className="fixed inset-0 bg-red-900/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-white rounded-3xl p-8 md:p-10 max-w-lg w-full shadow-[0_0_50px_rgba(239,68,68,0.5)] animate-in zoom-in-95 duration-300 transform transition-all border-4 border-red-500">
+          <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <X size={48} strokeWidth={3} />
+          </div>
+          <h2 className="text-3xl font-black text-center text-slate-900 mb-2 uppercase tracking-tight">¡ALERTA ROJA!</h2>
+          <h3 className="text-xl font-bold text-center text-red-600 mb-6 uppercase">Entrada Restringida Módulo De Seguridad</h3>
+          
+          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8">
+            <p className="text-center text-slate-600 mb-2 font-medium">El vehículo con placa:</p>
+            <div className="text-center mb-4">
+              <span className="inline-block px-4 py-2 bg-slate-900 text-white font-mono text-3xl font-bold tracking-widest rounded-xl">
+                {blacklistAlert.plate}
+              </span>
+            </div>
+            <p className="text-center text-slate-600 font-medium">Motivo del veto:</p>
+            <p className="text-center text-red-600 font-bold text-lg mt-1">{blacklistAlert.reason}</p>
+          </div>
+          
+          <button
+            onClick={() => {
+              setBlacklistAlert(null);
+              setPlate("");
+            }}
+            className="w-full py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold text-lg uppercase tracking-wider transition-colors shadow-lg shadow-red-200 focus:outline-none focus:ring-4 focus:ring-red-500/50"
+          >
+            Entendido, Rechazar Ingreso
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       {/* Mobile Header */}
@@ -493,11 +533,24 @@ export default function EmployeePage() {
         </button>
       </div>
 
+      {/* Sidebar Overlay for Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen sticky top-0 z-10`}>
-        <div className="p-6 hidden md:flex items-center gap-3 font-bold text-xl text-white border-b border-slate-800">
-          <Car size={28} className="text-indigo-400" />
-          <span>Operación</span>
+      <div className={`${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:sticky top-0 left-0 z-40 transition-transform duration-300 flex flex-col w-64 bg-slate-900 text-slate-300 flex-shrink-0 h-screen md:min-h-screen`}>
+        <div className="p-6 flex items-center justify-between md:justify-start gap-3 flex-wrap border-b border-slate-800">
+          <div className="flex items-center gap-3 font-bold text-xl text-white">
+            <Car size={28} className="text-indigo-400" />
+            <span>Operación</span>
+          </div>
+          <button className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+            <X size={24} className="text-slate-400" />
+          </button>
         </div>
         
         <div className="p-4 border-b border-slate-800">
@@ -594,18 +647,7 @@ export default function EmployeePage() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (navigator.mediaDevices) {
-                            navigator.mediaDevices.getUserMedia({ video: true })
-                              .then(stream => {
-                                alert("Cámara iniciada (Módulo de OCR pendiente de integración)");
-                                stream.getTracks().forEach(t => t.stop());
-                              })
-                              .catch(() => alert("No se pudo acceder a la cámara"));
-                          } else {
-                            alert("Cámara no soportada en este dispositivo");
-                          }
-                        }}
+                        onClick={() => setShowCamera(true)}
                         className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors"
                         title="Escanear placa"
                       >
@@ -720,26 +762,29 @@ export default function EmployeePage() {
                             </div>
                           </div>
 
-                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-                            <div className="relative flex-1 sm:w-32 hidden lg:block">
-                              <span className="absolute left-3 top-2.5 text-slate-500 font-medium">$</span>
-                              <input
-                                type="number"
-                                value={
-                                  exitPlate === session.id 
-                                    ? fee 
-                                    : (subscribers.some(sub => sub.plate === session.vehicles.plate)
-                                        ? "0"
-                                        : calculateFee(new Date(session.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === session.vehicles.type)).toString()
-                                      )
-                                }
-                                placeholder="Cobro"
-                                className={`w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium bg-white ${subscribers.some(sub => sub.plate === session.vehicles.plate) ? 'text-emerald-600 bg-emerald-50' : ''}`}
-                                onChange={(e) => {
-                                  setExitPlate(session.id);
-                                  setFee(e.target.value);
-                                }}
-                              />
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0 border-t sm:border-0 pt-4 sm:pt-0 border-slate-100">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider sm:hidden">Cobro Actual:</span>
+                              <div className="relative flex-1 sm:w-32 min-w-[120px]">
+                                <span className="absolute left-3 top-2.5 text-slate-500 font-medium">$</span>
+                                <input
+                                  type="number"
+                                  value={
+                                    exitPlate === session.id 
+                                      ? fee 
+                                      : (subscribers.some(sub => sub.plate === session.vehicles.plate)
+                                          ? "0"
+                                          : calculateFee(new Date(session.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === session.vehicles.type)).toString()
+                                        )
+                                  }
+                                  placeholder="Cobro"
+                                  className={`w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium bg-white ${subscribers.some(sub => sub.plate === session.vehicles.plate) ? 'text-emerald-600 bg-emerald-50' : ''}`}
+                                  onChange={(e) => {
+                                    setExitPlate(session.id);
+                                    setFee(e.target.value);
+                                  }}
+                                />
+                              </div>
                             </div>
                             <button
                               onClick={() => handleExit(session.id)}
@@ -814,7 +859,7 @@ export default function EmployeePage() {
           {/* TAB: HISTORY */}
           {activeTab === "history" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <EmployeeHistory parkingLotId={parkingLot.id} showRevenue={parkingLot.show_revenue} />
+              <EmployeeHistory parkingLotId={parkingLot.id} showRevenue={parkingLot.show_revenue} tariffs={tariffs} />
             </div>
           )}
 
@@ -907,6 +952,16 @@ export default function EmployeePage() {
           )}
         </div>
       </div>
+      
+      {/* Camera OCR Modal */}
+      {showCamera && (
+        <CameraOCR 
+          onClose={() => setShowCamera(false)} 
+          onScan={(scannedPlate) => {
+            handleSearchPlate(scannedPlate);
+          }} 
+        />
+      )}
     </div>
   );
 }
