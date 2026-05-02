@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { History, Search, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { History, Search, FileText, ChevronLeft, ChevronRight, Car, User, Palette, Tag } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
+import { Spinner } from "@/components/ui/Spinner";
 
 const PAGE_SIZE = 20;
 
@@ -21,6 +22,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [totalPages, setTotalPages] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -318,7 +320,10 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       </div>
 
       {loading ? (
-        <div className="text-center py-8 text-slate-500">Cargando historial...</div>
+        <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-3">
+          <Spinner />
+          <span>Cargando historial...</span>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -326,14 +331,13 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
               <tr>
                 <th className="p-4 font-medium rounded-tl-xl">Ticket</th>
                 <th className="p-4 font-medium">Placa</th>
-                <th className="p-4 font-medium">Propietario</th>
-                <th className="p-4 font-medium">Tipo</th>
+                <th className="p-4 font-medium hidden md:table-cell">Tipo</th>
                 <th className="p-4 font-medium">Ingreso</th>
                 <th className="p-4 font-medium">Salida</th>
-                <th className="p-4 font-medium">Atendido Por</th>
-                <th className="p-4 font-medium">Datos Extra</th>
+                <th className="p-4 font-medium hidden lg:table-cell">Atendido Por</th>
+                <th className="p-4 font-medium hidden md:table-cell">Datos Extra</th>
                 <th className="p-4 font-medium">Estado</th>
-                <th className="p-4 font-medium">Valor (Actual/Cobrado)</th>
+                <th className="p-4 font-medium">Valor</th>
                 <th className="p-4 font-medium rounded-tr-xl">Acciones</th>
               </tr>
             </thead>
@@ -343,66 +347,126 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                 const currentFee = calculateCurrentFee(session);
                 
                 return (
-                  <tr key={session.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="p-4 text-slate-600 font-mono text-sm">{session.receipt_number || '-'}</td>
-                    <td className="p-4 font-bold text-slate-900">{session.vehicles.plate}</td>
-                    <td className="p-4 text-slate-600">{session.vehicles.owner_name || 'N/A'}</td>
-                    <td className="p-4 capitalize text-slate-600">{session.vehicles.type}</td>
-                    <td className="p-4 text-slate-600">
-                      {new Date(session.entry_time).toLocaleString()}
-                    </td>
-                    <td className="p-4 text-slate-600">
-                      {isCompleted ? new Date(session.exit_time).toLocaleString() : "-"}
-                    </td>
-                    <td className="p-4 text-slate-600">
-                      <div className="text-xs">
-                        <span className="font-semibold text-slate-500">In:</span> {session.entry_employee_name || 'N/A'}
-                      </div>
-                      {isCompleted && (
-                        <div className="text-xs mt-1">
-                          <span className="font-semibold text-slate-500">Out:</span> {session.exit_employee_name || 'N/A'}
+                  <React.Fragment key={session.id}>
+                    <tr 
+                      className={`hover:bg-slate-50 transition-colors cursor-pointer ${expandedRow === session.id ? 'bg-indigo-50/50' : ''}`}
+                      onClick={() => setExpandedRow(expandedRow === session.id ? null : session.id)}
+                    >
+                      <td className="p-4 text-slate-600 font-mono text-xs">{session.receipt_number || '-'}</td>
+                      <td className="p-4 font-bold text-slate-900">
+                        {session.vehicles.plate}
+                        {expandedRow !== session.id && (
+                          <div className="text-[10px] text-indigo-500 font-medium md:hidden mt-1">Toca para ver detalles</div>
+                        )}
+                      </td>
+                      <td className="p-4 capitalize text-slate-600 hidden md:table-cell">{session.vehicles.type}</td>
+                      <td className="p-4 text-slate-600">
+                        {new Date(session.entry_time).toLocaleString()}
+                      </td>
+                      <td className="p-4 text-slate-600">
+                        {isCompleted ? new Date(session.exit_time).toLocaleString() : "-"}
+                      </td>
+                      <td className="p-4 text-slate-600 hidden lg:table-cell">
+                        <div className="text-xs">
+                          <span className="font-semibold text-slate-500">In:</span> {session.entry_employee_name || 'N/A'}
                         </div>
-                      )}
-                    </td>
-                    <td className="p-4 text-slate-600">
-                      {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (
-                            <span key={k} className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600 truncate max-w-[150px]" title={`${k}: ${v}`}>
-                              <span className="font-medium">{k}:</span> {v as string}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400">-</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          isCompleted
-                            ? "bg-slate-100 text-slate-600"
-                            : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        {isCompleted ? "Completado" : "En Sistema"}
-                      </span>
-                    </td>
-                    <td className="p-4 font-medium text-slate-900">
-                      {formatCurrency(currentFee)}
-                    </td>
-                    <td className="p-4">
-                      {!isCompleted && (
-                        <button
-                          onClick={() => handleExit(session)}
-                          disabled={isSubmittingExit === session.id}
-                          className="px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                        {isCompleted && (
+                          <div className="text-xs mt-1">
+                            <span className="font-semibold text-slate-500">Out:</span> {session.exit_employee_name || 'N/A'}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4 text-slate-600 hidden md:table-cell">
+                        {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (
+                              <span key={k} className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 truncate max-w-[120px]" title={`${k}: ${v}`}>
+                                <span className="font-medium">{k}:</span> {v as string}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            isCompleted
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-emerald-100 text-emerald-700"
+                          }`}
                         >
-                          {isSubmittingExit === session.id ? "..." : "Dar Salida"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                          {isCompleted ? "Completado" : "En Sistema"}
+                        </span>
+                      </td>
+                      <td className="p-4 font-medium text-slate-900 text-sm">
+                        {formatCurrency(currentFee)}
+                      </td>
+                      <td className="p-4">
+                        {!isCompleted && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleExit(session); }}
+                            disabled={isSubmittingExit === session.id}
+                            className="px-3 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center min-w-[90px]"
+                          >
+                            {isSubmittingExit === session.id ? <Spinner /> : "Dar Salida"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    
+                    {/* Expanded details row */}
+                    {expandedRow === session.id && (
+                      <tr className="bg-indigo-50/30 border-b border-slate-100">
+                        <td colSpan={10} className="p-4 px-6 relative">
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400"></div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-3">
+                              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles del Vehículo</h4>
+                              <div className="flex items-center gap-2 text-sm text-slate-700">
+                                <Car size={16} className="text-indigo-400" />
+                                <span><span className="font-medium">Marca:</span> {session.vehicles.brand || 'No registrada'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-slate-700">
+                                <Palette size={16} className="text-indigo-400" />
+                                <span><span className="font-medium">Color:</span> {session.vehicles.color || 'No registrado'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-slate-700">
+                                <User size={16} className="text-indigo-400" />
+                                <span><span className="font-medium">Propietario:</span> {session.vehicles.owner_name || 'No registrado'}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles Extras</h4>
+                              {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
+                                <div className="grid grid-cols-2 gap-2">
+                                  {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (
+                                    <div key={k} className="bg-white p-2 border border-slate-200 rounded-lg flex items-start gap-2">
+                                      <Tag size={14} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400">{k}</span>
+                                        <span className="text-xs font-medium text-slate-800">{v as string}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-slate-400 italic">No hay datos extra registrados para este vehículo.</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-3 lg:hidden">
+                               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Atendido Por</h4>
+                               <p className="text-sm"><strong>Entrada:</strong> {session.entry_employee_name || 'N/A'}</p>
+                               {isCompleted && <p className="text-sm"><strong>Salida:</strong> {session.exit_employee_name || 'N/A'}</p>}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
               {sessions.length === 0 && (

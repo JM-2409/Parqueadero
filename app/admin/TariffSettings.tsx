@@ -129,11 +129,18 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
     if (!window.confirm(`¿Seguro que deseas eliminar la tarifa de ${RATE_LABELS[rate] || rate} para ${type}?`)) return;
     
     setSuccess("");
-    const { error } = await supabase.from("tariffs_v2").delete().eq("id", id);
+    // Using select() along with delete() to detect if Row Level Security silently blocked the deletion (0 rows deleted)
+    const { data, error } = await supabase.from("tariffs_v2").delete().eq("id", id).select();
+    
     if (error) {
       setErrorMsg("Error al eliminar la tarifa: " + error.message);
       return;
     }
+    if (data && data.length === 0) {
+      alert("Error: No se pudo eliminar. Tu política de seguridad RLS puede estar bloqueando (DELETE) de esta tabla.");
+      return;
+    }
+    
     await fetchTariffs();
     setSuccess("Tarifa eliminada");
     setTimeout(() => setSuccess(""), 3000);

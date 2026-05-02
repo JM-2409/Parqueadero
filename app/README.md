@@ -64,56 +64,20 @@ Una aplicación web moderna y completa para la gestión de parqueaderos, constru
    ```
    Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-## 🗄️ Estructura de la Base de Datos (Supabase)
+## 🗄️ Estructura de la Base de Datos
 
-Asegúrate de ejecutar este script en el SQL Editor de Supabase para la función de Roles Personalizados:
+La aplicación utiliza Supabase como backend (PostgreSQL). Las tablas principales son:
 
-```sql
-CREATE TABLE IF NOT EXISTS custom_roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  permissions JSONB NOT NULL DEFAULT '[]',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_role_id UUID REFERENCES custom_roles(id);
-```
+- `profiles`: Perfiles de usuarios vinculados a Auth.
+- `parking_lots`: Configuración del parqueadero (capacidad, nombre, dirección, etc.).
+- `vehicles`: Registro de vehículos conocidos por su placa, incluyendo campos extra como marca y color.
+- `parking_sessions`: Sesiones activas e historial de ingresos y salidas.
+- `tariffs_v2`: Reglas de tarifas por tipo de vehículo y tipo de cobro (hora, fracción, día, mes).
+- `custom_roles`: Roles personalizados que definen permisos específicos de empleados.
+- `monthly_subscribers`: Suscriptores mensuales del parqueadero.
+- `blacklisted_vehicles`: Lista negra de vehículos.
+- `cash_closures`: Registros de cierres de caja (cuadres).
 
 ## 🔒 Notas de Seguridad
 - La clave `SUPABASE_SERVICE_ROLE_KEY` tiene permisos de administrador para crear usuarios. **NUNCA** la expongas en el lado del cliente (navegador). Solo debe usarse en Server Actions o API Routes.
 - Una vez que hayas creado tus usuarios principales, se recomienda deshabilitar o proteger la pestaña de "Registrarse" en el login para evitar que personas no autorizadas creen cuentas.
-
----
-
-## 📅 Actualizaciones SQL Requeridas
-
-Corre el siguiente script en tu editor SQL de Supabase para agregar la nueva funcionalidad de suscripciones mensuales y tareas automáticas:
-
-```sql
--- 1. Agregar end_date a suscriptores mensuales
-ALTER TABLE monthly_subscribers ADD COLUMN IF NOT EXISTS end_date DATE;
-UPDATE monthly_subscribers SET end_date = start_date + INTERVAL '1 month' WHERE end_date IS NULL;
-
--- 2. Tareas Automáticas (Cron)
--- Habilitar extensión pg_cron (si aún no está habilitada)
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-
--- Crear una función para desactivar suscripciones vencidas 
-CREATE OR REPLACE FUNCTION deactivate_expired_subscribers()
-RETURNS void AS $$
-BEGIN
-  -- Desactivar aquellos que su end_date sea menor al día de hoy y sigan activos
-  UPDATE monthly_subscribers
-  SET is_active = false
-  WHERE end_date < CURRENT_DATE
-  AND is_active = true;
-END;
-$$ LANGUAGE plpgsql;
-
--- Programar para que corra todos los días a la medianoche (Hora Servidor)
-SELECT cron.schedule(
-  'deactivate-expired-subs',
-  '0 0 * * *',
-  'SELECT deactivate_expired_subscribers()'
-);
-```
