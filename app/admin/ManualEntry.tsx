@@ -151,7 +151,8 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
       if (isCompleted) {
         sessionData.exit_time = exitTimestamp;
         sessionData.exit_employee_name = "Admin (Manual)";
-        sessionData.total_fee = parseFloat(totalFee);
+        sessionData.fee = parseFloat(totalFee);
+        sessionData.total_charged = parseFloat(totalFee);
       }
 
       const { error: sessionError } = await supabase

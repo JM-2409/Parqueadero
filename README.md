@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   full_name TEXT,
   role TEXT CHECK (role IN ('owner', 'admin', 'employee', 'superadmin')) DEFAULT 'employee',
   parking_lot_id UUID,
+  custom_role_id UUID,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -82,8 +83,8 @@ CREATE TABLE IF NOT EXISTS parking_sessions (
   status TEXT CHECK (status IN ('active', 'completed', 'cancelled')) DEFAULT 'active',
   entry_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   exit_time TIMESTAMP WITH TIME ZONE,
-  fee INTEGER DEFAULT 0,
-  total_charged INTEGER DEFAULT 0,
+  fee NUMERIC DEFAULT 0,
+  total_charged NUMERIC DEFAULT 0,
   receipt_number TEXT,
   duration_minutes INTEGER,
   entry_employee_name TEXT,
@@ -99,6 +100,8 @@ CREATE TABLE IF NOT EXISTS tariffs_v2 (
   vehicle_type TEXT NOT NULL,
   rate_type TEXT NOT NULL, 
   amount INTEGER NOT NULL DEFAULT 0,
+  start_time TIME,
+  end_time TIME,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

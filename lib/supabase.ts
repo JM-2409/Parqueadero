@@ -15,5 +15,12 @@ export const isSupabaseConfigured = supabaseUrl.length > 0 && supabaseUrl !== 'h
 
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder_key'
+  supabaseAnonKey || 'placeholder_key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );

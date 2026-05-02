@@ -38,11 +38,13 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
 
   useEffect(() => {
     if (allowedVehicles.length > 0 && !vehicleType) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVehicleType(allowedVehicles[0]);
     }
   }, [allowedVehicles, vehicleType]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTariffs();
   }, [fetchTariffs]);
 

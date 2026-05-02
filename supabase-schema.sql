@@ -79,25 +79,17 @@ CREATE TABLE IF NOT EXISTS admin_parking_lots (
 );
 
 -- 5. Tariffs configuration
-CREATE TABLE IF NOT EXISTS tariffs (
+-- 5. Motor de Tarifas (V2)
+CREATE TABLE IF NOT EXISTS tariffs_v2 (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
   vehicle_type TEXT NOT NULL,
-  charge_type TEXT NOT NULL,
-  day_rate NUMERIC DEFAULT 0,
-  night_rate NUMERIC DEFAULT 0,
-  day_start_time TEXT DEFAULT '06:00',
-  night_start_time TEXT DEFAULT '18:00',
-  grace_period_minutes INTEGER DEFAULT 15,
-  free_minutes INTEGER DEFAULT 0,
-  block_hours INTEGER DEFAULT 12,
-  fraction_minutes INTEGER DEFAULT 15,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(parking_lot_id, vehicle_type)
+  rate_type TEXT NOT NULL,
+  amount INTEGER NOT NULL DEFAULT 0,
+  start_time TIME,
+  end_time TIME,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- Safely add new columns to tariffs if they do not exist (migration support)
-ALTER TABLE tariffs ADD COLUMN IF NOT EXISTS fraction_minutes INTEGER DEFAULT 15;
 
 -- 6. Custom Employee Roles
 CREATE TABLE IF NOT EXISTS custom_roles (
@@ -203,7 +195,7 @@ ALTER TABLE subscription_plans DISABLE ROW LEVEL SECURITY;
 ALTER TABLE parking_lots DISABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_parking_lots DISABLE ROW LEVEL SECURITY;
-ALTER TABLE tariffs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tariffs_v2 DISABLE ROW LEVEL SECURITY;
 ALTER TABLE custom_roles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE vehicles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE parking_sessions DISABLE ROW LEVEL SECURITY;

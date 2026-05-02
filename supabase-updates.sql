@@ -18,17 +18,14 @@ ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAM
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT false;
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS lost_ticket_fee NUMERIC DEFAULT 15000;
 
-CREATE TABLE IF NOT EXISTS tariffs (
+CREATE TABLE IF NOT EXISTS tariffs_v2 (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
   vehicle_type TEXT NOT NULL,
-  charge_type TEXT NOT NULL CHECK (charge_type IN ('minute', 'hour', 'fraction', 'block')),
-  block_hours INTEGER DEFAULT 12,
-  day_rate NUMERIC DEFAULT 0,
-  night_rate NUMERIC DEFAULT 0,
-  day_start_time TIME DEFAULT '06:00:00',
-  night_start_time TIME DEFAULT '18:00:00',
-  free_minutes INTEGER DEFAULT 0,
+  rate_type TEXT NOT NULL,
+  amount INTEGER NOT NULL DEFAULT 0,
+  start_time TIME,
+  end_time TIME,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -112,7 +109,7 @@ CREATE TABLE IF NOT EXISTS invite_codes (
 
 ALTER TABLE invite_codes DISABLE ROW LEVEL SECURITY;
 ALTER TABLE app_settings DISABLE ROW LEVEL SECURITY;
-ALTER TABLE tariffs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tariffs_v2 DISABLE ROW LEVEL SECURITY;
 ALTER TABLE custom_roles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE private_parking_spaces DISABLE ROW LEVEL SECURITY;
 ALTER TABLE cash_closures DISABLE ROW LEVEL SECURITY;
