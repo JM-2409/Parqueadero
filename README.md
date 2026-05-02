@@ -27,7 +27,7 @@ Plataforma integral SaaS para la administración corporativa y operativa de múl
 ## Motor de la Aplicación ⚡
 El núcleo del sistema reside en:
 1. **Verificación de Seguridad a Nivel RLS (Row Level Security):** Cada tabla filtra la información basado en el `parking_lot_id`, aislando la data de manera segura (Multi-Tenant).
-2. **Cálculo de Tarifas (`pricing.ts`):** Basado en el registro de tiempo `(Entry Time -> Exit Time)`, evalúa en cascada contra la tabla `tariffs_v2` para definir si cobra minutos, horas, o la tarifa tope diaria.
+2. **Cálculo de Tarifas (`pricing.ts`):** Basado en el registro de tiempo `(Entry Time -> Exit Time)`, evalúa en cascada contra la tabla `tariffs_v3` para definir si cobra minutos, horas, o la tarifa tope diaria.
 
 ## Implementación de Base de Datos Completa (Setup SQL) 🗄️
 Corre el siguiente script en tu editor SQL de Supabase para inicializar todas las tablas requeridas.
@@ -40,8 +40,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   full_name TEXT,
+  email TEXT,
   role TEXT CHECK (role IN ('owner', 'admin', 'employee', 'superadmin')) DEFAULT 'employee',
   parking_lot_id UUID,
+  custom_role_id UUID,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -92,13 +94,15 @@ CREATE TABLE IF NOT EXISTS parking_sessions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. Motor de Tarifas (V2)
-CREATE TABLE IF NOT EXISTS tariffs_v2 (
+-- 5. Motor de Tarifas (V3)
+CREATE TABLE IF NOT EXISTS tariffs_v3 (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
   vehicle_type TEXT NOT NULL,
   rate_type TEXT NOT NULL, 
   amount INTEGER NOT NULL DEFAULT 0,
+  start_time TIME,
+  end_time TIME,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -155,7 +159,7 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE parking_lots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE parking_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tariffs_v2 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tariffs_v3 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE blacklisted_vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private_parking_spaces ENABLE ROW LEVEL SECURITY;
@@ -165,9 +169,14 @@ CREATE POLICY "Public Profiles" ON profiles FOR ALL USING (true) WITH CHECK (tru
 CREATE POLICY "Public Parking Lots" ON parking_lots FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Vehicles" ON vehicles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Sessions" ON parking_sessions FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public Tariffs V2" ON tariffs_v2 FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Tariffs V3" ON tariffs_v3 FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Subscribers" ON monthly_subscribers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Blacklist" ON blacklisted_vehicles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Private Spaces" ON private_parking_spaces FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Cash Closures" ON cash_closures FOR ALL USING (true) WITH CHECK (true);
 ```
+
+## Correcciones e Interacciones Recientes 🔄
+- **Autocompletado Inteligente**: Al digitar una placa de vehículo registrado previamente en el sistema de la sucursal (o general), los campos extra (`Marca`, `Color`, etc) se mapean y populán automáticamente minimizando el tiempo de ingreso del personal.
+- **Transiciones de Múltiples Operarios**: Inclusión de un botón "Cambiar" en el panel de control del empleado, evitando el cierre de sesión de la cuenta máster. Permite rotación de turnos (cambio de nombre de operario) de manera fluida y rápida en la misma estación de trabajo.
+- **Gestión Unificada de Tarifas**: Control de visualización V3 con botones de eliminar bloqueantes intermedios para evitar clics dobles, y prevención estricta de políticas de seguridad para simplificar la corrección de errores en la eliminación.

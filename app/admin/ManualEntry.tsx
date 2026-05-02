@@ -28,7 +28,7 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
   useEffect(() => {
     const fetchTariffs = async () => {
       const { data } = await supabase
-        .from("tariffs_v2")
+        .from("tariffs_v3")
         .select("*")
         .eq("parking_lot_id", parkingLotId);
       if (data) setTariffs(data);

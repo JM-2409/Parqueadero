@@ -52,15 +52,19 @@ export async function createUser(
     }
 
     // 2. Create profile
+    const profilePayload: Record<string, any> = {
+      id: authData.user.id,
+      email,
+      role,
+      parking_lot_id: parkingLotId,
+    };
+    if (customRoleId) {
+      profilePayload.custom_role_id = customRoleId;
+    }
+
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
-      .insert({
-        id: authData.user.id,
-        email,
-        role,
-        parking_lot_id: parkingLotId,
-        custom_role_id: customRoleId || null,
-      });
+      .insert(profilePayload);
 
     if (profileError) {
       // Rollback user creation if profile fails

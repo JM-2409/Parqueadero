@@ -72,11 +72,16 @@ La aplicación utiliza Supabase como backend (PostgreSQL). Las tablas principale
 - `parking_lots`: Configuración del parqueadero (capacidad, nombre, dirección, etc.).
 - `vehicles`: Registro de vehículos conocidos por su placa, incluyendo campos extra como marca y color.
 - `parking_sessions`: Sesiones activas e historial de ingresos y salidas.
-- `tariffs_v2`: Reglas de tarifas por tipo de vehículo y tipo de cobro (hora, fracción, día, mes).
+- `tariffs_v3`: Reglas de tarifas por tipo de vehículo y tipo de cobro (hora, fracción, día, mes).
 - `custom_roles`: Roles personalizados que definen permisos específicos de empleados.
 - `monthly_subscribers`: Suscriptores mensuales del parqueadero.
 - `blacklisted_vehicles`: Lista negra de vehículos.
 - `cash_closures`: Registros de cierres de caja (cuadres).
+
+## 🔄 Correcciones e Interacciones Recientes
+- **Autocompletado Inteligente**: Al digitar una placa de vehículo registrado previamente en el sistema de la sucursal (o general), los campos extra (`Marca`, `Color`, etc) se mapean y populán automáticamente minimizando el tiempo de ingreso del personal.
+- **Transiciones de Múltiples Operarios**: Inclusión de un botón "Cambiar" en el panel de control del empleado, evitando el cierre de sesión de la cuenta máster. Permite rotación de turnos (cambio de nombre de operario) de manera fluida y rápida en la misma estación de trabajo.
+- **Gestión Unificada de Tarifas**: Control de visualización V3 con botones de eliminar bloqueantes intermedios para evitar clics dobles, y prevención estricta de políticas de seguridad para simplificar la corrección de errores en la eliminación.
 
 ## 🔒 Notas de Seguridad
 - La clave `SUPABASE_SERVICE_ROLE_KEY` tiene permisos de administrador para crear usuarios. **NUNCA** la expongas en el lado del cliente (navegador). Solo debe usarse en Server Actions o API Routes.

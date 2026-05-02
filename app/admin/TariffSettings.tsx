@@ -19,11 +19,13 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
   const [endTime, setEndTime] = useState("18:00");
   const [isAdding, setIsAdding] = useState(false);
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const fetchTariffs = useCallback(async () => {
     setLoading(true);
     setErrorMsg("");
     const { data, error } = await supabase
-      .from("tariffs_v2")
+      .from("tariffs_v3")
       .select("*")
       .eq("parking_lot_id", parkingLotId)
       .order("created_at", { ascending: false });
@@ -80,12 +82,12 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
       payload.end_time = endTime;
     }
 
-    const { error } = await supabase.from("tariffs_v2").insert([payload]);
+    const { error } = await supabase.from("tariffs_v3").insert([payload]);
 
     if (error) {
       console.error("Error al guardar tarifa:", error);
       if (typeof error === 'object' && JSON.stringify(error).includes("start_time")) {
-        setErrorMsg("Faltan las columnas 'start_time' y 'end_time' en tu base de datos. Ejecuta: ALTER TABLE tariffs_v2 ADD COLUMN start_time TIME, ADD COLUMN end_time TIME; en SQL Supabase.");
+        setErrorMsg("Faltan columnas. Ejecuta el nuevo SQL para tariffs_v3 en el README.");
       } else {
         setErrorMsg("Error al guardar: " + (error.message || JSON.stringify(error)));
       }
@@ -100,28 +102,24 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
     setTimeout(() => setSuccess(""), 3000);
   };
 
-  const handleDelete = async (id: string, type: string, rate: string) => {
-    if (!window.confirm(`¿Seguro que deseas eliminar la tarifa de ${RATE_LABELS[rate] || rate} para ${type}?`)) return;
-    
+  const handleDelete = async (id: string) => {
     setSuccess("");
     setErrorMsg("");
+    setDeletingId(id);
     
     // Select to detect RLS failure
-    const { data, error } = await supabase.from("tariffs_v2").delete().eq("id", id).select();
+    const { error } = await supabase.from("tariffs_v3").delete().eq("id", id);
     
     if (error) {
       console.error("Delete error:", error);
       setErrorMsg("Error al eliminar la tarifa: " + (error.message || JSON.stringify(error)));
-      return;
-    }
-    
-    if (data && data.length === 0) {
-      alert("Error: No se eliminó la tarifa. Es posible que tu política RLS en Supabase esté bloqueando operaciones DELETE, o la tarifa ya fue eliminada.");
+      setDeletingId(null);
       return;
     }
     
     await fetchTariffs();
     setSuccess("Tarifa eliminada");
+    setDeletingId(null);
     setTimeout(() => setSuccess(""), 3000);
   };
 
@@ -317,11 +315,12 @@ export default function TariffSettings({ parkingLotId, allowedVehicles }: { park
                           )}
                         </div>
                         <button
-                          onClick={() => handleDelete(t.id, t.vehicle_type, t.rate_type)}
-                          className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                          onClick={() => handleDelete(t.id)}
+                          disabled={deletingId === t.id}
+                          className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-50"
                           title="Eliminar tarifa"
                         >
-                          <Trash2 size={18} />
+                          {deletingId === t.id ? <Spinner size={18} className="text-red-500" /> : <Trash2 size={18} />}
                         </button>
                       </div>
                     ))}

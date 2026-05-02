@@ -97,7 +97,7 @@ export default function EmployeeManagement({
       // Refresh employees list local
       const { data } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, email, role, parking_lot_id, created_at")
         .eq("parking_lot_id", parkingLotId)
         .eq("role", "employee");
         
@@ -129,7 +129,7 @@ export default function EmployeeManagement({
             <UserPlus size={28} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Crear Empleado</h2>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Crear Usuario u Operario</h2>
             <p className="text-sm font-medium text-slate-500 mt-1">Registra nuevos operarios</p>
           </div>
         </div>
@@ -217,17 +217,17 @@ export default function EmployeeManagement({
             ) : (
               <UserPlus size={20} />
             )}
-            {isCreatingEmployee ? "Creando..." : "Crear Empleado"}
+            {isCreatingEmployee ? "Creando..." : "Crear Usuario u Operario"}
           </button>
         </form>
       </div>
 
       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-        <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">Empleados Registrados</h2>
+        <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">Usuarios Registrados</h2>
         {employees.length === 0 ? (
           <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
             <UserPlus size={32} className="mx-auto text-slate-300 mb-3" />
-            <p className="font-medium text-slate-500">No hay empleados registrados aún.</p>
+            <p className="font-medium text-slate-500">No hay usuarios registrados aún.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -235,12 +235,12 @@ export default function EmployeeManagement({
               <div key={emp.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-2xl hover:border-indigo-100 hover:shadow-sm transition-all bg-white group">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black text-lg group-hover:bg-indigo-100 transition-colors">
-                    {emp.email.replace('@parkingapp.local', '').charAt(0).toUpperCase()}
+                    {(emp.email || emp.full_name || 'U').replace('@parkingapp.local', '').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900">{emp.email.replace('@parkingapp.local', '')}</p>
+                    <p className="font-bold text-slate-900">{(emp.email || emp.full_name || 'Usuario').replace('@parkingapp.local', '')}</p>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 hover:text-slate-500">
-                      Rol: Empleado
+                      Rol: Operario
                     </p>
                   </div>
                 </div>

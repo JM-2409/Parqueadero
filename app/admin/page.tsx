@@ -95,7 +95,7 @@ export default function AdminPage() {
   const fetchEmployees = useCallback(async (parkingLotId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, full_name, email, role, parking_lot_id, created_at")
       .eq("parking_lot_id", parkingLotId)
       .eq("role", "employee");
     if (data) {
@@ -293,9 +293,9 @@ export default function AdminPage() {
     );
 
     if (!result.success) {
-      setError(result.error || "Error al crear empleado");
+      setError(result.error || "Error al crear usuario");
     } else {
-      setSuccess("Empleado creado exitosamente");
+      setSuccess("Usuario creado exitosamente");
       setNewEmployee({ username: "", password: "", customRoleId: "" });
       await fetchEmployees(parkingLot.id);
       setTimeout(() => setSuccess(""), 3000);
@@ -412,7 +412,7 @@ export default function AdminPage() {
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "employees" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
             <Users size={20} />
-            <span className="font-medium whitespace-nowrap text-left">Empleados</span>
+            <span className="font-medium whitespace-nowrap text-left">Usuarios u Operarios</span>
           </button>
           <button
             onClick={() => { setActiveTab("private_parking"); setIsMobileMenuOpen(false); }}
@@ -481,38 +481,36 @@ export default function AdminPage() {
                     <p className="text-3xl font-bold text-slate-800">{todayStats.vehicles}</p>
                   </div>
                 </div>
-                {parkingLot.show_revenue && (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl">
-                          <DollarSign size={32} />
-                        </div>
-                        <div>
-                          <h3 className="text-slate-500 text-sm font-medium">Recaudo Actual (En Caja)</h3>
-                          <p className="text-3xl font-bold text-slate-800">
-                            {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(todayStats.revenue)}
-                          </p>
-                        </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                        <DollarSign size={32} />
                       </div>
-                      <button
-                        onClick={handleCloseRegister}
-                        disabled={isClosingRegister || todayStats.revenue === 0}
-                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-                      >
-                        {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
-                      </button>
+                      <div className="min-w-0">
+                        <h3 className="text-slate-500 text-sm font-medium truncate">Recaudo Actual (En Caja)</h3>
+                        <p className="text-2xl sm:text-3xl font-bold text-slate-800 truncate">
+                          {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(todayStats.revenue)}
+                        </p>
+                      </div>
                     </div>
+                    <button
+                      onClick={handleCloseRegister}
+                      disabled={isClosingRegister || todayStats.revenue === 0}
+                      className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                    >
+                      {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
               
-              {parkingLot.show_revenue && weeklyStats.length > 0 && (
+              {weeklyStats.length > 0 && (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-slate-700 font-semibold">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+                    <h3 className="text-slate-700 font-semibold break-words">
                       Ingresos Acumulados ({statPeriod === '7days' ? 'Últimos 7 Días' : 'Últimos 30 Días'}): 
-                      <span className="ml-2 text-emerald-600">
+                      <span className="sm:ml-2 text-emerald-600 font-bold">
                         {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(
                           weeklyStats.reduce((sum, stat) => sum + stat.amount, 0)
                         )}
@@ -669,7 +667,7 @@ export default function AdminPage() {
                           onChange={(e) => setShowRevenue(e.target.checked)}
                           className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                         />
-                        <span className="text-slate-700 font-medium">Mostrar recaudo a empleados</span>
+                        <span className="text-slate-700 font-medium">Mostrar recaudo a usuarios (operarios)</span>
                       </label>
                     </div>
                   </div>

@@ -101,7 +101,7 @@ export default function EmployeePage() {
     const { data: appData } = await supabase.from("app_settings").select("*").limit(1).maybeSingle();
     if (appData) setAppSettings(appData);
 
-    const { data: tariffData } = await supabase.from("tariffs_v2").select("*").eq("parking_lot_id", id);
+    const { data: tariffData } = await supabase.from("tariffs_v3").select("*").eq("parking_lot_id", id);
     if (tariffData) setTariffs(tariffData);
 
     setLoading(false);
@@ -216,13 +216,20 @@ export default function EmployeePage() {
 
         if (data) {
           setType(data.type);
-          if (data.custom_fields_data) setExtraData(data.custom_fields_data);
+          
+          const newExtraData = { ...(data.custom_fields_data || {}) };
+          if (data.brand && !newExtraData['Marca'] && !newExtraData['brand']) newExtraData['Marca'] = data.brand;
+          if (data.color && !newExtraData['Color'] && !newExtraData['color']) newExtraData['Color'] = data.color;
+          if (data.owner_name && !newExtraData['Propietario'] && !newExtraData['owner_name']) newExtraData['Propietario'] = data.owner_name;
+          
+          setExtraData(newExtraData);
           setIsNewVehicle(false);
         } else {
           setIsNewVehicle(true);
         }
       } else {
         setIsNewVehicle(true);
+        setExtraData({});
       }
     };
     searchVehicle();
@@ -342,7 +349,7 @@ export default function EmployeePage() {
         }]);
 
       if (sessionError) {
-        setError("Error al registrar ingreso");
+        setError("Error al registrar ingreso: " + sessionError.message);
       } else {
         setSuccess("Ingreso registrado exitosamente");
         setPlate("");
@@ -419,7 +426,7 @@ export default function EmployeePage() {
       .single();
 
     if (updateError) {
-      setError("Error al registrar salida");
+      setError("Error al registrar salida: " + updateError.message);
     } else {
       setSuccess("Salida registrada exitosamente");
       setExitPlate("");
@@ -554,9 +561,21 @@ export default function EmployeePage() {
         </div>
         
         <div className="p-4 border-b border-slate-800">
-          <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Turno Actual</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Turno Actual</p>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("shiftName");
+                setIsShiftSet(false);
+                setShiftName("");
+              }}
+              className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded transition-colors"
+            >
+              Cambiar
+            </button>
+          </div>
           <div className="flex items-center gap-2 text-white bg-slate-800 p-2 rounded-lg">
-            <User size={16} className="text-indigo-400" />
+            <User size={16} className="text-indigo-400 shrink-0" />
             <span className="font-medium truncate">{shiftName}</span>
           </div>
         </div>
@@ -716,10 +735,10 @@ export default function EmployeePage() {
                     <h2 className="text-xl font-semibold text-slate-900">Vehículos en Parqueadero</h2>
                   </div>
                   {parkingLot?.show_revenue && (
-                    <div className="hidden sm:flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg text-sm font-medium border border-emerald-100">
-                      <DollarSign size={16} />
-                      <span className="font-bold">
-                        Recaudo Actual: {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(accumulatedRevenue)}
+                    <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg text-sm font-medium border border-emerald-100 max-w-full overflow-hidden">
+                      <DollarSign size={16} className="shrink-0" />
+                      <span className="font-bold truncate">
+                        Recaudo: {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(accumulatedRevenue)}
                       </span>
                     </div>
                   )}

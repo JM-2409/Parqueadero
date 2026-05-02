@@ -30,7 +30,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     
     // Fetch tariffs
     const { data: tariffData } = await supabase
-      .from("tariffs_v2")
+      .from("tariffs_v3")
       .select("*")
       .eq("parking_lot_id", parkingLotId);
     if (tariffData) setTariffs(tariffData);
