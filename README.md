@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS parking_lots (
   private_custom_fields JSONB DEFAULT '[{"name": "Propietario", "required": false, "visible": true}, {"name": "Bloque", "required": false, "visible": true}, {"name": "Apartamento", "required": false, "visible": true}]'::jsonb,
   subscription_end_date TIMESTAMP WITH TIME ZONE,
   is_suspended BOOLEAN DEFAULT false,
+  shift_grace_period_mins INTEGER DEFAULT 15,
+  entry_grace_period_mins INTEGER DEFAULT 15,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -178,6 +180,7 @@ CREATE POLICY "Public Cash Closures" ON cash_closures FOR ALL USING (true) WITH 
 ```
 
 ## Correcciones e Interacciones Recientes 🔄
+- **Tiempo de Gabela (Tolerancia) Flexible**: Ahora puedes configurar los minutos de cortesía en la tabla de configuración. Esto cubre tanto los minutos iniciales de estadía para que cuente como gratis (Entrada de Cortesía) como el rango de tiempo (gabela) de los turnos de Día/Noche. Por ejemplo, salir 15 minutos después de terminado el turno no cobrará el siguiente rango horario, o entrar 15 minutos antes de que empiece un turno lo arrastrará al siguiente evitando dobles cobros inesperados.
 - **Autocompletado Inteligente**: Al digitar una placa de vehículo registrado previamente en el sistema de la sucursal (o general), los campos extra (`Marca`, `Color`, etc) se mapean y populán automáticamente (Ahora extendido a Ingreso Manual y Registro de Abonados Mensuales).
 - **Historial de Cierres de Caja**: Nueva pestaña en el panel administrador que muestra un registro exacto de la hora de apertura y cierre de cada turno/caja, y el recaudo final de ese período.
 - **Transiciones de Múltiples Operarios**: Inclusión de un botón "Cambiar" en el panel de control del empleado, evitando el cierre de sesión de la cuenta máster. Permite rotación de turnos (cambio de nombre de operario) de manera fluida y rápida en la misma estación de trabajo.

@@ -6,6 +6,11 @@ export interface TariffRule {
   end_time?: string | null;
 }
 
+export interface PricingSettings {
+  entry_grace_period_mins?: number;
+  shift_grace_period_mins?: number;
+}
+
 function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule[]): number {
   let currentMs = startMs;
   let totalFee = 0;
@@ -43,7 +48,6 @@ function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule
     const nightShiftStart = new Date(currentDate);
     nightShiftStart.setHours(nightStartHour, nightStartMin, 0, 0);
     
-    // Si la hora de noche es menor o igual a la de día (ej: noche empieza 00:00 y día a las 06:00), ajustable
     if (nightShiftStart.getTime() <= dayShiftStart.getTime()) {
       nightShiftStart.setDate(nightShiftStart.getDate() + 1);
     }
@@ -99,10 +103,8 @@ function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule
 
     if (rateShift !== undefined) {
        if (anyBaseRule) {
-          // If the accumulated cost exceeds the shift cost, cap it at shift cost
           segmentCost = Math.min(baseCost, rateShift);
        } else {
-          // If only shift cost is specified
           segmentCost = rateShift;
        }
     }
@@ -114,17 +116,87 @@ function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule
   return totalFee;
 }
 
-export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[]): number {
+export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[], settings?: PricingSettings): number {
   if (!rules || !Array.isArray(rules) || rules.length === 0) return 0;
 
-  const entryMs = entryTime.getTime();
-  const exitMs = exitTime.getTime();
-  const durationMs = exitMs - entryMs;
+  // Use provided settings or defaults
+  const entryGraceMins = settings?.entry_grace_period_mins !== undefined ? settings.entry_grace_period_mins : 15;
+  const shiftGraceMins = settings?.shift_grace_period_mins !== undefined ? settings.shift_grace_period_mins : 15;
+
+  let entryMs = entryTime.getTime();
+  let exitMs = exitTime.getTime();
+  let durationMs = exitMs - entryMs;
   
   if (durationMs <= 0) return 0;
 
-  const gracePeriodMs = 15 * 60000;
-  if (durationMs <= gracePeriodMs) return 0;
+  // 1. Gabela inicial (grace period entry) (ej. si sale antes de 15 min, paga 0)
+  const entryGraceMs = Math.max(0, entryGraceMins * 60000);
+  if (durationMs <= entryGraceMs && entryGraceMs > 0) return 0;
+
+  // 2. Shift adjustments (gabela turnos) (ej., entra 05:45 (shift a las 06:00), se ajusta a las 06:00)
+  // And si sale 06:15, se ajusta a las 06:00
+  const shiftGraceMs = Math.max(0, shiftGraceMins * 60000);
+  
+  if (shiftGraceMs > 0) {
+    const ruleDia = rules.find(r => r.rate_type === 'dia');
+    const ruleNoche = rules.find(r => r.rate_type === 'noche');
+
+    let dayStartHour = 6, dayStartMin = 0;
+    let nightStartHour = 18, nightStartMin = 0;
+
+    if (ruleDia?.start_time) {
+      const [h, m] = ruleDia.start_time.split(':');
+      dayStartHour = parseInt(h, 10) || 6;
+      dayStartMin = parseInt(m, 10) || 0;
+    }
+    if (ruleNoche?.start_time) {
+      const [h, m] = ruleNoche.start_time.split(':');
+      nightStartHour = parseInt(h, 10) || 18;
+      nightStartMin = parseInt(m, 10) || 0;
+    } else if (ruleDia?.end_time) {
+      const [h, m] = ruleDia.end_time.split(':');
+      nightStartHour = parseInt(h, 10) || 18;
+      nightStartMin = parseInt(m, 10) || 0;
+    }
+
+    const checkAndAdjustEntryToShift = (baseDate: Date, targetHour: number, targetMin: number) => {
+      let shiftDate = new Date(baseDate);
+      shiftDate.setHours(targetHour, targetMin, 0, 0);
+      let diff = shiftDate.getTime() - entryMs;
+      // If entry was just BEFORE shift starts (within grace period)
+      if (diff > 0 && diff <= shiftGraceMs) {
+        entryMs = shiftDate.getTime();
+      }
+    };
+
+    const checkAndAdjustExitToShift = (baseDate: Date, targetHour: number, targetMin: number) => {
+      let shiftDate = new Date(baseDate);
+      shiftDate.setHours(targetHour, targetMin, 0, 0);
+      let diff = exitMs - shiftDate.getTime();
+      // If exit was just AFTER shift ends (within grace period)
+      if (diff > 0 && diff <= shiftGraceMs) {
+        exitMs = shiftDate.getTime();
+      }
+    };
+
+    // Check yesterday, today, and tomorrow for shifts relative to entry/exit
+    for (let offset = -1; offset <= 1; offset++) {
+      let tempEntryDate = new Date(entryMs);
+      tempEntryDate.setDate(tempEntryDate.getDate() + offset);
+      checkAndAdjustEntryToShift(tempEntryDate, dayStartHour, dayStartMin);
+      checkAndAdjustEntryToShift(tempEntryDate, nightStartHour, nightStartMin);
+      
+      let tempExitDate = new Date(exitMs);
+      tempExitDate.setDate(tempExitDate.getDate() + offset);
+      checkAndAdjustExitToShift(tempExitDate, dayStartHour, dayStartMin);
+      checkAndAdjustExitToShift(tempExitDate, nightStartHour, nightStartMin);
+    }
+    
+    // Safety check in case adjustments flip entry and exit
+    if (entryMs >= exitMs) {
+      return 0; 
+    }
+  }
 
   const block12h = rules.find(r => r.rate_type === 'bloque_12h')?.amount;
 

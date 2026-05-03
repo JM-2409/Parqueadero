@@ -399,7 +399,10 @@ export default function EmployeePage() {
     if (subscriber) {
       finalFee = 0;
     } else if (exitPlate !== sessionId || !fee || isNaN(finalFee)) {
-      finalFee = calculateFee(entryTime, exitTime, rules);
+      finalFee = calculateFee(entryTime, exitTime, rules, {
+        entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+        shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+      });
     }
 
     // Generar consecutivo usando sequence property si se quiere, o autocalculado
@@ -793,7 +796,10 @@ export default function EmployeePage() {
                                       ? fee 
                                       : (subscribers.some(sub => sub.plate === session.vehicles.plate)
                                           ? "0"
-                                          : calculateFee(new Date(session.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === session.vehicles.type)).toString()
+                                          : calculateFee(new Date(session.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === session.vehicles.type), {
+                                              entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+                                              shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+                                            }).toString()
                                         )
                                   }
                                   placeholder="Cobro"
@@ -878,7 +884,7 @@ export default function EmployeePage() {
           {/* TAB: HISTORY */}
           {activeTab === "history" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <EmployeeHistory parkingLotId={parkingLot.id} showRevenue={parkingLot.show_revenue} tariffs={tariffs} />
+              <EmployeeHistory parkingLot={parkingLot} tariffs={tariffs} />
             </div>
           )}
 
@@ -955,7 +961,10 @@ export default function EmployeePage() {
                       setViewingSession(null);
                       // Pre-fill the exit form logic
                       setExitPlate(sessionId);
-                      const currentFee = calculateFee(new Date(viewingSession.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === viewingSession.vehicles.type)).toString();
+                      const currentFee = calculateFee(new Date(viewingSession.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === viewingSession.vehicles.type), {
+                        entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+                        shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+                      }).toString();
                       setFee(currentFee);
                       
                       // Focus the input if possible or handle exit directly? 

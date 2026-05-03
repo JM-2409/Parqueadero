@@ -99,11 +99,19 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
         <div className="flex gap-3 print:hidden">
           <button 
             onClick={handlePrint}
-            className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
           >
             <Printer size={20} />
             Imprimir
           </button>
+          <a 
+            href={`https://wa.me/?text=${encodeURIComponent(`*Recibo de Parqueadero*\n\nParqueadero: ${appSettings?.app_name || parkingLot?.name || 'Parqueadero'}\nNIT: ${parkingLot?.nit || '-'}\n\nRecibo No.: ${session.receipt_number || '-'}\nPlaca: ${session.vehicles?.plate || '-'}\nTipo: ${session.vehicles?.type || '-'}\nIngreso: ${entryTime.toLocaleString()}\nSalida: ${exitTime.toLocaleString()}\nTotal a Pagar: $${session.total_charged?.toLocaleString() || session.fee?.toLocaleString()}\n\n¡Gracias por su visita!`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            Enviar
+          </a>
           <button 
             onClick={onClose}
             className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-medium transition-colors"

@@ -271,7 +271,9 @@ export default function AdminPage() {
         custom_fields: customFields,
         private_custom_fields: privateCustomFields,
         nit: parkingLot?.nit,
-        address: parkingLot?.address
+        address: parkingLot?.address,
+        entry_grace_period_mins: parkingLot?.entry_grace_period_mins || 15,
+        shift_grace_period_mins: parkingLot?.shift_grace_period_mins || 15
       })
       .eq("id", parkingLot.id);
 
@@ -578,7 +580,7 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
-              <AdminHistory parkingLotId={parkingLot.id} />
+              <AdminHistory parkingLot={parkingLot} />
             </div>
           )}
 
@@ -592,7 +594,7 @@ export default function AdminPage() {
           {activeTab === "manual_entry" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <ManualEntry 
-                parkingLotId={parkingLot.id} 
+                parkingLot={parkingLot} 
                 allowedVehicles={allowedVehicles} 
                 customFields={customFields} 
               />
@@ -683,6 +685,30 @@ export default function AdminPage() {
                         placeholder="Ej. 100"
                         min="1"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de Cortesía (Gabela de Ingreso) *</label>
+                      <input
+                        type="number"
+                        value={parkingLot?.entry_grace_period_mins ?? 15}
+                        onChange={(e) => setParkingLot({ ...parkingLot!, entry_grace_period_mins: parseInt(e.target.value) || 0 })}
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        placeholder="Ej. 15"
+                        min="0"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Tiempo que un vehículo puede estar sin que se le cobre nada.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de Gabela de Turno *</label>
+                      <input
+                        type="number"
+                        value={parkingLot?.shift_grace_period_mins ?? 15}
+                        onChange={(e) => setParkingLot({ ...parkingLot!, shift_grace_period_mins: parseInt(e.target.value) || 0 })}
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        placeholder="Ej. 15"
+                        min="0"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Tiempo extra para salir o entrar sin cobrar el turno adyacente.</p>
                     </div>
                     
                     <div>

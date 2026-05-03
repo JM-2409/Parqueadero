@@ -8,7 +8,8 @@ import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
-export default function ManualEntry({ parkingLotId, allowedVehicles, customFields }: { parkingLotId: string, allowedVehicles: string[], customFields: any[] }) {
+export default function ManualEntry({ parkingLot, allowedVehicles, customFields }: { parkingLot: any, allowedVehicles: string[], customFields: any[] }) {
+  const parkingLotId = parkingLot.id;
   const [plate, setPlate] = useState("");
   const [debouncedPlate, setDebouncedPlate] = useState("");
   const [type, setType] = useState(allowedVehicles[0] || "carros");
@@ -86,7 +87,10 @@ export default function ManualEntry({ parkingLotId, allowedVehicles, customField
     const vehicleTariffs = tariffs.filter(t => t.vehicle_type === type);
     if (vehicleTariffs.length === 0) return;
 
-    const calculatedFee = calculateFee(entry, exit, vehicleTariffs);
+    const calculatedFee = calculateFee(entry, exit, vehicleTariffs, {
+      entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+      shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+    });
 
     setTotalFee(calculatedFee.toString());
   }, [entryDate, entryTime, exitDate, exitTime, type, tariffs, isSpecialFee, isCompleted]);

@@ -2,18 +2,22 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { History, Search, ChevronLeft, ChevronRight, Car, User, Palette, Tag } from "lucide-react";
+import { History, Search, ChevronLeft, ChevronRight, Car, User, Palette, Tag, FileText } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
+import ReceiptModal from "./ReceiptModal";
 
 const PAGE_SIZE = 20;
 
-export default function EmployeeHistory({ parkingLotId, showRevenue, tariffs }: { parkingLotId: string, showRevenue: boolean, tariffs: any[] }) {
+export default function EmployeeHistory({ parkingLot, tariffs }: { parkingLot: any, tariffs: any[] }) {
+  const parkingLotId = parkingLot.id;
+  const showRevenue = parkingLot.show_revenue;
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [viewingReceipt, setViewingReceipt] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -119,7 +123,10 @@ export default function EmployeeHistory({ parkingLotId, showRevenue, tariffs }: 
               {sessions.map((session) => {
                 const isCompleted = session.status === "completed";
                 const rules = tariffs?.filter(t => t.vehicle_type === session.vehicles?.type) || [];
-                const currentFee = !isCompleted ? calculateFee(new Date(session.entry_time), new Date(), rules) : 0;
+                const currentFee = !isCompleted ? calculateFee(new Date(session.entry_time), new Date(), rules, {
+                  entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+                  shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+                }) : 0;
                 
                 return (
                   <React.Fragment key={session.id}>
@@ -177,7 +184,12 @@ export default function EmployeeHistory({ parkingLotId, showRevenue, tariffs }: 
                       {showRevenue && (
                         <td className="p-4 font-medium text-slate-900 text-sm">
                           {isCompleted 
-                            ? formatCurrency(session.fee || session.total_charged || 0) 
+                            ? (
+                                <div className="flex items-center gap-2">
+                                  <span>{formatCurrency(session.fee || session.total_charged || 0)}</span>
+                                  <button onClick={(e) => { e.stopPropagation(); setViewingReceipt(session); }} className="text-indigo-600 hover:text-indigo-800 p-1" title="Ver Recibo"><FileText size={16}/></button>
+                                </div>
+                              ) 
                             : <span className="text-emerald-600 border border-emerald-200 bg-emerald-50 px-2 py-0.5 rounded text-xs">{formatCurrency(currentFee)}</span>
                           }
                         </td>
@@ -271,6 +283,15 @@ export default function EmployeeHistory({ parkingLotId, showRevenue, tariffs }: 
             </button>
           </div>
         </div>
+      )}
+
+      {viewingReceipt && (
+        <ReceiptModal
+          session={viewingReceipt}
+          appSettings={null}
+          parkingLot={parkingLot}
+          onClose={() => setViewingReceipt(null)}
+        />
       )}
     </div>
   );

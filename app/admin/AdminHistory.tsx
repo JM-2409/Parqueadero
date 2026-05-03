@@ -5,10 +5,12 @@ import { supabase } from "@/lib/supabase";
 import { History, Search, FileText, ChevronLeft, ChevronRight, Car, User, Palette, Tag, X } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
+import ReceiptModal from "../employee/ReceiptModal";
 
 const PAGE_SIZE = 20;
 
-export default function AdminHistory({ parkingLotId }: { parkingLotId: string }) {
+export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
+  const parkingLotId = parkingLot.id;
   const [sessions, setSessions] = useState<any[]>([]);
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,7 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [forceExitConfig, setForceExitConfig] = useState<{session: any, customDate: string, customTime: string} | null>(null);
+  const [viewingReceipt, setViewingReceipt] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -137,7 +140,10 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
       }
 
       const rules = tariffs.filter(t => t.vehicle_type === sessionToExit.vehicles.type);
-      const finalFee = calculateFee(entryTime, exitTime, rules);
+      const finalFee = calculateFee(entryTime, exitTime, rules, {
+        entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+        shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+      });
 
       const { data: lotData } = await supabase.from('parking_lots').select('receipt_sequence').eq('id', parkingLotId).single();
       const nextSeq = (lotData?.receipt_sequence || 0) + 1;
@@ -176,7 +182,10 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
     const exitTime = new Date(); // Current time
     const rules = tariffs.filter(t => t.vehicle_type === session.vehicles.type);
     
-    return calculateFee(entryTime, exitTime, rules);
+    return calculateFee(entryTime, exitTime, rules, {
+      entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+      shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+    });
   };
 
   const exportToCSV = async () => {
@@ -447,7 +456,14 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
                           </span>
                         </td>
                         <td className="p-5 font-black text-slate-900 text-sm tracking-tight border-l border-slate-50 bg-slate-50/30">
-                          {formatCurrency(currentFee)}
+                          {isCompleted ? (
+                            <div className="flex items-center gap-2">
+                              <span>{formatCurrency(currentFee)}</span>
+                              <button onClick={(e) => { e.stopPropagation(); setViewingReceipt(session); }} className="text-indigo-600 hover:text-indigo-800 p-1" title="Ver Recibo"><FileText size={16}/></button>
+                            </div>
+                          ) : (
+                            formatCurrency(currentFee)
+                          )}
                         </td>
                         <td className="p-5">
                           {!isCompleted && (
@@ -594,6 +610,15 @@ export default function AdminHistory({ parkingLotId }: { parkingLotId: string })
              </div>
           </div>
         </div>
+      )}
+
+      {viewingReceipt && (
+        <ReceiptModal
+          session={viewingReceipt}
+          appSettings={null}
+          parkingLot={parkingLot}
+          onClose={() => setViewingReceipt(null)}
+        />
       )}
     </>
   );
