@@ -319,7 +319,10 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Entrada *</label>
                 <input
-                  type="time"
+                  type="text"
+                  placeholder="HH:MM (24h)"
+                  pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+                  title="Formato 24 horas, ej. 14:30"
                   value={entryTime}
                   onChange={(e) => setEntryTime(e.target.value)}
                   className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
@@ -357,7 +360,10 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Salida *</label>
                     <input
-                      type="time"
+                      type="text"
+                      placeholder="HH:MM (24h)"
+                      pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+                      title="Formato 24 horas, ej. 14:30"
                       value={exitTime}
                       onChange={(e) => setExitTime(e.target.value)}
                       className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"

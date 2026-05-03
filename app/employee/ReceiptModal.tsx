@@ -15,8 +15,8 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
   const minutes = durationMinutes % 60;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm print:bg-white print:p-0">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-[80mm] print:p-0 flex flex-col max-h-[90vh] md:max-h-auto">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-[80mm] print:p-0 flex flex-col max-h-[90vh] md:max-h-none print:h-auto print:max-h-none print:block print:m-0" style={{ pageBreakInside: 'avoid' }}>
         
         <button 
           onClick={onClose}

@@ -237,24 +237,8 @@ export default function EmployeeHistory({ parkingLot, tariffs }: { parkingLot: a
                         <td colSpan={showRevenue ? 8 : 7} className="p-4 px-6 relative">
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400"></div>
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="space-y-3">
-                              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles del Vehículo</h4>
-                              <div className="flex items-center gap-2 text-sm text-slate-700">
-                                <Car size={16} className="text-indigo-400" />
-                                <span><span className="font-medium">Marca:</span> {session.vehicles.brand || 'No registrada'}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-slate-700">
-                                <Palette size={16} className="text-indigo-400" />
-                                <span><span className="font-medium">Color:</span> {session.vehicles.color || 'No registrado'}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-slate-700">
-                                <User size={16} className="text-indigo-400" />
-                                <span><span className="font-medium">Propietario:</span> {session.vehicles.owner_name || 'No registrado'}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-3 col-span-2 md:col-span-1">
-                              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles Extras</h4>
+                            <div className="space-y-3 col-span-3 md:col-span-2">
+                              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Datos del Vehículo</h4>
                               {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
                                 <div className="grid grid-cols-2 gap-2">
                                   {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (

@@ -234,7 +234,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
         .from("parking_sessions")
         .select(`
           *,
-          vehicles!inner (plate, type, brand, color, owner_name)
+          vehicles!inner (*)
         `)
         .eq("parking_lot_id", parkingLotId)
         .order("entry_time", { ascending: false });
@@ -252,8 +252,13 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
         return;
       }
 
+      // Extract custom field names
+      const publicCustomFields = (parkingLot?.custom_fields || []).map((f: any) => f.name);
+      const privateCustomFieldsObj = (parkingLot?.private_custom_fields || []).map((f: any) => f.name);
+      const dynamicFields = Array.from(new Set([...publicCustomFields, ...privateCustomFieldsObj]));
+
       // Generate CSV content
-      const headers = ["Ticket", "Placa", "Tipo", "Marca", "Color", "Propietario", "Ingreso", "Salida", "Atendido Por (Ingreso)", "Atendido Por (Salida)", "Estado", "Valor Cobrado", "Extras"];
+      const headers = ["Ticket", "Placa", "Tipo", "Ingreso", "Salida", "Atendido Por (Ingreso)", "Atendido Por (Salida)", "Estado", "Valor Cobrado", ...dynamicFields, "Otros Extras"];
       
       const csvRows = [headers.join(",")];
       
@@ -262,25 +267,30 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
         const entryDate = new Date(row.entry_time).toLocaleString();
         const exitDate = isCompleted ? new Date(row.exit_time).toLocaleString() : "-";
         
-        let extras = "";
         const allExtras = { ...row.vehicles?.custom_fields_data, ...row.extra_data };
+        
+        const dynamicValues = dynamicFields.map(field => {
+          const val = allExtras[field] || '';
+          delete allExtras[field];
+          return `"${val}"`;
+        });
+
+        let extras = "";
         if (Object.keys(allExtras).length > 0) {
           extras = Object.entries(allExtras).map(([k, v]) => `${k}: ${v}`).join(" | ");
         }
 
         const csvRow = [
           `"${row.receipt_number || '-'}"`,
-          `"${row.vehicles.plate}"`,
-          `"${row.vehicles.type}"`,
-          `"${row.vehicles.brand || ''}"`,
-          `"${row.vehicles.color || ''}"`,
-          `"${row.vehicles.owner_name || ''}"`,
+          `"${row.vehicles?.plate || ''}"`,
+          `"${row.vehicles?.type || ''}"`,
           `"${entryDate}"`,
           `"${exitDate}"`,
           `"${row.entry_employee_name || ''}"`,
           `"${row.exit_employee_name || ''}"`,
-          `"${row.status}"`,
+          `"${row.status === 'completed' ? 'Completado' : 'Activo'}"`,
           `"${row.total_charged || row.fee || 0}"`,
+          ...dynamicValues,
           `"${extras}"`
         ];
         
@@ -523,24 +533,8 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                           <td colSpan={10} className="p-4 px-6 relative">
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400"></div>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                              <div className="space-y-3">
-                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles del Vehículo</h4>
-                                <div className="flex items-center gap-2 text-sm text-slate-700">
-                                  <Car size={16} className="text-indigo-400" />
-                                  <span><span className="font-medium">Marca:</span> {session.vehicles.brand || 'No registrada'}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-700">
-                                  <Palette size={16} className="text-indigo-400" />
-                                  <span><span className="font-medium">Color:</span> {session.vehicles.color || 'No registrado'}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-700">
-                                  <User size={16} className="text-indigo-400" />
-                                  <span><span className="font-medium">Propietario:</span> {session.vehicles.owner_name || 'No registrado'}</span>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-3 col-span-2 md:col-span-1">
-                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles Extras</h4>
+                              <div className="space-y-3 col-span-3 md:col-span-2">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Datos del Vehículo</h4>
                                 {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
                                   <div className="grid grid-cols-2 gap-2">
                                     {Object.entries({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).map(([k, v]) => (
