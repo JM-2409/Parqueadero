@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { createUser } from "@/app/actions/auth";
-import { Building2, UserPlus, LogOut, PlusCircle, Settings, Image as ImageIcon, Car, Menu, X, ShieldCheck, CheckCircle2, Trash2, BarChart3 } from "lucide-react";
+import { Building2, UserPlus, LogOut, PlusCircle, Settings, Image as ImageIcon, Car, Menu, X, ShieldCheck, CheckCircle2, Trash2, BarChart3, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sanitizeInput } from "@/lib/sanitize";
@@ -35,6 +35,7 @@ export default function SuperAdminPage() {
     parkingLotId: "",
   });
   const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const handleDeleteParkingLot = async (id: string, name: string) => {
     if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente el parqueadero "${name}"?\nEsta acción eliminará todos los administradores, empleados, sesiones y registros asociados. No se puede deshacer.`)) {
@@ -774,13 +775,22 @@ export default function SuperAdminPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
-                    <input
-                      type="password"
-                      value={newAdmin.password}
-                      onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                      placeholder="Mínimo 6 caracteres"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showAdminPassword ? "text" : "password"}
+                        value={newAdmin.password}
+                        onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none pr-12"
+                        placeholder="Mínimo 6 caracteres"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
                   <button
                     type="submit"

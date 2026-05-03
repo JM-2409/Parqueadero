@@ -258,11 +258,25 @@ export default function EmployeePage() {
     searchVehicle();
   }, [debouncedPlate]);
 
+  const logShiftAction = async (action: 'login' | 'logout', name: string) => {
+    if (!parkingLot) return;
+    try {
+      await supabase.from("employee_logs").insert([{
+        parking_lot_id: parkingLot.id,
+        employee_name: name,
+        action: action
+      }]);
+    } catch(e) {
+      console.log("No se pudo registrar log");
+    }
+  };
+
   const handleStartShift = (e: React.FormEvent) => {
     e.preventDefault();
     if (shiftName.trim()) {
       sessionStorage.setItem("shiftName", shiftName.trim());
       setIsShiftSet(true);
+      logShiftAction('login', shiftName.trim());
     }
   };
 
@@ -402,9 +416,21 @@ export default function EmployeePage() {
     setError("");
     setSuccess("");
 
-    const sessionToExit = activeSessions.find(s => s.id === sessionId);
+    let sessionToExit = activeSessions.find(s => s.id === sessionId);
+    if (!sessionToExit) {
+      const { data: dbSession } = await supabase
+        .from("parking_sessions")
+        .select("*, vehicles(*)")
+        .eq("id", sessionId)
+        .single();
+      if (dbSession) {
+        sessionToExit = dbSession;
+      }
+    }
+
     if (!sessionToExit) {
       setIsSubmittingExit(null);
+      setError("No se pudo encontrar la sesión");
       return;
     }
 
@@ -423,11 +449,9 @@ export default function EmployeePage() {
       .lte("start_date", new Date().toISOString().split('T')[0])
       .maybeSingle();
 
-    // Auto-calculate fee if not manually entered
-    let finalFee = Number(fee);
-    if (subscriber) {
-      finalFee = 0;
-    } else if (exitPlate !== sessionId || !fee || isNaN(finalFee)) {
+    // Fee is strictly calculated
+    let finalFee = 0;
+    if (!subscriber) {
       finalFee = calculateFee(entryTime, exitTime, rules, {
         entry_grace_period_mins: parkingLot.entry_grace_period_mins,
         shift_grace_period_mins: parkingLot.shift_grace_period_mins,
@@ -472,6 +496,7 @@ export default function EmployeePage() {
   };
 
   const handleLogout = async () => {
+    await logShiftAction('logout', shiftName);
     sessionStorage.removeItem("shiftName");
     await supabase.auth.signOut();
     router.push("/");
@@ -560,14 +585,14 @@ export default function EmployeePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+    <div className="h-screen bg-slate-50 flex flex-col md:flex-row w-full overflow-hidden font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-30">
+      <div className="md:hidden bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md z-30 shrink-0">
         <div className="flex items-center gap-2 font-bold text-lg">
-          <Car size={24} className="text-indigo-400" />
-          <span className="truncate max-w-[200px]">{parkingLot?.name}</span>
+          <Car size={24} className="text-white opacity-90" />
+          <span className="truncate max-w-[200px] drop-shadow-sm">{parkingLot?.name}</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-indigo-700/50 hover:bg-indigo-700 rounded-lg transition-colors active:scale-95">
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -575,13 +600,13 @@ export default function EmployeePage() {
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden" 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden transition-opacity" 
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 transition-transform duration-300 w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col h-screen`}>
+      <div className={`${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} md:translate-x-0 fixed md:relative top-0 left-0 z-50 transition-transform duration-300 w-72 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col h-full`}>
         <div className="p-6 flex items-center justify-between gap-3 border-b border-slate-800">
           <div className="flex items-center gap-3 font-bold text-xl text-white">
             <Car size={28} className="text-indigo-400" />
@@ -597,6 +622,7 @@ export default function EmployeePage() {
             <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Turno Actual</p>
             <button
               onClick={() => {
+                logShiftAction('logout', shiftName);
                 sessionStorage.removeItem("shiftName");
                 setIsShiftSet(false);
                 setShiftName("");
@@ -655,8 +681,8 @@ export default function EmployeePage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 relative">
+        <div className="max-w-7xl mx-auto w-full p-4 lg:p-8 xl:p-12 pb-24 md:pb-8">
           
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
@@ -669,15 +695,15 @@ export default function EmployeePage() {
 
           {/* TAB: OPERATION */}
           {activeTab === "operation" && (
-            <div className="grid lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col xl:flex-row gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               
               {/* Entry Form */}
-              <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
+              <div className="xl:w-[380px] shrink-0 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100/60 h-fit">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl ring-1 ring-indigo-100">
                     <LogIn size={24} />
                   </div>
-                  <h2 className="text-xl font-semibold text-slate-900">Registrar Ingreso</h2>
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Nuevo Ingreso</h2>
                 </div>
 
                 <form onSubmit={handleEntry} className="space-y-4">
@@ -758,13 +784,16 @@ export default function EmployeePage() {
               </div>
 
               {/* Active Sessions */}
-              <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+              <div className="flex-1 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100/60 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl ring-1 ring-emerald-100">
                       <Car size={24} />
                     </div>
-                    <h2 className="text-xl font-semibold text-slate-900">Vehículos en Parqueadero</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                      Parqueadero
+                      <span className="bg-slate-100 text-slate-600 text-sm font-bold px-2.5 py-0.5 rounded-full">{activeSessions.length}</span>
+                    </h2>
                   </div>
                   {parkingLot?.show_revenue && (
                     <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg text-sm font-medium border border-emerald-100 max-w-full overflow-hidden">
@@ -815,40 +844,31 @@ export default function EmployeePage() {
 
                           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0 border-t sm:border-0 pt-4 sm:pt-0 border-slate-100">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider sm:hidden">Cobro Actual:</span>
-                              <div className="relative flex-1 sm:w-32 min-w-[120px]">
-                                <span className="absolute left-3 top-2.5 text-slate-500 font-medium">$</span>
-                                <input
-                                  type="number"
-                                  value={
-                                    exitPlate === session.id 
-                                      ? fee 
-                                      : (subscribers.some(sub => sub.plate === session.vehicles.plate)
-                                          ? "0"
-                                          : calculateFee(new Date(session.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === session.vehicles.type), {
-                                              entry_grace_period_mins: parkingLot.entry_grace_period_mins,
-                                              shift_grace_period_mins: parkingLot.shift_grace_period_mins,
-                                            }).toString()
-                                        )
+                              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:block">Cobro:</span>
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 flex items-center shadow-sm w-full sm:w-auto overflow-hidden">
+                                <span className="text-slate-400 font-medium mr-1.5">$</span>
+                                <span className={`text-base font-black truncate tracking-tight ${subscribers.some(sub => sub.plate === session.vehicles.plate) ? 'text-emerald-500' : 'text-slate-700'}`}>
+                                  {
+                                    (subscribers.some(sub => sub.plate === session.vehicles.plate)
+                                        ? 0
+                                        : calculateFee(new Date(session.entry_time), new Date(), tariffs.filter(t => t.vehicle_type === session.vehicles.type), {
+                                            entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+                                            shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+                                          })
+                                    ).toLocaleString("es-CO")
                                   }
-                                  placeholder="Cobro"
-                                  className={`w-full p-2 pl-7 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium bg-white ${subscribers.some(sub => sub.plate === session.vehicles.plate) ? 'text-emerald-600 bg-emerald-50' : ''}`}
-                                  onChange={(e) => {
-                                    setExitPlate(session.id);
-                                    setFee(e.target.value);
-                                  }}
-                                />
+                                </span>
                               </div>
                             </div>
                             <button
-                              onClick={() => handleExit(session.id)}
+                              onClick={(e) => { e.stopPropagation(); handleExit(session.id); }}
                               disabled={isSubmittingExit === session.id}
-                              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-lg text-sm font-bold transition-colors whitespace-nowrap shadow-sm shadow-emerald-200 flex items-center justify-center gap-2"
+                              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-indigo-200 flex items-center justify-center gap-2 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98]"
                             >
                               {isSubmittingExit === session.id ? (
                                 <>
                                   <Spinner size={16} className="text-white" />
-                                  <span className="hidden sm:inline">Procesando...</span>
+                                  <span className="inline">Saliendo...</span>
                                 </>
                               ) : (
                                 "Dar Salida"
@@ -913,7 +933,7 @@ export default function EmployeePage() {
           {/* TAB: HISTORY */}
           {activeTab === "history" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <EmployeeHistory parkingLot={parkingLot} tariffs={tariffs} />
+              <EmployeeHistory parkingLot={parkingLot} tariffs={tariffs} onExitSession={handleExit} />
             </div>
           )}
 

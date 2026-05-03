@@ -27,6 +27,15 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const formatTimeInput = (value: string) => {
+    let val = value.replace(/\D/g, ''); // Solo números
+    if (val.length > 4) val = val.slice(0, 4);
+    if (val.length >= 3) {
+      val = val.slice(0, 2) + ':' + val.slice(2);
+    }
+    return val;
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedPlate(plate), 300);
     return () => clearTimeout(timer);
@@ -320,11 +329,12 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Entrada *</label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   placeholder="HH:MM (24h)"
                   pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
                   title="Formato 24 horas, ej. 14:30"
                   value={entryTime}
-                  onChange={(e) => setEntryTime(e.target.value)}
+                  onChange={(e) => setEntryTime(formatTimeInput(e.target.value))}
                   className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                   required
                 />
@@ -361,11 +371,12 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Salida *</label>
                     <input
                       type="text"
+                      inputMode="numeric"
                       placeholder="HH:MM (24h)"
                       pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
                       title="Formato 24 horas, ej. 14:30"
                       value={exitTime}
-                      onChange={(e) => setExitTime(e.target.value)}
+                      onChange={(e) => setExitTime(formatTimeInput(e.target.value))}
                       className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
                       required={isCompleted}
                     />

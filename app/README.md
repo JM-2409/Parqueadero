@@ -77,8 +77,12 @@ La aplicación utiliza Supabase como backend (PostgreSQL). Las tablas principale
 - `monthly_subscribers`: Suscriptores mensuales del parqueadero.
 - `blacklisted_vehicles`: Lista negra de vehículos.
 - `cash_closures`: Registros de cierres de caja (cuadres).
+- `employee_logs`: Registro histórico de inicios y cambios de turno de los operarios.
 
 ## 🔄 Correcciones e Interacciones Recientes
+- **Interfaz de Empleado Modernizada**: Rediseño completo responsivo del panel de empleados, asegurando el correcto encaje en dispositivos móviles, un diseño moderno estilo dashboard sin salirse de la pantalla y cobro de tarifas automático, inmodificable por el empleado para una mayor seguridad.
+- **Historial de Operario Mejorado**: Opción de dar salida directamente desde el historial si la sesión no ha finalizado.
+- **Seguridad en Historial Administrador**: Inclusión de un modal de confirmación antes de eliminar el historial de una sesión de parqueo permanentemente y optimización anti-saturación en buscadores de Placa/Operario con _debounce_ (300ms).
 - **Autocompletado Inteligente**: Al digitar una placa de vehículo registrado previamente en el sistema de la sucursal (o general), los campos extra (`Marca`, `Color`, etc) se mapean y populán automáticamente minimizando el tiempo de ingreso del personal.
 - **Transiciones de Múltiples Operarios**: Inclusión de un botón "Cambiar" en el panel de control del empleado, evitando el cierre de sesión de la cuenta máster. Permite rotación de turnos (cambio de nombre de operario) de manera fluida y rápida en la misma estación de trabajo.
 - **Gestión Unificada de Tarifas**: Control de visualización V3 con botones de eliminar bloqueantes intermedios para evitar clics dobles, y prevención estricta de políticas de seguridad para simplificar la corrección de errores en la eliminación.

@@ -15,7 +15,8 @@ import PrivateParking from "./PrivateParking";
 import Blacklist from "./Blacklist";
 import MonthlySubscribers from "./MonthlySubscribers";
 import EmployeeManagement from "./EmployeeManagement";
-import { FileEdit, Shield } from "lucide-react";
+import EmployeeLogs from "./EmployeeLogs";
+import { FileEdit, Shield, Activity } from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
 
 import { Spinner } from "@/components/ui/Spinner";
@@ -460,6 +461,13 @@ export default function AdminPage() {
             <span className="font-medium whitespace-nowrap text-left">Usuarios u Operarios</span>
           </button>
           <button
+            onClick={() => { setActiveTab("employee_logs"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "employee_logs" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
+          >
+            <Activity size={20} />
+            <span className="font-medium whitespace-nowrap text-left">Registro Turnos</span>
+          </button>
+          <button
             onClick={() => { setActiveTab("private_parking"); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "private_parking" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
           >
@@ -651,6 +659,13 @@ export default function AdminPage() {
                 parkingLotId={parkingLot.id} 
                 initialEmployees={employees} 
               />
+            </div>
+          )}
+
+          {/* TAB: REGISTRO DE TURNOS */}
+          {activeTab === "employee_logs" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <EmployeeLogs parkingLotId={parkingLot.id} />
             </div>
           )}
 

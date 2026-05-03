@@ -8,7 +8,7 @@ import ReceiptModal from "./ReceiptModal";
 
 const PAGE_SIZE = 20;
 
-export default function EmployeeHistory({ parkingLot, tariffs }: { parkingLot: any, tariffs: any[] }) {
+export default function EmployeeHistory({ parkingLot, tariffs, onExitSession }: { parkingLot: any, tariffs: any[], onExitSession: (sessionId: string) => void }) {
   const parkingLotId = parkingLot.id;
   const showRevenue = parkingLot.show_revenue;
   const [sessions, setSessions] = useState<any[]>([]);
@@ -85,25 +85,6 @@ export default function EmployeeHistory({ parkingLot, tariffs }: { parkingLot: a
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchTerm]);
-
-  const handleDeleteSession = async (sessionId: string) => {
-    if (!window.confirm("ATENCIÓN: ¿Estás seguro de que deseas eliminar permanentemente este registro? Esta acción no se puede deshacer y borrará el historial de pagos asociados a esta sesión de la base de datos.")) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('parking_sessions')
-        .delete()
-        .eq('id', sessionId);
-
-      if (error) throw error;
-      fetchData(); // Reload
-    } catch (e) {
-      console.error(e);
-      alert("Hubo un error al eliminar el registro.");
-    }
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -262,16 +243,17 @@ export default function EmployeeHistory({ parkingLot, tariffs }: { parkingLot: a
                                {isCompleted && <p className="text-sm"><strong>Salida:</strong> {session.exit_employee_name || 'N/A'}</p>}
                             </div>
 
-                            <div className="space-y-3 flex flex-col justify-start items-end">
-                              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider w-full text-right">Acciones</h4>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.id); }}
-                                className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
-                              >
-                                <Trash2 size={16} />
-                                Borrar Registro
-                              </button>
-                            </div>
+                            {!isCompleted && (
+                              <div className="space-y-3 flex flex-col justify-start items-end">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider w-full text-right">Acciones</h4>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onExitSession(session.id); }}
+                                  className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm"
+                                >
+                                  Dar Salida
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>

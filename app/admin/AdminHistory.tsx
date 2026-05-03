@@ -15,7 +15,9 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
+  const [localEmployeeSearchTerm, setLocalEmployeeSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("active");
   const [dateFrom, setDateFrom] = useState("");
@@ -26,7 +28,16 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [forceExitConfig, setForceExitConfig] = useState<{session: any, customDate: string, customTime: string} | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [viewingReceipt, setViewingReceipt] = useState<any>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(localSearchTerm);
+      setEmployeeSearchTerm(localEmployeeSearchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, localEmployeeSearchTerm]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -90,11 +101,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
   }, [parkingLotId, page, searchTerm, employeeSearchTerm, filterType, filterStatus, dateFrom, dateTo]);
 
   useEffect(() => {
-    // Debounce search
-    const timeoutId = setTimeout(() => {
-      fetchData();
-    }, 300);
-    return () => clearTimeout(timeoutId);
+    fetchData();
   }, [fetchData]);
 
   useEffect(() => {
@@ -195,18 +202,17 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
     setIsSubmittingExit(null);
   };
 
-  const handleDeleteSession = async (sessionId: string) => {
-    if (!window.confirm("ATENCIÓN: ¿Estás seguro de que deseas eliminar permanentemente este registro? Esta acción no se puede deshacer y borrará el historial de pagos asociados a esta sesión de la base de datos.")) {
-      return;
-    }
+  const confirmDeleteSession = async () => {
+    if (!sessionToDelete) return;
 
     try {
       const { error } = await supabase
         .from('parking_sessions')
         .delete()
-        .eq('id', sessionId);
+        .eq('id', sessionToDelete);
 
       if (error) throw error;
+      setSessionToDelete(null);
       fetchData(); // Reload
     } catch (e) {
       console.error(e);
@@ -368,8 +374,8 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <input
               type="text"
               placeholder="Placa..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full font-bold uppercase transition-all shadow-sm"
             />
           </div>
@@ -378,8 +384,8 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <input
               type="text"
               placeholder="Operario..."
-              value={employeeSearchTerm}
-              onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+              value={localEmployeeSearchTerm}
+              onChange={(e) => setLocalEmployeeSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full transition-all shadow-sm"
             />
           </div>
@@ -561,7 +567,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                               <div className="space-y-3 flex flex-col justify-start items-end">
                                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider w-full text-right">Acciones</h4>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.id); }}
+                                  onClick={(e) => { e.stopPropagation(); setSessionToDelete(session.id); }}
                                   className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
                                 >
                                   <Trash2 size={16} />
@@ -652,6 +658,37 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                  Confirmar Salida
                </button>
              </div>
+          </div>
+        </div>
+      )}
+
+      {sessionToDelete && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="font-bold text-slate-900 text-xl mb-2">Borrar Registro</h3>
+              <p className="text-sm text-slate-500">
+                ¿Estás seguro de que deseas eliminar permanentemente este registro? Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-center">
+              <button 
+                onClick={() => setSessionToDelete(null)} 
+                className="px-5 py-2.5 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors w-full"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmDeleteSession} 
+                className="px-5 py-2.5 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors w-full flex items-center justify-center gap-2"
+              >
+                <Trash2 size={18} />
+                Borrar
+              </button>
+            </div>
           </div>
         </div>
       )}
