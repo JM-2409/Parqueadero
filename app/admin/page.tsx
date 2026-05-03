@@ -272,8 +272,8 @@ export default function AdminPage() {
         private_custom_fields: privateCustomFields,
         nit: parkingLot?.nit,
         address: parkingLot?.address,
-        entry_grace_period_mins: parkingLot?.entry_grace_period_mins || 15,
-        shift_grace_period_mins: parkingLot?.shift_grace_period_mins || 15
+        entry_grace_period_mins: parkingLot?.entry_grace_period_mins ?? 0,
+        shift_grace_period_mins: parkingLot?.shift_grace_period_mins ?? 15
       })
       .eq("id", parkingLot.id);
 
@@ -687,16 +687,16 @@ export default function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de Cortesía (Gabela de Ingreso) *</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de Cortesía (Entrada Gratis) *</label>
                       <input
                         type="number"
-                        value={parkingLot?.entry_grace_period_mins ?? 15}
+                        value={parkingLot?.entry_grace_period_mins ?? 0}
                         onChange={(e) => setParkingLot({ ...parkingLot!, entry_grace_period_mins: parseInt(e.target.value) || 0 })}
                         className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
-                        placeholder="Ej. 15"
+                        placeholder="Ej. 0"
                         min="0"
                       />
-                      <p className="text-xs text-slate-500 mt-1">Tiempo que un vehículo puede estar sin que se le cobre nada.</p>
+                      <p className="text-xs text-slate-500 mt-1">Si está en 0, se empieza a cobrar acorde a la tabla desde el minuto 1.</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de Gabela de Turno *</label>

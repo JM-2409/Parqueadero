@@ -120,7 +120,7 @@ export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[
   if (!rules || !Array.isArray(rules) || rules.length === 0) return 0;
 
   // Use provided settings or defaults
-  const entryGraceMins = settings?.entry_grace_period_mins !== undefined ? settings.entry_grace_period_mins : 15;
+  const entryGraceMins = settings?.entry_grace_period_mins !== undefined ? settings.entry_grace_period_mins : 0;
   const shiftGraceMins = settings?.shift_grace_period_mins !== undefined ? settings.shift_grace_period_mins : 15;
 
   let entryMs = entryTime.getTime();
@@ -194,9 +194,12 @@ export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[
     
     // Safety check in case adjustments flip entry and exit
     if (entryMs >= exitMs) {
-      return 0; 
+      exitMs = entryMs + 60000; // Adds 1 minute to trigger the new shift's base rate
     }
   }
+
+  // Update duration after adjustments
+  durationMs = exitMs - entryMs;
 
   const block12h = rules.find(r => r.rate_type === 'bloque_12h')?.amount;
 
