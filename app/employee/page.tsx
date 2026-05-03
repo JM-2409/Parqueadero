@@ -201,6 +201,25 @@ export default function EmployeePage() {
   }, [checkUser, isShiftSet]);
 
   useEffect(() => {
+    if (!parkingLot?.id) return;
+    
+    const channel = supabase
+      .channel('public:parking_sessions:employee_active')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'parking_sessions', filter: `parking_lot_id=eq.${parkingLot.id}` },
+        () => {
+          fetchActiveSessions(parkingLot.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [parkingLot?.id, fetchActiveSessions]);
+
+  useEffect(() => {
     const timer = setTimeout(() => setDebouncedPlate(plate), 300);
     return () => clearTimeout(timer);
   }, [plate]);

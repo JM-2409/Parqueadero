@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { History, Search, FileText, ChevronLeft, ChevronRight, Car, User, Palette, Tag, X } from "lucide-react";
+import { History, Search, FileText, ChevronLeft, ChevronRight, Car, User, Palette, Tag, X, Trash2 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import ReceiptModal from "../employee/ReceiptModal";
@@ -97,6 +97,23 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
     return () => clearTimeout(timeoutId);
   }, [fetchData]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:parking_sessions:admin_history')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'parking_sessions', filter: `parking_lot_id=eq.${parkingLotId}` },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [parkingLotId, fetchData]);
+
   // Reset page when search changes
   useEffect(() => {
     setPage(1);
@@ -176,6 +193,25 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
       alert("Hubo un error al forzar salida.");
     }
     setIsSubmittingExit(null);
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!window.confirm("ATENCIÓN: ¿Estás seguro de que deseas eliminar permanentemente este registro? Esta acción no se puede deshacer y borrará el historial de pagos asociados a esta sesión de la base de datos.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('parking_sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      if (error) throw error;
+      fetchData(); // Reload
+    } catch (e) {
+      console.error(e);
+      alert("Hubo un error al eliminar el registro.");
+    }
   };
 
   const calculateCurrentFee = (session: any) => {
@@ -486,7 +522,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                         <tr className="bg-indigo-50/30 border-b border-slate-100">
                           <td colSpan={10} className="p-4 px-6 relative">
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400"></div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                               <div className="space-y-3">
                                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles del Vehículo</h4>
                                 <div className="flex items-center gap-2 text-sm text-slate-700">
@@ -503,7 +539,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                 </div>
                               </div>
                               
-                              <div className="space-y-3">
+                              <div className="space-y-3 col-span-2 md:col-span-1">
                                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles Extras</h4>
                                 {Object.keys({ ...session.vehicles?.custom_fields_data, ...session.extra_data }).length > 0 ? (
                                   <div className="grid grid-cols-2 gap-2">
@@ -526,6 +562,17 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Atendido Por</h4>
                                  <p className="text-sm"><strong>Entrada:</strong> {session.entry_employee_name || 'N/A'}</p>
                                  {isCompleted && <p className="text-sm"><strong>Salida:</strong> {session.exit_employee_name || 'N/A'}</p>}
+                              </div>
+
+                              <div className="space-y-3 flex flex-col justify-start items-end">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider w-full text-right">Acciones</h4>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.id); }}
+                                  className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
+                                >
+                                  <Trash2 size={16} />
+                                  Borrar Registro
+                                </button>
                               </div>
                             </div>
                           </td>
