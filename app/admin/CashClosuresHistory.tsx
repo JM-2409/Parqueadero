@@ -9,7 +9,6 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
   const [loading, setLoading] = useState(true);
 
   const fetchClosures = useCallback(async () => {
-    setLoading(true);
     const { data } = await supabase
       .from("cash_closures")
       .select("*, profiles:closed_by(full_name, email)")
@@ -22,6 +21,7 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
   }, [parkingLotId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchClosures();
   }, [fetchClosures]);
 

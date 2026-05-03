@@ -93,7 +93,7 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
     });
 
     setTotalFee(calculatedFee.toString());
-  }, [entryDate, entryTime, exitDate, exitTime, type, tariffs, isSpecialFee, isCompleted]);
+  }, [entryDate, entryTime, exitDate, exitTime, type, tariffs, isSpecialFee, isCompleted, parkingLot.entry_grace_period_mins, parkingLot.shift_grace_period_mins]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +189,8 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
       if (isCompleted) {
         sessionData.exit_time = exitTimestamp;
         sessionData.exit_employee_name = "Admin (Manual)";
-        sessionData.total_fee = parseFloat(totalFee);
+        sessionData.fee = parseFloat(totalFee);
+        sessionData.total_charged = parseFloat(totalFee);
       }
 
       const { error: sessionError } = await supabase

@@ -152,7 +152,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
       const receiptNumber = `REC-${nextSeq.toString().padStart(6, '0')}`;
       const durationMinutes = Math.round((exitTime.getTime() - entryTime.getTime()) / 60000);
 
-      const { error: updateError } = await supabase
+      const { data: updatedSession, error: updateError } = await supabase
         .from("parking_sessions")
         .update({
           status: "completed",
@@ -163,10 +163,13 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
           duration_minutes: durationMinutes,
           exit_employee_name: "Admin"
         })
-        .eq("id", sessionToExit.id);
+        .eq("id", sessionToExit.id)
+        .select("*, vehicles(*)")
+        .single();
 
-      if (!updateError) {
+      if (!updateError && updatedSession) {
         fetchData(); // Reload list
+        setViewingReceipt(updatedSession);
       }
     } catch (e) {
       console.error(e);

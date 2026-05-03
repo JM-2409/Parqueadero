@@ -163,8 +163,8 @@ export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[
       let shiftDate = new Date(baseDate);
       shiftDate.setHours(targetHour, targetMin, 0, 0);
       let diff = shiftDate.getTime() - entryMs;
-      // If entry was just BEFORE shift starts (within grace period)
-      if (diff > 0 && diff <= shiftGraceMs) {
+      // If entry was BEFORE shift starts (within grace period), and exit is AFTER shift starts
+      if (diff > 0 && diff <= shiftGraceMs && exitMs >= shiftDate.getTime()) {
         entryMs = shiftDate.getTime();
       }
     };
@@ -173,8 +173,8 @@ export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[
       let shiftDate = new Date(baseDate);
       shiftDate.setHours(targetHour, targetMin, 0, 0);
       let diff = exitMs - shiftDate.getTime();
-      // If exit was just AFTER shift ends (within grace period)
-      if (diff > 0 && diff <= shiftGraceMs) {
+      // If exit was AFTER shift ends (within grace period), and entry is explicitly BEFORE shift ends
+      if (diff > 0 && diff <= shiftGraceMs && entryMs < shiftDate.getTime()) {
         exitMs = shiftDate.getTime();
       }
     };
