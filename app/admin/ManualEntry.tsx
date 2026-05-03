@@ -139,12 +139,23 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
       let vehicleId = null;
       const { data: existingVehicle } = await supabase
         .from("vehicles")
-        .select("id")
+        .select("id, brand, color, owner_name")
         .eq("plate", sanitizeInput(plate.toUpperCase()))
         .maybeSingle();
 
       if (existingVehicle) {
         vehicleId = existingVehicle.id;
+        // Update existing vehicle with new latest data
+        await supabase
+          .from("vehicles")
+          .update({
+            type,
+            brand: sanitizeInput(extraData['Marca'] || extraData['brand'] || existingVehicle.brand || ""),
+            color: sanitizeInput(extraData['Color'] || extraData['color'] || existingVehicle.color || ""),
+            owner_name: sanitizeInput(extraData['Propietario'] || extraData['owner_name'] || existingVehicle.owner_name || ""),
+            custom_fields_data: extraData
+          })
+          .eq("id", vehicleId);
       } else {
         const { data: newVehicle, error: vehicleError } = await supabase
           .from("vehicles")
@@ -187,10 +198,20 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
       };
 
       if (isCompleted) {
+        // Generar consecutivo usando sequence property si se quiere, o autocalculado
+        const { data: lotData } = await supabase.from('parking_lots').select('receipt_sequence').eq('id', parkingLotId).single();
+        const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+        await supabase.from('parking_lots').update({ receipt_sequence: nextSeq }).eq('id', parkingLotId);
+
+        const receiptNumber = `REC-${nextSeq.toString().padStart(6, '0')}`;
+        const durationMinutes = Math.round((new Date(exitTimestamp!).getTime() - new Date(entryTimestamp).getTime()) / 60000);
+
         sessionData.exit_time = exitTimestamp;
         sessionData.exit_employee_name = "Admin (Manual)";
         sessionData.fee = parseFloat(totalFee);
         sessionData.total_charged = parseFloat(totalFee);
+        sessionData.receipt_number = receiptNumber;
+        sessionData.duration_minutes = durationMinutes;
       }
 
       const { error: sessionError } = await supabase

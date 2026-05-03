@@ -93,16 +93,7 @@ export default function AdminPage() {
     }
   }, []);
 
-  const fetchEmployees = useCallback(async (parkingLotId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, role, parking_lot_id, created_at")
-      .eq("parking_lot_id", parkingLotId)
-      .eq("role", "employee");
-    if (data) {
-      setEmployees(data);
-    }
-    
+  const fetchTodayStats = useCallback(async (parkingLotId: string) => {
     // Fetch last closure
     const { data: lastClosure } = await supabase
       .from("cash_closures")
@@ -119,7 +110,7 @@ export default function AdminPage() {
       .from("parking_sessions")
       .select("total_charged")
       .eq("parking_lot_id", parkingLotId)
-      .not("exit_time", "is", null); // Solo sumamos lo que ya salió/fue cobrado
+      .not("exit_time", "is", null);
 
     if (lastClosureTime) {
       query = query.gt("exit_time", lastClosureTime);
@@ -142,11 +133,23 @@ export default function AdminPage() {
       setCurrentShiftRevenue(revenue);
       setTodayStats(prev => ({ ...prev, vehicles: todayVehiclesData?.length || 0, revenue }));
     }
+  }, []);
 
+  const fetchEmployees = useCallback(async (parkingLotId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, role, parking_lot_id, created_at")
+      .eq("parking_lot_id", parkingLotId)
+      .eq("role", "employee");
+    if (data) {
+      setEmployees(data);
+    }
+    
+    await fetchTodayStats(parkingLotId);
     await fetchStats(parkingLotId, statPeriod);
 
     setLoading(false);
-  }, [fetchStats, statPeriod]);
+  }, [fetchStats, statPeriod, fetchTodayStats]);
 
   const handleCloseRegister = async () => {
     if (!confirm("¿Está seguro que desea cerrar la caja? El recaudo volverá a $0.")) return;
@@ -249,6 +252,25 @@ export default function AdminPage() {
   useEffect(() => {
     checkUser();
   }, [checkUser]);
+
+  useEffect(() => {
+    if (!parkingLot?.id) return;
+    
+    const channel = supabase
+      .channel('public:parking_sessions:admin_dashboard')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'parking_sessions', filter: `parking_lot_id=eq.${parkingLot.id}` },
+        () => {
+          fetchTodayStats(parkingLot.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [parkingLot?.id, fetchTodayStats]);
 
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();

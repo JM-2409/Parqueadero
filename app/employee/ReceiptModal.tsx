@@ -16,28 +16,29 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm print:bg-white print:p-0">
-      <div className="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative print:shadow-none print:max-w-none print:w-[80mm] print:p-0">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-[80mm] print:p-0 flex flex-col max-h-[90vh] md:max-h-auto">
         
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 print:hidden"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 print:hidden z-10 bg-white/80 rounded-full p-1"
         >
           <X size={24} />
         </button>
 
-        <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-6 print:pb-4">
-          {appSettings?.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={appSettings.logo_url} alt="Logo" className="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 shadow-sm" />
-          ) : (
-            <div className="w-20 h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Car size={40} />
-            </div>
-          )}
-          
-          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-wider">
-            {appSettings?.app_name || parkingLot?.name || "Parqueadero"}
-          </h2>
+        <div className="p-6 md:p-8 overflow-y-auto print:overflow-visible">
+          <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-6 print:pb-4">
+            {appSettings?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={appSettings.logo_url} alt="Logo" className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 shadow-sm" />
+            ) : (
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <Car size={32} />
+              </div>
+            )}
+            
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wider">
+              {appSettings?.app_name || parkingLot?.name || "Parqueadero"}
+            </h2>
           <p className="text-sm text-slate-500 mt-1">NIT: {parkingLot?.nit}</p>
           <p className="text-sm text-slate-500">{parkingLot?.address}</p>
         </div>
@@ -96,25 +97,27 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
           <p>Conserve este recibo para cualquier reclamo.</p>
         </div>
 
-        <div className="flex gap-3 print:hidden">
+        </div>
+        
+        <div className="p-4 md:p-6 border-t border-slate-100 bg-white md:rounded-b-2xl flex flex-wrap gap-3 print:hidden shrink-0 mt-auto">
           <button 
             onClick={handlePrint}
-            className="flex-1 py-3 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+            className="flex-auto md:flex-1 py-3 px-4 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
           >
-            <Printer size={20} />
+            <Printer size={18} />
             Imprimir
           </button>
           <a 
             href={`https://wa.me/?text=${encodeURIComponent(`*Recibo de Parqueadero*\n\nParqueadero: ${appSettings?.app_name || parkingLot?.name || 'Parqueadero'}\nNIT: ${parkingLot?.nit || '-'}\n\nRecibo No.: ${session.receipt_number || '-'}\nPlaca: ${session.vehicles?.plate || '-'}\nTipo: ${session.vehicles?.type || '-'}\nIngreso: ${entryTime.toLocaleString()}\nSalida: ${exitTime.toLocaleString()}\nTotal a Pagar: $${session.total_charged?.toLocaleString() || session.fee?.toLocaleString()}\n\n¡Gracias por su visita!`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 py-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+            className="flex-auto md:flex-1 py-3 px-4 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
           >
             Enviar
           </a>
           <button 
             onClick={onClose}
-            className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-medium transition-colors"
+            className="flex-auto py-3 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-medium transition-colors w-full md:w-auto md:flex-1 text-sm md:text-base"
           >
             Cerrar
           </button>

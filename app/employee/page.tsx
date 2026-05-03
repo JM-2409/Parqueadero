@@ -58,20 +58,7 @@ export default function EmployeePage() {
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
   const [accumulatedRevenue, setAccumulatedRevenue] = useState(0);
 
-  const fetchParkingLot = useCallback(async (id: string) => {
-    const { data } = await supabase
-      .from("parking_lots")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-    if (data) {
-      setParkingLot(data);
-      if (data.allowed_vehicles && data.allowed_vehicles.length > 0) {
-        setType(data.allowed_vehicles[0]);
-      }
-    }
-    
-    // Fetch last closure to calculate accumulated revenue
+  const fetchRevenue = useCallback(async (id: string) => {
     const { data: lastClosure } = await supabase
       .from("cash_closures")
       .select("closed_at")
@@ -97,6 +84,22 @@ export default function EmployeePage() {
       const revenue = shiftData.reduce((sum, s) => sum + (Number(s.total_charged) || 0), 0);
       setAccumulatedRevenue(revenue);
     }
+  }, []);
+
+  const fetchParkingLot = useCallback(async (id: string) => {
+    const { data } = await supabase
+      .from("parking_lots")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (data) {
+      setParkingLot(data);
+      if (data.allowed_vehicles && data.allowed_vehicles.length > 0) {
+        setType(data.allowed_vehicles[0]);
+      }
+    }
+    
+    await fetchRevenue(id);
 
     const { data: appData } = await supabase.from("app_settings").select("*").limit(1).maybeSingle();
     if (appData) setAppSettings(appData);
@@ -105,7 +108,7 @@ export default function EmployeePage() {
     if (tariffData) setTariffs(tariffData);
 
     setLoading(false);
-  }, []);
+  }, [fetchRevenue]);
 
   const fetchActiveSessions = useCallback(async (parkingLotId: string) => {
     const { data } = await supabase
@@ -210,6 +213,7 @@ export default function EmployeePage() {
         { event: '*', schema: 'public', table: 'parking_sessions', filter: `parking_lot_id=eq.${parkingLot.id}` },
         () => {
           fetchActiveSessions(parkingLot.id);
+          fetchRevenue(parkingLot.id);
         }
       )
       .subscribe();
@@ -217,7 +221,7 @@ export default function EmployeePage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [parkingLot?.id, fetchActiveSessions]);
+  }, [parkingLot?.id, fetchActiveSessions, fetchRevenue]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedPlate(plate), 300);
@@ -336,13 +340,19 @@ export default function EmployeePage() {
     } else {
       const { data: existingVehicle } = await supabase
         .from("vehicles")
-        .select("id")
+        .select("id, brand, color, owner_name")
         .eq("plate", plate.toUpperCase())
         .maybeSingle();
 
       if (existingVehicle) {
         vehicleId = existingVehicle.id;
-        await supabase.from("vehicles").update({ custom_fields_data: extraData }).eq("id", vehicleId);
+        await supabase.from("vehicles").update({ 
+          type,
+          brand: sanitizeInput(extraData['Marca'] || extraData['brand'] || existingVehicle.brand || ""),
+          color: sanitizeInput(extraData['Color'] || extraData['color'] || existingVehicle.color || ""),
+          owner_name: sanitizeInput(extraData['Propietario'] || extraData['owner_name'] || existingVehicle.owner_name || ""),
+          custom_fields_data: extraData 
+        }).eq("id", vehicleId);
       }
     }
 
