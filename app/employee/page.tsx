@@ -3,13 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  Car, LogOut, LogIn, Search, CheckCircle2, DollarSign, Clock, Receipt, User, History, Menu, X, Home, Camera
+  Car, LogOut, LogIn, Search, CheckCircle2, DollarSign, Clock, Receipt, User, History, Menu, X, Home, Camera, Bike, Truck, AlertTriangle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import EmployeeHistory from "./EmployeeHistory";
 import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
-import CameraOCR from "./CameraOCR";
 import { calculateFee } from "@/lib/pricing";
 
 import { sanitizeInput } from "@/lib/sanitize";
@@ -34,6 +33,14 @@ export default function EmployeePage() {
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showConfirmEntry, setShowConfirmEntry] = useState(false);
+
+  // Preferencias Opcionales
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [prefAutoPrint, setPrefAutoPrint] = useState(false);
+  const [prefSound, setPrefSound] = useState(true);
+  const [prefConfirmEntry, setPrefConfirmEntry] = useState(true);
+  const [prefShowNotes, setPrefShowNotes] = useState(false);
 
   // Receipt Modal
   const [selectedSession, setSelectedSession] = useState<any>(null);
@@ -51,8 +58,6 @@ export default function EmployeePage() {
   // Exit form states
   const [exitPlate, setExitPlate] = useState("");
   const [fee, setFee] = useState("");
-
-  const [showCamera, setShowCamera] = useState(false);
 
   const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
@@ -96,6 +101,13 @@ export default function EmployeePage() {
       setParkingLot(data);
       if (data.allowed_vehicles && data.allowed_vehicles.length > 0) {
         setType(data.allowed_vehicles[0]);
+      }
+      
+      // Override local preferences with Admin global settings
+      if (data.settings) {
+        if (typeof data.settings.autoPrint === 'boolean') setPrefAutoPrint(data.settings.autoPrint);
+        if (typeof data.settings.confirmEntry === 'boolean') setPrefConfirmEntry(data.settings.confirmEntry);
+        if (typeof data.settings.showNotes === 'boolean') setPrefShowNotes(data.settings.showNotes);
       }
     }
     
@@ -191,6 +203,37 @@ export default function EmployeePage() {
     }
   }, [router, fetchParkingLot, fetchActiveSessions, fetchSubscribers]);
 
+  const playBeep = useCallback((type: 'success' | 'error') => {
+    if (!localStorage.getItem('pref_sound') || localStorage.getItem('pref_sound') === 'true') {
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        if (type === 'success') {
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.1);
+        } else {
+          oscillator.type = 'sawtooth';
+          oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.2);
+        }
+      } catch (e) {
+        console.log('Audio not supported', e);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     // Check for saved shift
     const savedShift = sessionStorage.getItem("shiftName");
@@ -200,6 +243,12 @@ export default function EmployeePage() {
       setIsShiftSet(true);
     }
     
+    // Load Prefs
+    setPrefAutoPrint(localStorage.getItem('pref_autoPrint') === 'true');
+    setPrefSound(localStorage.getItem('pref_sound') !== 'false');
+    setPrefConfirmEntry(localStorage.getItem('pref_confirmEntry') !== 'false');
+    setPrefShowNotes(localStorage.getItem('pref_showNotes') === 'true');
+
     checkUser();
   }, [checkUser, isShiftSet]);
 
@@ -284,25 +333,38 @@ export default function EmployeePage() {
     setPlate(searchPlate);
   };
 
-  const handleEntry = async (e: React.FormEvent) => {
+  const handleEntrySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingEntry) return;
-    setIsSubmittingEntry(true);
+
     setError("");
     setSuccess("");
 
     if (!plate || !type) {
+      playBeep('error');
       setError("Placa y tipo son obligatorios");
-      setIsSubmittingEntry(false);
       return;
     }
 
     // Check capacity
     if (activeSessions.length >= parkingLot.capacity) {
+      playBeep('error');
       setError("El parqueadero está lleno");
-      setIsSubmittingEntry(false);
       return;
     }
+
+    if (prefConfirmEntry) {
+      setShowConfirmEntry(true);
+    } else {
+      processEntry();
+    }
+  };
+
+  const processEntry = async () => {
+    setIsSubmittingEntry(true);
+    setShowConfirmEntry(false);
+    setError("");
+    setSuccess("");
 
     // Check blacklist
     const { data: blacklistedItem } = await supabase
@@ -392,9 +454,25 @@ export default function EmployeePage() {
         }]);
 
       if (sessionError) {
+        playBeep('error');
         setError("Error al registrar ingreso: " + sessionError.message);
       } else {
+        playBeep('success');
         setSuccess("Ingreso registrado exitosamente");
+        
+        // Handle AutoPrint
+        if (prefAutoPrint) {
+          // Open receipt automatically pointing to the created session
+          setViewingSession({
+            id: 'mocked-id', // Ideally get the inserted ID, but we just re-fetch
+            entry_employee_name: shiftName,
+            status: "active",
+            entry_time: new Date().toISOString(),
+            vehicles: { plate: plate.toUpperCase(), type }
+          });
+          setShowReceipt(true);
+        }
+
         setPlate("");
         setDebouncedPlate("");
         setExtraData({});
@@ -502,6 +580,14 @@ export default function EmployeePage() {
     router.push("/");
   };
 
+  const savePref = (key: string, value: boolean) => {
+    localStorage.setItem(key, value.toString());
+    if (key === 'pref_autoPrint') setPrefAutoPrint(value);
+    if (key === 'pref_sound') setPrefSound(value);
+    if (key === 'pref_confirmEntry') setPrefConfirmEntry(value);
+    if (key === 'pref_showNotes') setPrefShowNotes(value);
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       <div className="hidden md:flex flex-col w-64 bg-slate-900 min-h-screen animate-pulse"></div>
@@ -530,7 +616,7 @@ export default function EmployeePage() {
           <form onSubmit={handleStartShift}>
             <input
               type="text"
-              value={shiftName}
+              value={shiftName || ""}
               onChange={(e) => setShiftName(e.target.value)}
               placeholder="Ej. Juan Pérez"
               className="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg text-center mb-4"
@@ -671,11 +757,18 @@ export default function EmployeePage() {
             <p className="text-xs text-right mt-1">{activeSessions.length} / {parkingLot?.capacity}</p>
           </div>
           <button
+            onClick={() => setShowPreferences(true)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition-colors w-full mb-2"
+          >
+            <Menu size={20} />
+            <span className="font-medium">Preferencias</span>
+          </button>
+          <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
           >
             <LogOut size={20} />
-            <span className="font-medium">Cerrar Turno</span>
+            <span className="font-medium">Cerrar Sesión</span>
           </button>
         </div>
       </div>
@@ -706,49 +799,53 @@ export default function EmployeePage() {
                   <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Nuevo Ingreso</h2>
                 </div>
 
-                <form onSubmit={handleEntry} className="space-y-4">
+                <form onSubmit={handleEntrySubmit} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Placa *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Placa *</label>
                     <div className="relative flex items-center gap-2">
-                      <div className="relative flex-1">
+                      <div className="relative flex-1 group">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <div className="w-8 h-6 bg-yellow-400 rounded-sm flex items-center justify-center shadow-sm border border-yellow-500">
+                            <span className="text-[10px] font-black text-slate-900 tracking-tighter">COL</span>
+                          </div>
+                        </div>
                         <input
                           type="text"
-                          value={plate}
+                          value={plate || ""}
                           onChange={(e) => handleSearchPlate(e.target.value)}
-                          className="w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono text-lg"
+                          className="w-full pl-14 pr-4 py-3.5 bg-slate-50 border border-slate-200 group-hover:border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white outline-none uppercase font-mono text-xl sm:text-2xl font-black tracking-widest text-slate-900 transition-all shadow-inner placeholder:text-slate-300 placeholder:font-normal placeholder:tracking-normal"
                           placeholder="ABC-123"
                           maxLength={7}
                           required
                         />
-                        <Search className="absolute left-3 top-3.5 text-slate-400" size={20} />
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowCamera(true)}
-                        className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors"
-                        title="Escanear placa"
-                      >
-                        <Camera size={24} />
-                      </button>
                     </div>
                     {!isNewVehicle && plate.length >= 5 && (
-                      <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
-                        <CheckCircle2 size={12} /> Vehículo encontrado
+                      <p className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1.5 px-1 bg-emerald-50 w-fit py-1 px-2 rounded-md border border-emerald-100">
+                        <CheckCircle2 size={14} /> Vehículo registrado anteriormente
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Vehículo *</label>
-                    <select
-                      value={type}
-                      onChange={(e) => setType(e.target.value)}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white capitalize"
-                    >
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Tipo de Vehículo *</label>
+                    <div className="grid grid-cols-2 gap-3">
                       {parkingLot?.allowed_vehicles?.map((v: string) => (
-                        <option key={v} value={v}>{v}</option>
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setType(v)}
+                          className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                            type === v 
+                              ? "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-md scale-[1.02]" 
+                              : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          {v.toLowerCase() === 'carros' ? <Car size={24} /> : v.toLowerCase() === 'motos' ? <Bike size={24} /> : <Truck size={24} />}
+                          <span className="font-semibold capitalize text-sm">{v}</span>
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
 
                   {/* Custom Fields */}
@@ -767,6 +864,21 @@ export default function EmployeePage() {
                       />
                     </div>
                   ))}
+
+                  {prefShowNotes && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Observaciones (Opcional)
+                      </label>
+                      <textarea
+                        value={extraData['Observaciones'] || ""}
+                        onChange={(e) => setExtraData({...extraData, ['Observaciones']: e.target.value})}
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                        placeholder="Daños, rayones o notas importantes..."
+                        rows={2}
+                      />
+                    </div>
+                  )}
 
                   <button
                     type="submit"
@@ -1027,18 +1139,73 @@ export default function EmployeePage() {
               </div>
             </div>
           )}
+
+          {showConfirmEntry && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-md">
+                    <AlertTriangle size={32} />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-xl mb-2">Confirmar Ingreso</h3>
+                  <p className="text-sm text-slate-500 font-medium">
+                    ¿Estás seguro de registrar el ingreso de la placa <span className="text-slate-900 font-bold uppercase">{plate}</span>?
+                  </p>
+                </div>
+                <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-center">
+                  <button 
+                    onClick={() => setShowConfirmEntry(false)} 
+                    className="px-5 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors w-full"
+                    disabled={isSubmittingEntry}
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={processEntry} 
+                    className="px-5 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all w-full flex items-center justify-center gap-2 active:scale-95"
+                    disabled={isSubmittingEntry}
+                  >
+                    {isSubmittingEntry ? <Spinner size={20} className="text-white" /> : <CheckCircle2 size={18} />}
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {showPreferences && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-slate-900 text-white p-5 flex justify-between items-center">
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <Menu size={20} />
+                    Preferencias Adicionales
+                  </h3>
+                  <button onClick={() => setShowPreferences(false)} className="text-slate-400 hover:text-white transition-colors">
+                    <X size={24} />
+                  </button>
+                </div>
+                <div className="p-6 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-slate-900 text-sm">Sonidos de Notificación</p>
+                      <p className="text-xs text-slate-500">Pitidos al guardar ingresos y mostrar errores</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={prefSound} onChange={(e) => savePref('pref_sound', e.target.checked)} />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-50 border-t border-slate-100">
+                  <button onClick={() => setShowPreferences(false)} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">
+                    Cerrar y Guardar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-      
-      {/* Camera OCR Modal */}
-      {showCamera && (
-        <CameraOCR 
-          onClose={() => setShowCamera(false)} 
-          onScan={(scannedPlate) => {
-            handleSearchPlate(scannedPlate);
-          }} 
-        />
-      )}
     </div>
   );
 }

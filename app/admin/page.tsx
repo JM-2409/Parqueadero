@@ -41,6 +41,12 @@ export default function AdminPage() {
   const [allowedVehicles, setAllowedVehicles] = useState<string[]>([]);
   const [customFields, setCustomFields] = useState<{name: string, required: boolean}[]>([]);
   const [privateCustomFields, setPrivateCustomFields] = useState<{name: string, required: boolean, visible: boolean}[]>([]);
+  const [parkingSettings, setParkingSettings] = useState({
+    autoPrint: false,
+    confirmEntry: true,
+    showNotes: false
+  });
+  const [showSqlAlert, setShowSqlAlert] = useState(false);
 
   // Employee creation states
   const [newEmployee, setNewEmployee] = useState({ username: "", password: "", customRoleId: "" });
@@ -62,6 +68,11 @@ export default function AdminPage() {
       setAllowedVehicles(data.allowed_vehicles || []);
       setCustomFields(data.custom_fields || []);
       setPrivateCustomFields(data.private_custom_fields || []);
+      setParkingSettings(data.settings || {
+        autoPrint: false,
+        confirmEntry: true,
+        showNotes: false
+      });
     }
   }, []);
 
@@ -293,6 +304,7 @@ export default function AdminPage() {
         allowed_vehicles: allowedVehicles,
         custom_fields: customFields,
         private_custom_fields: privateCustomFields,
+        settings: parkingSettings,
         nit: parkingLot?.nit,
         address: parkingLot?.address,
         entry_grace_period_mins: parkingLot?.entry_grace_period_mins ?? 0,
@@ -301,7 +313,12 @@ export default function AdminPage() {
       .eq("id", parkingLot.id);
 
     if (updateError) {
-      setError("Error al actualizar configuración");
+      if (updateError.message?.includes("settings") && updateError.message?.includes("does not exist")) {
+        setShowSqlAlert(true);
+        setError("Falta una configuración en la base de datos para guardar estas preferencias.");
+      } else {
+        setError("Error al actualizar configuración: " + updateError.message);
+      }
     } else {
       setSuccess("Configuración actualizada exitosamente");
       setTimeout(() => setSuccess(""), 3000);
@@ -716,7 +733,7 @@ export default function AdminPage() {
                       <label className="block text-sm font-medium text-slate-700 mb-1">Capacidad Total</label>
                       <input
                         type="number"
-                        value={capacity}
+                        value={capacity || ""}
                         onChange={(e) => setCapacity(e.target.value)}
                         className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
                         placeholder="Ej. 100"
@@ -758,6 +775,50 @@ export default function AdminPage() {
                           className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                         />
                         <span className="text-slate-700 font-medium">Mostrar recaudo a usuarios (operarios)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-6">
+                    <label className="block text-base font-semibold text-slate-900 mb-4">Preferencias Globales para Empleados</label>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                        <div>
+                          <span className="text-slate-900 font-medium block">Impresión Automática</span>
+                          <span className="text-slate-500 text-xs mt-0.5 block">Abre el recibo sin preguntar al ingresar un vehículo.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={parkingSettings?.autoPrint || false}
+                          onChange={(e) => setParkingSettings({...parkingSettings, autoPrint: e.target.checked})}
+                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                        />
+                      </label>
+                      
+                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                        <div>
+                          <span className="text-slate-900 font-medium block">Confirmación de Ingreso</span>
+                          <span className="text-slate-500 text-xs mt-0.5 block">Muestra un aviso intermedio para evitar equivocaciones.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={parkingSettings?.confirmEntry || false}
+                          onChange={(e) => setParkingSettings({...parkingSettings, confirmEntry: e.target.checked})}
+                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                        />
+                      </label>
+
+                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                        <div>
+                          <span className="text-slate-900 font-medium block">Mostar Observaciones Adicionales</span>
+                          <span className="text-slate-500 text-xs mt-0.5 block">Campo libre para nota de golpes o rayones.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={parkingSettings?.showNotes || false}
+                          onChange={(e) => setParkingSettings({...parkingSettings, showNotes: e.target.checked})}
+                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                        />
                       </label>
                     </div>
                   </div>
@@ -857,7 +918,7 @@ export default function AdminPage() {
                           <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                             <input
                               type="text"
-                              value={field.name}
+                              value={field.name || ""}
                               onChange={(e) => updateCustomField(idx, 'name', e.target.value)}
                               placeholder="Nombre del campo (Ej. Casco)"
                               className="flex-1 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
@@ -867,7 +928,7 @@ export default function AdminPage() {
                               <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
                                 <input
                                   type="checkbox"
-                                  checked={field.required}
+                                  checked={field.required || false}
                                   onChange={(e) => updateCustomField(idx, 'required', e.target.checked)}
                                   className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                                 />
@@ -916,7 +977,7 @@ export default function AdminPage() {
                           <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                             <input
                               type="text"
-                              value={field.name}
+                              value={field.name || ""}
                               onChange={(e) => updatePrivateCustomField(idx, 'name', e.target.value)}
                               placeholder="Nombre del campo (Ej. Placa)"
                               className="flex-1 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
@@ -926,7 +987,7 @@ export default function AdminPage() {
                               <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
                                 <input
                                   type="checkbox"
-                                  checked={field.required}
+                                  checked={field.required || false}
                                   onChange={(e) => updatePrivateCustomField(idx, 'required', e.target.checked)}
                                   className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
                                 />
@@ -935,7 +996,7 @@ export default function AdminPage() {
                               <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
                                 <input
                                   type="checkbox"
-                                  checked={field.visible}
+                                  checked={field.visible || false}
                                   onChange={(e) => updatePrivateCustomField(idx, 'visible', e.target.checked)}
                                   className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
                                 />
@@ -958,6 +1019,21 @@ export default function AdminPage() {
                   </div>
 
                   <div className="pt-4">
+                    {showSqlAlert && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl space-y-3">
+                        <h4 className="text-red-800 font-bold flex items-center gap-2">
+                          <CheckCircle2 size={20} />
+                          Comando de Base de Datos Requerido
+                        </h4>
+                        <p className="text-red-700 text-sm">
+                          Para guardar las nuevas preferencias de impresión y opciones, debes añadir la columna <code>settings</code> jsonb en tu base de datos mediante el editor SQL de Supabase:
+                        </p>
+                        <pre className="p-3 bg-red-950 text-red-50 font-mono text-sm rounded-lg overflow-x-auto">
+                          ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'::jsonb;
+                        </pre>
+                        <button type="button" onClick={() => setShowSqlAlert(false)} className="text-sm font-bold text-red-700 hover:text-red-800 underline">Descartar</button>
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={isUpdatingSettings}

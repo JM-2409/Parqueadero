@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { History, Search, FileText, ChevronLeft, ChevronRight, Car, User, Palette, Tag, X, Trash2 } from "lucide-react";
+import { History, Search, FileText, ChevronLeft, ChevronRight, Car, User, Palette, Tag, X, Trash2, Edit2 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import ReceiptModal from "../employee/ReceiptModal";
@@ -29,6 +29,9 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [forceExitConfig, setForceExitConfig] = useState<{session: any, customDate: string, customTime: string} | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [sessionToEdit, setSessionToEdit] = useState<any>(null);
+  const [newPlate, setNewPlate] = useState("");
+  const [isEditingPlate, setIsEditingPlate] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState<any>(null);
 
   useEffect(() => {
@@ -217,6 +220,72 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
     } catch (e) {
       console.error(e);
       alert("Hubo un error al eliminar el registro.");
+    }
+  };
+
+  const handleSaveEditReceipt = async () => {
+    if (!sessionToEdit || !newPlate.trim()) return;
+    setIsEditingPlate(true);
+    try {
+      const uppercasePlate = newPlate.trim().toUpperCase();
+      
+      // Check if vehicle with new plate already exists
+      const { data: existingVehicle } = await supabase
+        .from("vehicles")
+        .select("id")
+        .eq("plate", uppercasePlate)
+        .maybeSingle();
+
+      if (existingVehicle) {
+        // Just link session to this existing vehicle
+        await supabase
+          .from("parking_sessions")
+          .update({ vehicle_id: existingVehicle.id })
+          .eq("id", sessionToEdit.id);
+      } else {
+        // Create new vehicle with new plate (copying old properties would be better but this works) or update existing vehicle if only 1 session
+        const { data: sessionsWithVehicle } = await supabase
+          .from("parking_sessions")
+          .select("id")
+          .eq("vehicle_id", sessionToEdit.vehicle_id);
+          
+        if (sessionsWithVehicle && sessionsWithVehicle.length === 1) {
+          // It's safe to update the vehicle directly since only this session relies on it
+          await supabase
+            .from("vehicles")
+            .update({ plate: uppercasePlate })
+            .eq("id", sessionToEdit.vehicle_id);
+        } else {
+          // Create new vehicle
+          const { data: newV } = await supabase
+            .from("vehicles")
+            .insert([{
+              plate: uppercasePlate,
+              type: sessionToEdit.vehicles.type,
+              brand: sessionToEdit.vehicles.brand,
+              color: sessionToEdit.vehicles.color,
+              owner_name: sessionToEdit.vehicles.owner_name
+            }])
+            .select()
+            .single();
+            
+          if (newV) {
+            await supabase
+              .from("parking_sessions")
+              .update({ vehicle_id: newV.id })
+              .eq("id", sessionToEdit.id);
+          }
+        }
+      }
+
+      setSessionToEdit(null);
+      setNewPlate("");
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Hubo un error al editar la placa.");
+    } finally {
+      setIsEditingPlate(false);
     }
   };
 
@@ -565,10 +634,21 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                               </div>
 
                               <div className="space-y-3 flex flex-col justify-start items-end">
-                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider w-full text-right">Acciones</h4>
+                                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider w-full text-right">Acciones</h4>
+                                <button
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    setSessionToEdit(session); 
+                                    setNewPlate(session.vehicles.plate); 
+                                  }}
+                                  className="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 mb-2 w-full justify-center md:justify-end"
+                                >
+                                  <Edit2 size={16} />
+                                  Editar Placa
+                                </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setSessionToDelete(session.id); }}
-                                  className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
+                                  className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 w-full justify-center md:justify-end"
                                 >
                                   <Trash2 size={16} />
                                   Borrar Registro
@@ -687,6 +767,48 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               >
                 <Trash2 size={18} />
                 Borrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sessionToEdit && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-lg">Editar Placa</h3>
+              <button onClick={() => setSessionToEdit(null)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Nueva Placa</label>
+              <input 
+                type="text" 
+                value={newPlate} 
+                onChange={(e) => setNewPlate(e.target.value.toUpperCase())}
+                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono text-lg font-bold"
+                placeholder="ABC-123"
+                autoFocus
+              />
+              <p className="text-xs text-slate-500 mt-3">Al editar la placa, el recibo y el registro histórico se actualizarán para apuntar a la placa correcta.</p>
+            </div>
+            <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
+              <button 
+                onClick={() => setSessionToEdit(null)} 
+                className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors"
+                disabled={isEditingPlate}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSaveEditReceipt} 
+                className="px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors flex items-center gap-2"
+                disabled={isEditingPlate || !newPlate.trim()}
+              >
+                {isEditingPlate ? <Spinner className="w-4 h-4" /> : <Edit2 size={16} />}
+                Guardar
               </button>
             </div>
           </div>
