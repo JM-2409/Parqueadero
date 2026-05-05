@@ -1,8 +1,14 @@
 "use client";
 
-import { Receipt, Printer, X, Car } from "lucide-react";
+import { Receipt, Printer, X, Car, Send } from "lucide-react";
+import { useState } from "react";
 
 export default function ReceiptModal({ session, appSettings, parkingLot, onClose }: any) {
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState("");
+
   const handlePrint = () => {
     window.print();
   };
@@ -13,6 +19,63 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
   const durationMinutes = Math.floor(durationMs / (1000 * 60));
   const hours = Math.floor(durationMinutes / 60);
   const minutes = durationMinutes % 60;
+
+  const handleSendWhatsAppAPI = async () => {
+    if (!phoneNumber || phoneNumber.length < 10) {
+      setErrorMessage("Ingrese un número válido (ej: 3001234567)");
+      return;
+    }
+    
+    setIsSending(true);
+    setSendResult('idle');
+    setErrorMessage("");
+
+    try {
+      // Create local URL for the receipt-image generator API
+      const baseUrl = window.location.origin;
+      const params = new URLSearchParams({
+        receiptNumber: session.receipt_number || '-',
+        plate: session.vehicles?.plate || '-',
+        type: session.vehicles?.type || '-',
+        total: (session.total_charged || session.fee || 0).toString(),
+        entry: entryTime.toLocaleString(),
+        exit: exitTime.toLocaleString(),
+        appName: appSettings?.app_name || parkingLot?.name || 'Parqueadero',
+        nit: parkingLot?.nit || '-',
+        address: parkingLot?.address || '',
+        duration: `${hours}h ${minutes}m`
+      });
+      const mediaUrl = `${baseUrl}/api/receipt-image?${params.toString()}`;
+
+      const text = `*Recibo de Parqueadero*\n\nParqueadero: ${appSettings?.app_name || parkingLot?.name || 'Parqueadero'}\nNIT: ${parkingLot?.nit || '-'}\n\nRecibo No.: ${session.receipt_number || '-'}\nPlaca: ${session.vehicles?.plate || '-'}\nTipo: ${session.vehicles?.type || '-'}\nIngreso: ${entryTime.toLocaleString()}\nSalida: ${exitTime.toLocaleString()}\nTotal a Pagar: $${session.total_charged?.toLocaleString() || session.fee?.toLocaleString()}\n\n¡Gracias por su visita!`;
+
+      const response = await fetch('/api/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: phoneNumber,
+          mediaUrl,
+          text
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Error al enviar el mensaje");
+      }
+
+      setSendResult('success');
+      setTimeout(() => {
+        setSendResult('idle');
+      }, 5000);
+    } catch (error: any) {
+      console.error(error);
+      setSendResult('error');
+      setErrorMessage(error.message);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
@@ -99,30 +162,64 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
 
         </div>
         
-        <div className="p-4 md:p-6 border-t border-slate-100 bg-white md:rounded-b-2xl flex flex-wrap gap-3 print:hidden shrink-0 mt-auto">
-          <button 
-            onClick={handlePrint}
-            className="flex-auto md:flex-1 py-3 px-4 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
-          >
-            <Printer size={18} />
-            Imprimir
-          </button>
-          <a 
-            href={`https://wa.me/?text=${encodeURIComponent(`*Recibo de Parqueadero*\n\nParqueadero: ${appSettings?.app_name || parkingLot?.name || 'Parqueadero'}\nNIT: ${parkingLot?.nit || '-'}\n\nRecibo No.: ${session.receipt_number || '-'}\nPlaca: ${session.vehicles?.plate || '-'}\nTipo: ${session.vehicles?.type || '-'}\nIngreso: ${entryTime.toLocaleString()}\nSalida: ${exitTime.toLocaleString()}\nTotal a Pagar: $${session.total_charged?.toLocaleString() || session.fee?.toLocaleString()}\n\n¡Gracias por su visita!`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-auto md:flex-1 py-3 px-4 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
-          >
-            Enviar
-          </a>
-          <button 
-            onClick={onClose}
-            className="flex-auto py-3 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-medium transition-colors w-full md:w-auto md:flex-1 text-sm md:text-base"
-          >
-            Cerrar
-          </button>
+        <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 md:rounded-b-2xl flex flex-col gap-3 print:hidden">
+          
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Enviar SMS / WhatsApp
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="tel"
+                placeholder="Nº WhatsApp (ej. 3001234567)"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
+              />
+              <button
+                onClick={handleSendWhatsAppAPI}
+                disabled={isSending}
+                className="px-4 py-2 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-[#25D366]/50 text-white rounded-xl transition-colors flex items-center justify-center gap-2"
+                title="Enviar por WhatsApp"
+              >
+                {isSending ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send size={18} />
+                )}
+              </button>
+            </div>
+            
+            {sendResult === 'success' && (
+              <p className="text-xs text-emerald-600 font-medium">¡Mensaje enviado exitosamente!</p>
+            )}
+            
+            {sendResult === 'error' && (
+              <p className="text-[10px] text-red-500 leading-tight">{errorMessage}</p>
+            )}
+            <p className="text-[10px] text-slate-400 leading-tight">
+              Recuerda que al estar en Sandbox de Twilio, el usuario primero debe enviar &quot;join class-began&quot; al +14155238886 para recibir el mensaje.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-2 pt-4 border-t border-slate-200">
+            <button 
+              onClick={handlePrint}
+              className="flex-auto md:flex-1 py-3 px-4 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
+            >
+              <Printer size={18} />
+              Imprimir
+            </button>
+            <button 
+              onClick={onClose}
+              className="flex-auto py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-xl font-medium transition-colors w-full md:w-auto md:flex-1 text-sm md:text-base"
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

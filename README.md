@@ -180,6 +180,9 @@ CREATE POLICY "Public Cash Closures" ON cash_closures FOR ALL USING (true) WITH 
 ```
 
 ## Correcciones e Interacciones Recientes 🔄
+- **Envío de Recibos por WhatsApp (Twilio)**: Se integró la API de Twilio para enviar automáticamente una imagen del recibo de parqueo vía WhatsApp.
+- **Generación de Imagen de Recibo**: Nuevo endpoint (`/api/receipt-image`) que genera un recibo en formato imagen `.png` on-the-fly con los detalles de la sesión.
+- **Dashboard de Operario**: Nueva sección de "Resumen Rápido" en el panel del empleado que muestra el número de vehículos parqueados, suscripciones activas y vehículos vetados.
 - **Tiempo de Gabela (Tolerancia) Flexible**: Ahora puedes configurar los minutos de cortesía en la tabla de configuración. Esto cubre tanto los minutos iniciales de estadía para que cuente como gratis (Entrada de Cortesía) como el rango de tiempo (gabela) de los turnos de Día/Noche. Por ejemplo, salir 15 minutos después de terminado el turno no cobrará el siguiente rango horario, o entrar 15 minutos antes de que empiece un turno lo arrastrará al siguiente evitando dobles cobros inesperados.
 - **Autocompletado Inteligente**: Al digitar una placa de vehículo registrado previamente en el sistema de la sucursal (o general), los campos extra (`Marca`, `Color`, etc) se mapean y populán automáticamente (Ahora extendido a Ingreso Manual y Registro de Abonados Mensuales).
 - **Previsualización de Recibos y Envíos**: Al registrar la salida, o al seleccionar un recibo del historial en ambos paneles (Administración y Empleado), ahora el sistema mostrará la previsualización del recibo automáticamente antes de ofrecer la opción final de enviarlo por WhatsApp (con botón dedicado) o imprimirlo de manera física.

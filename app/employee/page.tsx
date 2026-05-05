@@ -30,6 +30,7 @@ export default function EmployeePage() {
   const [appSettings, setAppSettings] = useState<any>(null);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [subscribers, setSubscribers] = useState<any[]>([]);
+  const [blacklistedCount, setBlacklistedCount] = useState<number>(0);
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -144,6 +145,14 @@ export default function EmployeePage() {
     if (data) setSubscribers(data);
   }, []);
 
+  const fetchBlacklistedCount = useCallback(async (parkingLotId: string) => {
+    const { count } = await supabase
+      .from("blacklisted_vehicles")
+      .select("*", { count: 'exact', head: true })
+      .eq("parking_lot_id", parkingLotId);
+    if (count !== null) setBlacklistedCount(count);
+  }, []);
+
   const checkUser = useCallback(async () => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -197,11 +206,12 @@ export default function EmployeePage() {
       fetchParkingLot(profileData.parking_lot_id);
       fetchActiveSessions(profileData.parking_lot_id);
       fetchSubscribers(profileData.parking_lot_id);
+      fetchBlacklistedCount(profileData.parking_lot_id);
     } catch (err) {
       console.error("Error checking user:", err);
       router.push("/login");
     }
-  }, [router, fetchParkingLot, fetchActiveSessions, fetchSubscribers]);
+  }, [router, fetchParkingLot, fetchActiveSessions, fetchSubscribers, fetchBlacklistedCount]);
 
   const playBeep = useCallback((type: 'success' | 'error') => {
     if (!localStorage.getItem('pref_sound') || localStorage.getItem('pref_sound') === 'true') {
@@ -788,7 +798,42 @@ export default function EmployeePage() {
 
           {/* TAB: OPERATION */}
           {activeTab === "operation" && (
-            <div className="flex flex-col xl:flex-row gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              
+              {/* Resumen Rápido */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Vehículos Parqueados</p>
+                    <p className="text-3xl font-black text-slate-900">{activeSessions.length}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100">
+                    <Car size={24} />
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Suscripciones Activas</p>
+                    <p className="text-3xl font-black text-emerald-600">{subscribers.length}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100">
+                    <CheckCircle2 size={24} />
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Vehículos Vetados</p>
+                    <p className="text-3xl font-black text-red-600">{blacklistedCount}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center border border-red-100">
+                    <AlertTriangle size={24} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col xl:flex-row gap-6 lg:gap-8">
               
               {/* Entry Form */}
               <div className="xl:w-[380px] shrink-0 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100/60 h-fit">
@@ -1038,6 +1083,7 @@ export default function EmployeePage() {
                     ))}
                   </div>
                 )}
+              </div>
               </div>
             </div>
           )}
