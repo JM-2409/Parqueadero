@@ -1,16 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Car, ShieldCheck, Clock, MapPin, CheckCircle2, Mail, Phone, ArrowRight, X } from "lucide-react";
+import { Car, ShieldCheck, Clock, MapPin, CheckCircle2, Mail, Phone, ArrowRight, X, Menu } from "lucide-react";
 
 export default function Home() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200">
               <Car size={24} />
             </div>
             <span className="text-xl font-bold text-slate-900 tracking-tight">ParkManager</span>
@@ -21,21 +24,58 @@ export default function Home() {
             <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Precios</a>
             <a href="#contact" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Contacto</a>
           </nav>
-          <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4">
             <Link
               href="/login"
-              className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors hidden sm:block"
+              className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
             >
               Iniciar Sesión
             </Link>
             <Link
               href="/login"
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl shadow-sm transition-all hover:shadow-md flex items-center gap-2"
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl shadow-sm transition-all hover:shadow-md flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
             >
               Ingresar <ArrowRight size={16} />
             </Link>
           </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-slate-600 hover:text-indigo-600 focus:outline-none p-2"
+            >
+              {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-b border-slate-200 absolute w-full shadow-lg">
+            <div className="px-4 pt-2 pb-6 space-y-2">
+              <a onClick={() => setIsMobileMenuOpen(false)} href="#features" className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">Características</a>
+              <a onClick={() => setIsMobileMenuOpen(false)} href="#about" className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">Nosotros</a>
+              <a onClick={() => setIsMobileMenuOpen(false)} href="#pricing" className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">Precios</a>
+              <a onClick={() => setIsMobileMenuOpen(false)} href="#contact" className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">Contacto</a>
+              <div className="pt-4 flex flex-col gap-3">
+                <Link
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  href="/login"
+                  className="w-full text-center px-5 py-3 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 text-base font-medium rounded-xl transition-colors"
+                >
+                  Iniciar Sesión
+                </Link>
+                <Link
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  href="/login"
+                  className="w-full text-center px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-medium rounded-xl shadow-sm transition-all"
+                >
+                  Ingresar al Sistema
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">

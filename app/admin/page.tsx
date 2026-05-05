@@ -1029,7 +1029,7 @@ export default function AdminPage() {
                           Para guardar las nuevas preferencias de impresión y opciones, debes añadir la columna <code>settings</code> jsonb en tu base de datos mediante el editor SQL de Supabase:
                         </p>
                         <pre className="p-3 bg-red-950 text-red-50 font-mono text-sm rounded-lg overflow-x-auto">
-                          ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'::jsonb;
+                          ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT &apos;&#123;&quot;autoPrint&quot;: false&#125;&apos;::jsonb;
                         </pre>
                         <button type="button" onClick={() => setShowSqlAlert(false)} className="text-sm font-bold text-red-700 hover:text-red-800 underline">Descartar</button>
                       </div>
