@@ -858,7 +858,7 @@ export default function EmployeePage() {
                           type="text"
                           value={plate || ""}
                           onChange={(e) => handleSearchPlate(e.target.value)}
-                          className="w-full pl-14 pr-4 py-3.5 bg-slate-50 border border-slate-200 group-hover:border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white outline-none uppercase font-mono text-xl sm:text-2xl font-black tracking-widest text-slate-900 transition-all shadow-inner placeholder:text-slate-300 placeholder:font-normal placeholder:tracking-normal"
+                          className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-50 border border-slate-200 group-hover:border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-slate-900 transition-all shadow-inner placeholder:text-slate-300 placeholder:font-normal placeholder:tracking-normal text-center"
                           placeholder="ABC-123"
                           maxLength={7}
                           required
@@ -880,14 +880,14 @@ export default function EmployeePage() {
                           key={v}
                           type="button"
                           onClick={() => setType(v)}
-                          className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                          className={`p-4 md:p-5 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all active:scale-95 ${
                             type === v 
                               ? "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-md scale-[1.02]" 
                               : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                           }`}
                         >
-                          {v.toLowerCase() === 'carros' ? <Car size={24} /> : v.toLowerCase() === 'motos' ? <Bike size={24} /> : <Truck size={24} />}
-                          <span className="font-semibold capitalize text-sm">{v}</span>
+                          {v.toLowerCase() === 'carros' ? <Car size={32} /> : v.toLowerCase() === 'motos' ? <Bike size={32} /> : <Truck size={32} />}
+                          <span className="font-semibold capitalize text-base md:text-lg">{v}</span>
                         </button>
                       ))}
                     </div>
@@ -928,12 +928,12 @@ export default function EmployeePage() {
                   <button
                     type="submit"
                     disabled={isSubmittingEntry}
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6 shadow-md shadow-indigo-200"
+                    className="w-full py-4 md:py-5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-6 shadow-lg shadow-indigo-200/50 text-lg"
                   >
                     {isSubmittingEntry ? (
-                      <Spinner size={20} className="text-white" />
+                      <Spinner size={24} className="text-white" />
                     ) : (
-                      <LogIn size={20} />
+                      <LogIn size={24} />
                     )}
                     {isSubmittingEntry ? "Registrando..." : "Dar Ingreso"}
                   </button>
