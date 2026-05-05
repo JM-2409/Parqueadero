@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { History, Search, ChevronLeft, ChevronRight, Car, User, Palette, Tag, FileText, Trash2 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
-import * as XLSX from "xlsx";
 import ReceiptModal from "./ReceiptModal";
 
 const PAGE_SIZE = 20;
@@ -83,6 +82,7 @@ export default function EmployeeHistory({ parkingLot, tariffs, onExitSession }: 
 
   // Reset page when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchTerm]);
 
@@ -92,55 +92,6 @@ export default function EmployeeHistory({ parkingLot, tariffs, onExitSession }: 
       currency: "COP",
       minimumFractionDigits: 0,
     }).format(amount);
-  };
-
-  const exportToExcel = async () => {
-    setLoading(true);
-    let allSessions = [];
-    try {
-      const { data, error } = await supabase
-        .from("parking_sessions")
-        .select(`*, vehicles!inner (plate, type, brand, color, owner_name)`)
-        .eq("parking_lot_id", parkingLotId)
-        .order("entry_time", { ascending: false });
-
-      if (error) throw error;
-      allSessions = data || [];
-    } catch (err) {
-      console.error("Error fetching data for export", err);
-      setLoading(false);
-      return;
-    }
-
-    const exportData = allSessions.map((session) => {
-      const isCompleted = session.status === "completed";
-      const rules = tariffs?.filter((t) => t.vehicle_type === session.vehicles?.type) || [];
-      const currentFee = !isCompleted
-        ? calculateFee(new Date(session.entry_time), new Date(), rules, {
-            entry_grace_period_mins: parkingLot.entry_grace_period_mins,
-            shift_grace_period_mins: parkingLot.shift_grace_period_mins,
-          })
-        : session.fee || session.total_charged || 0;
-
-      return {
-        Placa: session.vehicles?.plate || "",
-        Tipo: session.vehicles?.type || "",
-        "Ingreso": new Date(session.entry_time).toLocaleString(),
-        "Salida": isCompleted ? new Date(session.exit_time).toLocaleString() : "En Sistema",
-        "Atendido por (Ingreso)": session.entry_employee_name || 'N/A',
-        "Atendido por (Salida)": session.exit_employee_name || 'N/A',
-        Estado: isCompleted ? "Completado" : "En Sistema",
-        Cobro: currentFee || 0,
-      };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Historial");
-    
-    // Generar el archivo
-    XLSX.writeFile(workbook, `Historial_${parkingLot.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
-    setLoading(false);
   };
 
   return (
@@ -156,24 +107,15 @@ export default function EmployeeHistory({ parkingLot, tariffs, onExitSession }: 
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              placeholder="Buscar placa..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
-              className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm w-full sm:w-64"
-            />
-          </div>
-          <button
-            onClick={exportToExcel}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors font-medium text-sm whitespace-nowrap"
-          >
-            <FileText size={16} />
-            Exportar
-          </button>
+        <div className="relative w-full sm:w-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type="text"
+            placeholder="Buscar placa..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm w-full sm:w-64"
+          />
         </div>
       </div>
 

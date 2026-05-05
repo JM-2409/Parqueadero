@@ -18,7 +18,6 @@ import EmployeeManagement from "./EmployeeManagement";
 import EmployeeLogs from "./EmployeeLogs";
 import { FileEdit, Shield, Activity } from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
-import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, Bar } from "recharts";
 
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
@@ -600,47 +599,31 @@ export default function AdminPage() {
                       <option value="30days">Últimos 30 días</option>
                     </select>
                   </div>
-                  <div className="h-64 mt-6">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={weeklyStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                        <XAxis 
-                          dataKey="date" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 10, fill: '#64748b' }} 
-                          dy={10} 
-                        />
-                        <YAxis 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 10, fill: '#64748b' }}
-                          tickFormatter={(value) => `$${(value / 1000)}k`}
-                        />
-                        <RechartsTooltip 
-                          cursor={{ fill: '#f1f5f9' }}
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              return (
-                                <div className="bg-slate-800 text-white text-xs py-1.5 px-3 rounded shadow-lg border border-slate-700">
-                                  <p className="font-medium mb-1">{payload[0].payload.date}</p>
-                                  <p className="text-emerald-400 font-bold">
-                                    {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(payload[0].value as number)}
-                                  </p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar 
-                          dataKey="amount" 
-                          fill="#6366f1" 
-                          radius={[4, 4, 0, 0]} 
-                          maxBarSize={40}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="flex gap-2 overflow-x-auto pb-4 items-end h-48 mt-6">
+                    {weeklyStats.map((stat, idx) => {
+                      const maxAmount = Math.max(...weeklyStats.map(s => s.amount), 1);
+                      const heightPercent = Math.max((stat.amount / maxAmount) * 100, 5); // at least 5% height
+
+                      return (
+                        <div key={idx} className="flex flex-col justify-end items-center min-w-[60px] flex-1 group">
+                          {/* Tooltip on hover */}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-2 bg-slate-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap pointer-events-none">
+                            {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(stat.amount)}
+                          </div>
+                          
+                          {/* Bar */}
+                          <div 
+                            className="w-full max-w-[40px] bg-indigo-500 rounded-t-sm hover:bg-indigo-600 transition-colors"
+                            style={{ height: `${heightPercent}%` }}
+                          ></div>
+                          
+                          {/* Label */}
+                          <p className="text-[10px] text-slate-500 font-medium mt-2 truncate w-full text-center">
+                            {stat.date}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

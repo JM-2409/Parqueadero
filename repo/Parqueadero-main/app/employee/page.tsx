@@ -63,7 +63,6 @@ export default function EmployeePage() {
   const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
   const [accumulatedRevenue, setAccumulatedRevenue] = useState(0);
-  const [isClosingRegister, setIsClosingRegister] = useState(false);
 
   const fetchRevenue = useCallback(async (id: string) => {
     const { data: lastClosure } = await supabase
@@ -92,47 +91,6 @@ export default function EmployeePage() {
       setAccumulatedRevenue(revenue);
     }
   }, []);
-
-  const handleCloseRegister = async () => {
-    if (!window.confirm("¿Está seguro que desea cerrar la caja? El recaudo volverá a $0 para su turno.")) return;
-    setIsClosingRegister(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const { data: lastClosure } = await supabase
-        .from("cash_closures")
-        .select("closed_at")
-        .eq("parking_lot_id", parkingLot.id)
-        .order("closed_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const opened_at = lastClosure ? lastClosure.closed_at : new Date(new Date().setHours(0,0,0,0)).toISOString();
-
-      const { error } = await supabase.from("cash_closures").insert([{
-        parking_lot_id: parkingLot.id,
-        total_revenue: accumulatedRevenue,
-        closed_by: session?.user?.id,
-        opened_at: opened_at,
-        notes: `Cierre de caja - ${shiftName || 'Operario'}`
-      }]);
-
-      if (error) throw error;
-      
-      playBeep('success');
-      setSuccess("Caja cerrada exitosamente.");
-      setTimeout(() => setSuccess(""), 3000);
-      
-      // re-fetch revenue to reset to $0
-      await fetchRevenue(parkingLot.id);
-    } catch (err: any) {
-      console.error("Error cerrado caja", err);
-      playBeep('error');
-      setError("No se pudo cerrar la caja: " + err.message);
-    } finally {
-      setIsClosingRegister(false);
-    }
-  };
 
   const fetchParkingLot = useCallback(async (id: string) => {
     const { data } = await supabase
@@ -290,6 +248,7 @@ export default function EmployeePage() {
     // Check for saved shift
     const savedShift = sessionStorage.getItem("shiftName");
     if (savedShift && !isShiftSet) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShiftName(savedShift);
       setIsShiftSet(true);
     }
@@ -803,29 +762,10 @@ export default function EmployeePage() {
           <div className="mb-4 px-2">
             <p className="text-xs text-slate-500 mb-1">Ocupación</p>
             <div className="w-full bg-slate-800 rounded-full h-2.5">
-              <div className="bg-indigo-500 h-2.5 rounded-full" style={{ width: `${(activeSessions.length / (parkingLot?.capacity || 1)) * 100}%` }}></div>
+              <div className="bg-indigo-500 h-2.5 rounded-full" style={{ width: `${(activeSessions.length / parkingLot?.capacity) * 100}%` }}></div>
             </div>
-            <p className="text-xs text-right mt-1">{activeSessions.length} / {parkingLot?.capacity || 0}</p>
+            <p className="text-xs text-right mt-1">{activeSessions.length} / {parkingLot?.capacity}</p>
           </div>
-          
-          {parkingLot?.show_revenue && (
-            <div className="mb-6 px-2">
-              <p className="text-xs text-slate-500 mb-1">Recaudo del Turno</p>
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex flex-col items-center justify-center">
-                <span className="text-xl font-bold text-emerald-400 block mb-2">
-                  {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(accumulatedRevenue)}
-                </span>
-                <button
-                  onClick={handleCloseRegister}
-                  disabled={isClosingRegister || accumulatedRevenue === 0}
-                  className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
-                >
-                  {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
-                </button>
-              </div>
-            </div>
-          )}
-
           <button
             onClick={() => setShowPreferences(true)}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition-colors w-full mb-2"
