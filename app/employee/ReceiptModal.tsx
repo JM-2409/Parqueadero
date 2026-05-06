@@ -55,7 +55,8 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
         body: JSON.stringify({
           to: phoneNumber,
           mediaUrl,
-          text
+          text,
+          parkingLotId: parkingLot?.id
         }),
       });
 
