@@ -197,9 +197,6 @@ export default function ReceiptModal({ session, appSettings, parkingLot, onClose
             {sendResult === 'error' && (
               <p className="text-[10px] text-red-500 leading-tight">{errorMessage}</p>
             )}
-            <p className="text-[10px] text-slate-400 leading-tight">
-              Recuerda que al estar en Sandbox de Twilio, el usuario primero debe enviar &quot;join class-began&quot; al +14155238886 para recibir el mensaje.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-2 mt-2 pt-4 border-t border-slate-200">
