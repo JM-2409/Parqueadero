@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { createClient } from '@supabase/supabase-js';
 
-const twilioSid = process.env.TWILIO_SID || 'ACba63e1a278525d3f8fccd0278b3664a4';
-const twilioToken = process.env.TWILIO_TOKEN || '2f6550af52ee8519bdd321aec34bb177';
+// 1. Nombres correctos del .env y cero credenciales quemadas
+const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+const twilioToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhone = 'whatsapp:+14155238886';
 
 let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").trim();
@@ -19,7 +20,6 @@ export async function POST(req: Request) {
 
     const client = twilio(twilioSid, twilioToken);
     
-    // Formatting number for Twilio sandbox
     let formattedTo = to.replace(/\D/g, '');
     if (!formattedTo.startsWith('57')) {
       formattedTo = '57' + formattedTo; 
@@ -35,23 +35,25 @@ export async function POST(req: Request) {
     if (mediaUrl) {
       try {
         const { GET: generateImage } = await import('../receipt-image/route');
-        const mockRequest = new Request(mediaUrl); // Contains the query params
+        const mockRequest = new Request(mediaUrl);
         const response = await generateImage(mockRequest);
         
         if (!response.ok) throw new Error(`Failed to generate image locally: ${response.status}`);
         
+        // 2. Usar el ArrayBuffer directamente sin transformarlo
         const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
         
         if (supabaseUrl && supabaseServiceKey) {
           const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
           await supabaseAdmin.storage.createBucket('receipts', { public: true }).catch(() => {});
 
           const fileName = `receipt-${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
+
+          // 3. Pasamos el arrayBuffer limpio a Supabase
           const { data: uploadData, error: uploadError } = await supabaseAdmin
             .storage
             .from('receipts')
-            .upload(fileName, buffer, {
+            .upload(fileName, arrayBuffer, {
               contentType: 'image/png',
               cacheControl: '3600',
               upsert: false
@@ -86,7 +88,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Twilio Error:', error);
     let errMsg = error.message || 'Error al enviar el mensaje por WhatsApp';
-    // Clean up twilio URL if it shows up in error
     errMsg = errMsg.replace(/https:\/\/api\.twilio\.com[^\s]*/g, '');
     return NextResponse.json({ success: false, error: errMsg }, { status: 500 });
   }
