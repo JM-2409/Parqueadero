@@ -35,7 +35,7 @@ export default function Home() {
               href="/login"
               className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl shadow-sm transition-all hover:shadow-md flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
             >
-              Ingresar <ArrowRight size={16} />
+              Iniciar Sesión <ArrowRight size={16} />
             </Link>
           </div>
           {/* Mobile menu button */}
@@ -70,7 +70,7 @@ export default function Home() {
                   href="/login"
                   className="w-full text-center px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-medium rounded-xl shadow-sm transition-all"
                 >
-                  Ingresar al Sistema
+                  Iniciar Sesión
                 </Link>
               </div>
             </div>
