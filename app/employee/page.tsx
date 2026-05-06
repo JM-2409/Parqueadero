@@ -14,7 +14,6 @@ import { calculateFee } from "@/lib/pricing";
 import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function EmployeePage() {
   const router = useRouter();
@@ -731,7 +730,6 @@ export default function EmployeePage() {
           <span className="truncate max-w-[200px] drop-shadow-sm">{parkingLot?.name}</span>
         </div>
         <div className="flex items-center gap-2">
-          <DarkModeToggle />
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-indigo-700/50 hover:bg-indigo-700 rounded-lg transition-colors active:scale-95">
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -754,7 +752,6 @@ export default function EmployeePage() {
             <span>Operación</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden md:block"><DarkModeToggle /></div>
             <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
               <X size={24} />
             </button>

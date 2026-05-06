@@ -10,7 +10,6 @@ import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -424,7 +423,6 @@ export default function SuperAdminPage() {
           <span>Dueño</span>
         </div>
         <div className="flex items-center gap-2">
-          <DarkModeToggle />
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -447,7 +445,6 @@ export default function SuperAdminPage() {
             <span>Panel Dueño</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden md:block"><DarkModeToggle /></div>
             <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
               <X size={24} />
             </button>
