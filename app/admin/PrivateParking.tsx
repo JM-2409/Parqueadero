@@ -233,7 +233,8 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
         try {
           const rows = results.data as any[];
           
-          let count = 0;
+          const spacesToUpsert = [];
+
           for (const row of rows) {
             const spaceNum = row['Número de Parqueadero'];
             if (!spaceNum) continue;
@@ -246,42 +247,30 @@ export default function PrivateParking({ parkingLotId }: { parkingLotId: string 
               }
             });
 
-            // Upsert based on space_number
-            // In supabase, we have UNIQUE(parking_lot_id, space_number), so if it exists we can update it or ignore
-            
-            const { data: existingSpace } = await supabase
-              .from("private_parking_spaces")
-              .select("id")
-              .eq("parking_lot_id", parkingLotId)
-              .eq("space_number", String(spaceNum).trim())
-              .maybeSingle();
+            spacesToUpsert.push({
+              parking_lot_id: parkingLotId,
+              space_number: String(spaceNum).trim(),
+              block: row['Bloque'] ? String(row['Bloque']).trim() : "",
+              house_or_apartment: row['Apartamento'] ? String(row['Apartamento']).trim() : "",
+              owner_name: row['Propietario'] ? String(row['Propietario']).trim() : "",
+              custom_fields_data: dynamicFields
+            });
+          }
 
-            if (existingSpace) {
-               await supabase
-                .from("private_parking_spaces")
-                .update({
-                  block: row['Bloque'] ? String(row['Bloque']).trim() : "",
-                  house_or_apartment: row['Apartamento'] ? String(row['Apartamento']).trim() : "",
-                  owner_name: row['Propietario'] ? String(row['Propietario']).trim() : "",
-                  custom_fields_data: dynamicFields
-                })
-                .eq("id", existingSpace.id);
-            } else {
-               await supabase
-                .from("private_parking_spaces")
-                .insert([{
-                  parking_lot_id: parkingLotId,
-                  space_number: String(spaceNum).trim(),
-                  block: row['Bloque'] ? String(row['Bloque']).trim() : "",
-                  house_or_apartment: row['Apartamento'] ? String(row['Apartamento']).trim() : "",
-                  owner_name: row['Propietario'] ? String(row['Propietario']).trim() : "",
-                  custom_fields_data: dynamicFields
-                }]);
-            }
-            count++;
+          // Bulk upsert in chunks to avoid payload size limits
+          const chunkSize = 500;
+          for (let i = 0; i < spacesToUpsert.length; i += chunkSize) {
+            const chunk = spacesToUpsert.slice(i, i + chunkSize);
+            const { error: upsertError } = await supabase
+              .from("private_parking_spaces")
+              .upsert(chunk, {
+                onConflict: 'parking_lot_id,space_number'
+              });
+
+            if (upsertError) throw upsertError;
           }
           
-          setSuccess(`Se importaron ${count} parqueaderos correctamente.`);
+          setSuccess(`Se importaron ${spacesToUpsert.length} parqueaderos correctamente.`);
           fetchSpaces();
         } catch (err: any) {
           setError(`Error importando CSV: ${err.message}`);
