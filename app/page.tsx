@@ -6,17 +6,18 @@ import { Car, ShieldCheck, Clock, MapPin, CheckCircle2, Mail, Phone, ArrowRight,
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || "Sistema de Parqueaderos";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen flex flex-col font-sans selection:bg-indigo-200 selection:text-indigo-900 bg-white">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 transition-all duration-300">
+      <header className="bg-white/90 backdrop-blur-lg border-b border-slate-100 sticky top-0 z-50 transition-all duration-300 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200">
+            <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200/50">
               <Car size={24} />
             </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">ParkManager</span>
+            <span className="text-2xl font-black text-slate-900 tracking-tighter">{appName}</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Características</a>
@@ -67,23 +68,23 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative pt-20 pb-32 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 to-white -z-10"></div>
+        <section className="relative pt-24 pb-32 overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-white -z-10"></div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-medium mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-semibold mb-8 shadow-sm">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
               Gestión Inteligente de Parqueaderos
             </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-8 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-8 leading-tight">
               Control total de tu <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
                 negocio de parqueo
               </span>
             </h1>
-            <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-slate-500 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
               Administra múltiples parqueaderos, controla ingresos y salidas, gestiona tarifas dinámicas y obtén reportes en tiempo real. Todo desde una única plataforma.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -413,7 +414,7 @@ export default function Home() {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                   <Car size={20} />
                 </div>
-                <span className="text-xl font-bold text-white tracking-tight">ParkManager</span>
+                <span className="text-xl font-bold text-white tracking-tight">{appName}</span>
               </div>
               <p className="text-sm leading-relaxed max-w-sm">
                 La solución definitiva para la gestión de parqueaderos. Simplifica tu operación, controla tus ingresos y mejora tu servicio.
@@ -438,7 +439,7 @@ export default function Home() {
             </div>
           </div>
           <div className="pt-8 border-t border-slate-800 text-sm text-center flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>&copy; {new Date().getFullYear()} ParkManager. Todos los derechos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} {appName}. Todos los derechos reservados.</p>
             <div className="flex gap-4">
               <a href="#" className="hover:text-white transition-colors">Términos de Servicio</a>
               <a href="#" className="hover:text-white transition-colors">Política de Privacidad</a>

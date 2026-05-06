@@ -71,7 +71,7 @@ export default function VersionsPage() {
         <div className="mb-12">
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-4">Historial de Versiones</h1>
           <p className="text-lg text-slate-600">
-            Mantente al día con las últimas actualizaciones, mejoras y nuevas características de ParkManager.
+            Mantente al día con las últimas actualizaciones, mejoras y nuevas características de la plataforma.
           </p>
         </div>
 

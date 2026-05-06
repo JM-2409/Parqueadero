@@ -179,8 +179,13 @@ CREATE POLICY "Public Private Spaces" ON private_parking_spaces FOR ALL USING (t
 CREATE POLICY "Public Cash Closures" ON cash_closures FOR ALL USING (true) WITH CHECK (true);
 ```
 
+## Configuración Dinámica y Arquitectura 🏗️
+- **Configuración Global del Nombre:** El nombre de la aplicación ahora es completamente dinámico y no está hardcodeado. Puedes cambiar "Sistema de Parqueaderos" o el nombre de tu marca definiendo la variable `NEXT_PUBLIC_APP_NAME` en el archivo `.env`. Este cambio se reflejará en toda la plataforma (Layouts, Metadata, Headers y Footers).
+- **Modelo Multi-Tenant Escalable:** Se implementó una base SQL no destructiva para agrupar múltiples sucursales bajo una misma entidad "Compañía" (Tenant). Esto permite que clientes corporativos puedan gestionar varias sedes desde una cuenta maestra sin mezclar datos con otros tenants.
+- **Seguridad en Integraciones de Terceros:** Las credenciales y números de teléfono de WhatsApp (Twilio) pasaron de estar quemadas en el código a requerir estrictamente las variables de entorno (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`). El servidor arroja error 500 para evitar fugas si no están configuradas correctamente.
+
 ## Correcciones e Interacciones Recientes 🔄
-- **Envío de Recibos por WhatsApp (Twilio)**: Se integró la API de Twilio para enviar automáticamente una imagen del recibo de parqueo vía WhatsApp.
+- **Envío de Recibos por WhatsApp (Twilio)**: Se integró la API de Twilio para enviar automáticamente una imagen del recibo de parqueo vía WhatsApp de forma segura. Adicionalmente, el ArrayBuffer de imágenes a Supabase Storage ahora se manda nativamente solucionando la corrupción de archivos.
 - **Generación de Imagen de Recibo**: Nuevo endpoint (`/api/receipt-image`) que genera un recibo en formato imagen `.png` on-the-fly con los detalles de la sesión.
 - **Dashboard de Operario**: Nueva sección de "Resumen Rápido" en el panel del empleado que muestra el número de vehículos parqueados, suscripciones activas y vehículos vetados.
 - **Tiempo de Gabela (Tolerancia) Flexible**: Ahora puedes configurar los minutos de cortesía en la tabla de configuración. Esto cubre tanto los minutos iniciales de estadía para que cuente como gratis (Entrada de Cortesía) como el rango de tiempo (gabela) de los turnos de Día/Noche. Por ejemplo, salir 15 minutos después de terminado el turno no cobrará el siguiente rango horario, o entrar 15 minutos antes de que empiece un turno lo arrastrará al siguiente evitando dobles cobros inesperados.
