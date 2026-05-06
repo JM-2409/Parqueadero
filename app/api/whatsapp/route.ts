@@ -66,7 +66,7 @@ export async function POST(req: Request) {
             });
 
           if (uploadError) {
-            console.error('Error uploading image to Supabase:', uploadError);
+            console.error('Error uploading image to Supabase');
             messagePayload.body += `\n\nEnlace del recibo: ${mediaUrl}`;
           } else {
             const { data: publicUrlData } = supabaseAdmin
@@ -81,18 +81,17 @@ export async function POST(req: Request) {
           messagePayload.body += `\n\nEnlace del recibo: ${mediaUrl}`;
         }
       } catch (uploadObjError) {
-         console.error('Error in image generation or upload:', uploadObjError);
+         console.error('Error in image generation or upload');
          messagePayload.body += `\n\nEnlace del recibo: ${mediaUrl}`;
       }
     }
 
-    console.log('Enviando payload a Twilio:', messagePayload);
     const message = await client.messages.create(messagePayload);
     console.log('Mensaje aceptado por Twilio, SID:', message.sid);
     
-    return NextResponse.json({ success: true, messageSid: message.sid, payload: messagePayload });
+    return NextResponse.json({ success: true, messageSid: message.sid });
   } catch (error: any) {
-    console.error('Twilio Error:', error);
+    console.error('Twilio Error');
     let errMsg = error.message || 'Error al enviar el mensaje por WhatsApp';
     errMsg = errMsg.replace(/https:\/\/api\.twilio\.com[^\s]*/g, '');
     return NextResponse.json({ success: false, error: errMsg }, { status: 500 });
