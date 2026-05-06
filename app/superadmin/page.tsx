@@ -29,6 +29,10 @@ export default function SuperAdminPage() {
   // Form states
   const [newLot, setNewLot] = useState({ name: "", nit: "", address: "" });
   const [isCreatingLot, setIsCreatingLot] = useState(false);
+
+  const [editingLot, setEditingLot] = useState<any>(null);
+  const [isEditingLot, setIsEditingLot] = useState(false);
+
   const [newAdmin, setNewAdmin] = useState({
     username: "",
     password: "",
@@ -88,18 +92,9 @@ export default function SuperAdminPage() {
     }
   }, []);
 
-  const [plans, setPlans] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<any[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
-  const fetchPlans = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("subscription_plans")
-      .select("*")
-      .order("price", { ascending: true });
-    
-    if (data) setPlans(data);
-  }, []);
 
   const fetchMetrics = useCallback(async () => {
     setLoadingMetrics(true);
@@ -123,7 +118,7 @@ export default function SuperAdminPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("parking_lots")
-      .select("*, subscription_plans(name)")
+      .select("*, name")
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Error fetching parking lots:", error);
@@ -160,9 +155,6 @@ export default function SuperAdminPage() {
     }
   }, []);
 
-  const [newPlan, setNewPlan] = useState({ name: "", price: 0, max_branches: 1, allow_custom_roles: true, allow_monthly_subscribers: true });
-  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
-  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
 
   const checkUser = useCallback(async () => {
     try {
@@ -184,86 +176,16 @@ export default function SuperAdminPage() {
         fetchAppSettings();
         fetchAdmins();
         fetchEmployees();
-        fetchPlans();
         fetchMetrics();
       }
     } catch (err) {
       console.error("Error checking user:", err);
       router.push("/login");
     }
-  }, [router, fetchParkingLots, fetchAppSettings, fetchAdmins, fetchEmployees, fetchPlans, fetchMetrics]);
+  }, [router, fetchParkingLots, fetchAppSettings, fetchAdmins, fetchEmployees, fetchMetrics]);
 
-  const handleCreatePlan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isCreatingPlan) return;
-    setIsCreatingPlan(true);
-    setError("");
-    setSuccess("");
 
-    if (!newPlan.name) {
-      setError("El nombre del plan es obligatorio");
-      setIsCreatingPlan(false);
-      return;
-    }
 
-    if (editingPlanId) {
-      const { error: updateError } = await supabase
-        .from("subscription_plans")
-        .update(newPlan)
-        .eq("id", editingPlanId);
-
-      if (updateError) {
-        setError(updateError.message);
-      } else {
-        setSuccess("Plan actualizado exitosamente");
-        setEditingPlanId(null);
-        setNewPlan({ name: "", price: 0, max_branches: 1, allow_custom_roles: true, allow_monthly_subscribers: true });
-        fetchPlans();
-        setTimeout(() => setSuccess(""), 3000);
-      }
-    } else {
-      const { error: insertError } = await supabase
-        .from("subscription_plans")
-        .insert([newPlan]);
-
-      if (insertError) {
-        setError(insertError.message);
-      } else {
-        setSuccess("Plan creado exitosamente");
-        setNewPlan({ name: "", price: 0, max_branches: 1, allow_custom_roles: true, allow_monthly_subscribers: true });
-        fetchPlans();
-        setTimeout(() => setSuccess(""), 3000);
-      }
-    }
-    
-    setIsCreatingPlan(false);
-  };
-
-  const handleEditPlanClick = (plan: any) => {
-    setEditingPlanId(plan.id);
-    setNewPlan({
-      name: plan.name,
-      price: plan.price,
-      max_branches: plan.max_branches,
-      allow_custom_roles: plan.allow_custom_roles,
-      allow_monthly_subscribers: plan.allow_monthly_subscribers
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleAssignPlan = async (lotId: string, planId: string) => {
-    const { error: updateError } = await supabase
-      .from("parking_lots")
-      .update({ plan_id: planId || null })
-      .eq("id", lotId);
-      
-    if (updateError) setError("Error al asignar plan");
-    else {
-      setSuccess("Plan asignado exitosamente");
-      fetchParkingLots();
-      setTimeout(() => setSuccess(""), 3000);
-    }
-  };
 
   useEffect(() => {
      
@@ -314,6 +236,41 @@ export default function SuperAdminPage() {
     setTimeout(() => setSuccess(""), 3000);
   };
 
+
+  const handleUpdateParkingLot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLot || isEditingLot) return;
+    setIsEditingLot(true);
+    setError("");
+    setSuccess("");
+
+    if (!editingLot.name || !editingLot.nit || !editingLot.address) {
+      setError("Nombre, NIT y Dirección son obligatorios");
+      setIsEditingLot(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("parking_lots")
+      .update({
+        name: sanitizeInput(editingLot.name),
+        nit: sanitizeInput(editingLot.nit),
+        address: sanitizeInput(editingLot.address),
+        features: editingLot.features
+      })
+      .eq("id", editingLot.id);
+
+    if (updateError) {
+      setError(updateError.message);
+    } else {
+      setSuccess("Parqueadero actualizado exitosamente");
+      setEditingLot(null);
+      await fetchParkingLots();
+      setTimeout(() => setSuccess(""), 3000);
+    }
+    setIsEditingLot(false);
+  };
+
   const handleCreateParkingLot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isCreatingLot) return;
@@ -337,7 +294,8 @@ export default function SuperAdminPage() {
           allowed_vehicles: ["motos", "carros", "bicicletas"],
           capacity: 100,
           show_revenue: false,
-          custom_fields: []
+          custom_fields: [],
+          features: { whatsapp_receipts: false, monthly_subscribers: false, multiple_employees: false, reports: false }
         },
       ])
       .select();
@@ -455,13 +413,6 @@ export default function SuperAdminPage() {
           >
             <UserPlus size={20} />
             <span className="font-medium">Administradores</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab("plans"); setIsMobileMenuOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "plans" ? "bg-indigo-600 text-white" : "hover:bg-slate-800 hover:text-white"}`}
-          >
-            <ShieldCheck size={20} />
-            <span className="font-medium">Planes</span>
           </button>
           <button
             onClick={() => { setActiveTab("metrics"); setIsMobileMenuOpen(false); }}
@@ -606,6 +557,14 @@ export default function SuperAdminPage() {
                       
                       return (
                         <div key={lot.id} className="border border-slate-200 p-5 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all bg-slate-50/50 flex flex-col relative group">
+
+                          <button
+                            onClick={() => setEditingLot({ ...lot, features: lot.features || { whatsapp_receipts: false, monthly_subscribers: false, multiple_employees: false, reports: false } })}
+                            className="absolute top-3 right-12 p-2 bg-indigo-50 text-indigo-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-100 focus:opacity-100"
+                            title="Editar parqueadero"
+                          >
+                            <Settings size={16} />
+                          </button>
                           <button
                             onClick={() => handleDeleteParkingLot(lot.id, lot.name)}
                             className="absolute top-3 right-3 p-2 bg-red-50 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 focus:opacity-100"
@@ -630,7 +589,17 @@ export default function SuperAdminPage() {
                             </div>
                           </div>
                           <p className="text-sm text-slate-500 mb-2 font-mono bg-white inline-block px-2 py-1 rounded border border-slate-100 w-max">NIT: {lot.nit}</p>
-                          <p className="text-sm text-slate-600 mb-4 line-clamp-2 h-10">{lot.address}</p>
+                          <p className="text-sm text-slate-600 mb-2 line-clamp-2 h-10">{lot.address}</p>
+
+                          {lot.features && (
+                            <div className="flex flex-wrap gap-1 mt-2 mb-2">
+                              {lot.features.whatsapp_receipts && <span className="px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded">WhatsApp</span>}
+                              {lot.features.monthly_subscribers && <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded">Abonados</span>}
+                              {lot.features.multiple_employees && <span className="px-2 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded">Empleados</span>}
+                              {lot.features.reports && <span className="px-2 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-700 rounded">Reportes</span>}
+                            </div>
+                          )}
+
                           
                           <div className="mt-auto space-y-3">
                             <div className="pt-4 border-t border-slate-200">
@@ -682,21 +651,8 @@ export default function SuperAdminPage() {
                             </div>
                             
                             <div className="pt-4 border-t border-slate-200 mt-4">
-                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Suscripción y Acceso</h4>
+                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Acceso y Suspensión</h4>
                               <div className="space-y-3">
-                                <div>
-                                  <label className="block text-[11px] font-medium text-slate-500 mb-1">Plan de Suscripción</label>
-                                  <select
-                                    value={lot.plan_id || ""}
-                                    onChange={(e) => handleAssignPlan(lot.id, e.target.value)}
-                                    className="w-full px-2 py-1.5 border border-slate-200 rounded-lg outline-none text-sm bg-white focus:border-indigo-500"
-                                  >
-                                    <option value="">Sin plan asignado</option>
-                                    {plans.map(plan => (
-                                      <option key={plan.id} value={plan.id}>{plan.name} - ${plan.price}</option>
-                                    ))}
-                                  </select>
-                                </div>
                                 <div>
                                   <label className="block text-[11px] font-medium text-slate-500 mb-1">Fecha de Expiración</label>
                                   <input
@@ -836,141 +792,6 @@ export default function SuperAdminPage() {
                         >
                           <Trash2 size={18} />
                         </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB: PLANES */}
-          {activeTab === "plans" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-violet-100 text-violet-600 rounded-xl">
-                    <ShieldCheck size={24} />
-                  </div>
-                  <h2 className="text-xl font-semibold text-slate-900">{editingPlanId ? "Editar Plan de Suscripción" : "Crear Plan de Suscripción"}</h2>
-                </div>
-
-                <form onSubmit={handleCreatePlan} className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
-                    <input
-                      type="text"
-                      value={newPlan.name}
-                      onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none"
-                      placeholder="Ej. Plan Pro"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Precio Mensual ($)</label>
-                    <input
-                      type="number"
-                      value={newPlan.price}
-                      onChange={(e) => setNewPlan({ ...newPlan, price: Number(e.target.value) })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Max Sucursales</label>
-                    <input
-                      type="number"
-                      value={newPlan.max_branches}
-                      onChange={(e) => setNewPlan({ ...newPlan, max_branches: Number(e.target.value) })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none"
-                    />
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 justify-center pt-5">
-                    <label className="flex items-center gap-2 cursor-pointer p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={newPlan.allow_custom_roles}
-                        onChange={(e) => setNewPlan({ ...newPlan, allow_custom_roles: e.target.checked })}
-                        className="w-4 h-4 text-violet-600 rounded border-slate-300 focus:ring-violet-500"
-                      />
-                      <span className="text-slate-700 font-medium text-xs">Roles Personalizados</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={newPlan.allow_monthly_subscribers}
-                        onChange={(e) => setNewPlan({ ...newPlan, allow_monthly_subscribers: e.target.checked })}
-                        className="w-4 h-4 text-violet-600 rounded border-slate-300 focus:ring-violet-500"
-                      />
-                      <span className="text-slate-700 font-medium text-xs">Abonados Mensuales</span>
-                    </label>
-                  </div>
-                  
-                  <div className="md:col-span-2 lg:col-span-4 flex justify-end gap-3 mt-2">
-                    {editingPlanId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingPlanId(null);
-                          setNewPlan({ name: "", price: 0, max_branches: 1, allow_custom_roles: true, allow_monthly_subscribers: true });
-                        }}
-                        className="py-3 px-6 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-medium transition-colors"
-                      >
-                        Cancelar
-                      </button>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={isCreatingPlan}
-                      className="py-3 px-6 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 w-full md:w-auto shadow-md shadow-violet-200"
-                    >
-                      {isCreatingPlan ? (
-                        <Spinner size={20} className="text-white" />
-                      ) : (
-                        <PlusCircle size={20} />
-                      )}
-                      {isCreatingPlan ? "Guardando..." : (editingPlanId ? "Actualizar Plan" : "Crear Plan")}
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h2 className="text-xl font-semibold text-slate-900 mb-6">Planes Disponibles</h2>
-                {plans.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    No hay planes registrados aún. Ejecuta el script SQL global para los planes predefinidos.
-                  </p>
-                ) : (
-                  <div className="grid md:grid-cols-3 gap-6">
-                    {plans.map((plan) => (
-                      <div key={plan.id} className="border border-slate-200 p-5 rounded-xl flex flex-col bg-slate-50/50 relative group">
-                        <button
-                          onClick={() => handleEditPlanClick(plan)}
-                          className="absolute top-3 right-3 p-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 hover:text-violet-600 focus:opacity-100"
-                          title="Editar Plan"
-                        >
-                          <Settings size={16} />
-                        </button>
-                        <h3 className="font-bold text-lg text-slate-800 mb-1 pr-6">{plan.name}</h3>
-                        <p className="text-2xl font-black text-violet-600 mb-4">
-                          {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(plan.price)}
-                          <span className="text-xs text-slate-500 font-normal">/mes</span>
-                        </p>
-                        <div className="space-y-2 mt-auto text-sm text-slate-600">
-                          <p className="flex justify-between border-b border-slate-200 pb-2">
-                            <span>Max. Sucursales</span>
-                            <span className="font-bold">{plan.max_branches}</span>
-                          </p>
-                          <p className="flex justify-between border-b border-slate-200 pb-2">
-                            <span>Roles Pers.</span>
-                            <span>{plan.allow_custom_roles ? "✅" : "❌"}</span>
-                          </p>
-                          <p className="flex justify-between border-b border-slate-200 pb-2">
-                            <span>Abonados</span>
-                            <span>{plan.allow_monthly_subscribers ? "✅" : "❌"}</span>
-                          </p>
-                        </div>
                       </div>
                     ))}
                   </div>
@@ -1119,6 +940,150 @@ export default function SuperAdminPage() {
 
         </div>
       </div>
+
+      {/* Modal de Edición de Parqueadero */}
+      {editingLot && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                  <Building2 size={20} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Editar Parqueadero</h3>
+              </div>
+              <button
+                onClick={() => setEditingLot(null)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              <form id="edit-lot-form" onSubmit={handleUpdateParkingLot} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
+                    <input
+                      type="text"
+                      value={editingLot.name}
+                      onChange={(e) => setEditingLot({ ...editingLot, name: e.target.value })}
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">NIT</label>
+                    <input
+                      type="text"
+                      value={editingLot.nit}
+                      onChange={(e) => setEditingLot({ ...editingLot, nit: e.target.value })}
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
+                    <input
+                      type="text"
+                      value={editingLot.address}
+                      onChange={(e) => setEditingLot({ ...editingLot, address: e.target.value })}
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <h4 className="font-semibold text-slate-800 mb-4">Funcionalidades (Módulos)</h4>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={editingLot.features?.whatsapp_receipts || false}
+                        onChange={(e) => setEditingLot({
+                          ...editingLot,
+                          features: { ...editingLot.features, whatsapp_receipts: e.target.checked }
+                        })}
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-medium text-slate-900 text-sm">Recibos por WhatsApp</div>
+                        <div className="text-xs text-slate-500">Envío automático al cliente</div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={editingLot.features?.monthly_subscribers || false}
+                        onChange={(e) => setEditingLot({
+                          ...editingLot,
+                          features: { ...editingLot.features, monthly_subscribers: e.target.checked }
+                        })}
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-medium text-slate-900 text-sm">Abonados (Mensualidades)</div>
+                        <div className="text-xs text-slate-500">Gestión de vehículos mensuales</div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={editingLot.features?.multiple_employees || false}
+                        onChange={(e) => setEditingLot({
+                          ...editingLot,
+                          features: { ...editingLot.features, multiple_employees: e.target.checked }
+                        })}
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-medium text-slate-900 text-sm">Múltiples Empleados</div>
+                        <div className="text-xs text-slate-500">Permite roles y cuentas extra</div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={editingLot.features?.reports || false}
+                        onChange={(e) => setEditingLot({
+                          ...editingLot,
+                          features: { ...editingLot.features, reports: e.target.checked }
+                        })}
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-medium text-slate-900 text-sm">Reportes Avanzados</div>
+                        <div className="text-xs text-slate-500">Cierres de caja y analíticas</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={() => setEditingLot(null)}
+                className="px-6 py-2.5 text-slate-600 hover:bg-slate-200 bg-slate-100 font-medium rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="edit-lot-form"
+                disabled={isEditingLot}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-xl transition-colors flex items-center gap-2"
+              >
+                {isEditingLot && <Spinner size={16} className="text-white" />}
+                {isEditingLot ? "Guardando..." : "Guardar Cambios"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
