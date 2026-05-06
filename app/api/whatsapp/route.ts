@@ -18,10 +18,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Configuración de servidor incompleta para el envío de WhatsApp.' }, { status: 500 });
     }
 
-    const { to, mediaUrl, text } = await req.json();
+    const { to, mediaUrl, text, parkingLotId } = await req.json();
 
     if (!to) {
       return NextResponse.json({ error: 'Falta el número de destino' }, { status: 400 });
+    }
+
+    if (!parkingLotId) {
+      return NextResponse.json({ error: 'Falta el identificador del parqueadero' }, { status: 400 });
+    }
+
+    if (supabaseUrl && supabaseServiceKey) {
+      const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: lotData, error: lotError } = await supabaseAdmin
+        .from('parking_lots')
+        .select('features')
+        .eq('id', parkingLotId)
+        .single();
+
+      if (lotError || !lotData || !lotData.features || !lotData.features.whatsapp_receipts) {
+        return NextResponse.json({ success: false, error: 'La funcionalidad de WhatsApp no está habilitada para este parqueadero.' }, { status: 403 });
+      }
+    } else {
+       return NextResponse.json({ error: 'Configuración de servidor incompleta para validación de base de datos.' }, { status: 500 });
     }
 
     const client = twilio(twilioSid, twilioToken);

@@ -22,6 +22,7 @@ import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip as 
 
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -297,32 +298,49 @@ export default function AdminPage() {
       return;
     }
 
-    const { error: updateError } = await supabase
-      .from("parking_lots")
-      .update({
-        capacity: parseInt(capacity),
-        show_revenue: showRevenue,
-        allowed_vehicles: allowedVehicles,
-        custom_fields: customFields,
-        private_custom_fields: privateCustomFields,
-        settings: parkingSettings,
-        nit: parkingLot?.nit,
-        address: parkingLot?.address,
-        entry_grace_period_mins: parkingLot?.entry_grace_period_mins ?? 0,
-        shift_grace_period_mins: parkingLot?.shift_grace_period_mins ?? 15
-      })
-      .eq("id", parkingLot.id);
+    const updateData = {
+      capacity: parseInt(capacity),
+      show_revenue: showRevenue,
+      allowed_vehicles: allowedVehicles,
+      custom_fields: customFields,
+      private_custom_fields: privateCustomFields,
+      settings: parkingSettings,
+      nit: parkingLot?.nit,
+      address: parkingLot?.address,
+      entry_grace_period_mins: parkingLot?.entry_grace_period_mins ?? 0,
+      shift_grace_period_mins: parkingLot?.shift_grace_period_mins ?? 15
+    };
 
-    if (updateError) {
-      if (updateError.message?.includes("settings") && updateError.message?.includes("does not exist")) {
-        setShowSqlAlert(true);
-        setError("Falta una configuración en la base de datos para guardar estas preferencias.");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch('/api/parking-lots/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          parkingLotId: parkingLot.id,
+          updateData
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        if (result.error?.includes("settings") && result.error?.includes("does not exist")) {
+          setShowSqlAlert(true);
+          setError("Falta una configuración en la base de datos para guardar estas preferencias.");
+        } else {
+          setError(result.error || "Error al actualizar configuración");
+        }
       } else {
-        setError("Error al actualizar configuración: " + updateError.message);
+        setSuccess("Configuración actualizada exitosamente");
+        setTimeout(() => setSuccess(""), 3000);
       }
-    } else {
-      setSuccess("Configuración actualizada exitosamente");
-      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError("Error de red al actualizar configuración: " + err.message);
     }
     setIsUpdatingSettings(false);
   };
@@ -404,19 +422,22 @@ export default function AdminPage() {
     setPrivateCustomFields(privateCustomFields.filter((_, i) => i !== index));
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">Cargando panel...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-800/50">Cargando panel...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800/50 flex flex-col md:flex-row">
       {/* Mobile Top Header */}
       <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-30">
         <div className="flex items-center gap-2 font-bold text-lg">
           <Settings size={24} className="text-indigo-400" />
           <span className="truncate">Panel Admin</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <DarkModeToggle />
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar Overlay for Mobile */}
@@ -434,9 +455,12 @@ export default function AdminPage() {
             <Settings size={28} className="text-indigo-400" />
             <span>Admin</span>
           </div>
-          <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
-            <X size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="hidden md:block"><DarkModeToggle /></div>
+            <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
+              <X size={24} />
+            </button>
+          </div>
         </div>
         <div className="p-4 border-b border-slate-800">
           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Parqueadero</p>
@@ -543,16 +567,16 @@ export default function AdminPage() {
           {activeTab === "dashboard" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center gap-4">
                   <div className="p-4 bg-indigo-50 text-indigo-600 rounded-xl">
                     <Car size={32} />
                   </div>
                   <div>
                     <h3 className="text-slate-500 text-sm font-medium">Vehículos Hoy</h3>
-                    <p className="text-3xl font-bold text-slate-800">{todayStats.vehicles}</p>
+                    <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">{todayStats.vehicles}</p>
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
@@ -560,7 +584,7 @@ export default function AdminPage() {
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-slate-500 text-sm font-medium truncate">Recaudo Actual (En Caja)</h3>
-                        <p className="text-2xl sm:text-3xl font-bold text-slate-800 truncate">
+                        <p className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 truncate">
                           {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(todayStats.revenue)}
                         </p>
                       </div>
@@ -577,9 +601,9 @@ export default function AdminPage() {
               </div>
               
               {weeklyStats.length > 0 && (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-                    <h3 className="text-slate-700 font-semibold break-words">
+                    <h3 className="text-slate-700 dark:text-slate-300 font-semibold break-words">
                       Ingresos Acumulados ({statPeriod === '7days' ? 'Últimos 7 Días' : 'Últimos 30 Días'}): 
                       <span className="sm:ml-2 text-emerald-600 font-bold">
                         {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(
@@ -594,7 +618,7 @@ export default function AdminPage() {
                         setStatPeriod(newPeriod);
                         fetchStats(parkingLot.id, newPeriod);
                       }}
-                      className="px-3 py-1.5 border border-slate-200 text-sm rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 text-sm rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="7days">Últimos 7 días</option>
                       <option value="30days">Últimos 30 días</option>
@@ -713,13 +737,13 @@ export default function AdminPage() {
           {/* TAB: CONFIGURACIÓN */}
           {activeTab === "settings" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-slate-100 text-slate-600 rounded-xl">
+                  <div className="p-3 bg-slate-100 text-slate-600 dark:text-slate-400 rounded-xl">
                     <Settings size={24} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-900">Configuración del Parqueadero</h2>
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Configuración del Parqueadero</h2>
                     <p className="text-sm text-slate-500">Ajustes generales y campos personalizados</p>
                   </div>
                 </div>
@@ -727,55 +751,59 @@ export default function AdminPage() {
                 <form onSubmit={handleUpdateSettings} className="space-y-8">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">NIT del Parqueadero</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIT del Parqueadero</label>
                         <input
                           type="text"
                           value={parkingLot?.nit || ""}
                           onChange={(e) => setParkingLot({ ...parkingLot, nit: e.target.value })}
-                          className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                          className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed"
                           placeholder="Ej. 900.123.456-7"
+                          disabled
+                          readOnly
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Dirección Comercial</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Dirección Comercial</label>
                         <input
                           type="text"
                           value={parkingLot?.address || ""}
                           onChange={(e) => setParkingLot({ ...parkingLot, address: e.target.value })}
-                          className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                          className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed"
                           placeholder="Ej. Calle 123 #45-67"
+                          disabled
+                          readOnly
                         />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Capacidad Total</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Capacidad Total</label>
                       <input
                         type="number"
                         value={capacity || ""}
                         onChange={(e) => setCapacity(e.target.value)}
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
                         placeholder="Ej. 100"
                         min="1"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de Cortesía (Entrada Gratis) *</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Minutos de Cortesía (Entrada Gratis) *</label>
                       <input
                         type="number"
                         value={parkingLot?.entry_grace_period_mins ?? 0}
                         onChange={(e) => setParkingLot({ ...parkingLot!, entry_grace_period_mins: parseInt(e.target.value) || 0 })}
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
                         placeholder="Ej. 0"
                         min="0"
                       />
                       <p className="text-xs text-slate-500 mt-1">Si está en 0, se empieza a cobrar acorde a la tabla desde el minuto 1.</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Minutos de Gabela de Turno *</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Minutos de Gabela de Turno *</label>
                       <input
                         type="number"
                         value={parkingLot?.shift_grace_period_mins ?? 15}
                         onChange={(e) => setParkingLot({ ...parkingLot!, shift_grace_period_mins: parseInt(e.target.value) || 0 })}
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none"
                         placeholder="Ej. 15"
                         min="0"
                       />
@@ -783,65 +811,65 @@ export default function AdminPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-3">Opciones de Visibilidad</label>
-                      <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Opciones de Visibilidad</label>
+                      <label className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={showRevenue}
                           onChange={(e) => setShowRevenue(e.target.checked)}
-                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 dark:border-slate-600 focus:ring-indigo-500"
                         />
-                        <span className="text-slate-700 font-medium">Mostrar recaudo a usuarios (operarios)</span>
+                        <span className="text-slate-700 dark:text-slate-300 font-medium">Mostrar recaudo a usuarios (operarios)</span>
                       </label>
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-6">
-                    <label className="block text-base font-semibold text-slate-900 mb-4">Preferencias Globales para Empleados</label>
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+                    <label className="block text-base font-semibold text-slate-900 dark:text-slate-100 mb-4">Preferencias Globales para Empleados</label>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <label className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
                         <div>
-                          <span className="text-slate-900 font-medium block">Impresión Automática</span>
+                          <span className="text-slate-900 dark:text-slate-100 font-medium block">Impresión Automática</span>
                           <span className="text-slate-500 text-xs mt-0.5 block">Abre el recibo sin preguntar al ingresar un vehículo.</span>
                         </div>
                         <input
                           type="checkbox"
                           checked={parkingSettings?.autoPrint || false}
                           onChange={(e) => setParkingSettings({...parkingSettings, autoPrint: e.target.checked})}
-                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 dark:border-slate-600 focus:ring-indigo-500"
                         />
                       </label>
                       
-                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <label className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
                         <div>
-                          <span className="text-slate-900 font-medium block">Confirmación de Ingreso</span>
+                          <span className="text-slate-900 dark:text-slate-100 font-medium block">Confirmación de Ingreso</span>
                           <span className="text-slate-500 text-xs mt-0.5 block">Muestra un aviso intermedio para evitar equivocaciones.</span>
                         </div>
                         <input
                           type="checkbox"
                           checked={parkingSettings?.confirmEntry || false}
                           onChange={(e) => setParkingSettings({...parkingSettings, confirmEntry: e.target.checked})}
-                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 dark:border-slate-600 focus:ring-indigo-500"
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                      <label className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
                         <div>
-                          <span className="text-slate-900 font-medium block">Mostar Observaciones Adicionales</span>
+                          <span className="text-slate-900 dark:text-slate-100 font-medium block">Mostar Observaciones Adicionales</span>
                           <span className="text-slate-500 text-xs mt-0.5 block">Campo libre para nota de golpes o rayones.</span>
                         </div>
                         <input
                           type="checkbox"
                           checked={parkingSettings?.showNotes || false}
                           onChange={(e) => setParkingSettings({...parkingSettings, showNotes: e.target.checked})}
-                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                          className="w-5 h-5 text-indigo-600 rounded border-slate-300 dark:border-slate-600 focus:ring-indigo-500"
                         />
                       </label>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-3">Tipos de Vehículos Permitidos</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Tipos de Vehículos Permitidos</label>
                     <div className="flex flex-wrap gap-3">
                       {vehicleTypes.map((type) => (
                         <button
@@ -851,7 +879,7 @@ export default function AdminPage() {
                           className={`px-4 py-2 rounded-xl font-medium text-sm transition-colors border ${
                             allowedVehicles.includes(type)
                               ? "bg-indigo-600 text-white border-indigo-600"
-                              : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
                           }`}
                         >
                           <span className="capitalize">{type}</span>
@@ -860,18 +888,18 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-8">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Estado del Software y Plan</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Estado del Software y Plan</h3>
                         <p className="text-sm text-slate-500">Información sobre su plan actual y capacidades</p>
                       </div>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="grid md:grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                        <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Expiración</label>
-                            <div className="w-full p-2.5 border border-slate-200 rounded-xl bg-white text-slate-600 font-mono text-sm cursor-not-allowed">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha de Expiración</label>
+                            <div className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono text-sm cursor-not-allowed">
                               {parkingLot?.subscription_end_date 
                                 ? new Date(parkingLot.subscription_end_date).toLocaleDateString()
                                 : "No especificada (Suscripción Ilimitada o Pendiente)"}
@@ -881,9 +909,9 @@ export default function AdminPage() {
                        </div>
                        
                        <div className="flex flex-col justify-center gap-4">
-                         <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl bg-white">
+                         <div className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800">
                            <div className={`w-3 h-3 rounded-full ${parkingLot?.is_suspended ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
-                           <span className="text-slate-700 font-medium text-sm">
+                           <span className="text-slate-700 dark:text-slate-300 font-medium text-sm">
                              Estado: <span className={parkingLot?.is_suspended ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}>
                                {parkingLot?.is_suspended ? 'Suspendido' : 'Operativo (Activo)'}
                              </span>
@@ -891,10 +919,10 @@ export default function AdminPage() {
                          </div>
                          
                          {parkingLot?.subscription_plans ? (
-                           <div className="p-3 border border-slate-200 rounded-xl bg-white space-y-1">
+                           <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 space-y-1">
                              <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Plan Actual</div>
                              <div className="text-sm font-bold text-violet-700">{parkingLot.subscription_plans.name}</div>
-                             <div className="flex gap-2 text-xs text-slate-600 mt-2">
+                             <div className="flex gap-2 text-xs text-slate-600 dark:text-slate-400 mt-2">
                                {parkingLot.subscription_plans.allow_custom_roles && <span className="bg-slate-100 px-2 py-0.5 rounded">Roles Pers.</span>}
                                {parkingLot.subscription_plans.allow_monthly_subscribers && <span className="bg-slate-100 px-2 py-0.5 rounded">Abonados</span>}
                              </div>
@@ -908,10 +936,10 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-8">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Campos Personalizados (Visitantes)</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Campos Personalizados (Visitantes)</h3>
                         <p className="text-sm text-slate-500">Datos extra a pedir al ingresar un vehículo (Ej. Casco, Teléfono)</p>
                       </div>
                       <button
@@ -926,28 +954,28 @@ export default function AdminPage() {
 
                     <div className="space-y-3 mt-4 mb-6">
                     {customFields.length === 0 ? (
-                      <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-sm">
+                      <div className="text-center py-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-500 text-sm">
                         No hay campos personalizados configurados.
                       </div>
                     ) : (
                       <div className="space-y-3">
                         {customFields.map((field, idx) => (
-                          <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                          <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
                             <input
                               type="text"
                               value={field.name || ""}
                               onChange={(e) => updateCustomField(idx, 'name', e.target.value)}
                               placeholder="Nombre del campo (Ej. Casco)"
-                              className="flex-1 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                              className="flex-1 w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
                               required
                             />
                             <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
                                 <input
                                   type="checkbox"
                                   checked={field.required || false}
                                   onChange={(e) => updateCustomField(idx, 'required', e.target.checked)}
-                                  className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                                  className="w-4 h-4 text-indigo-600 rounded border-slate-300 dark:border-slate-600 focus:ring-indigo-500"
                                 />
                                 Obligatorio
                               </label>
@@ -967,10 +995,10 @@ export default function AdminPage() {
                   </div>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-8 mt-8">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-8 mt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Campos Parqueadero Privado</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Campos Parqueadero Privado</h3>
                         <p className="text-sm text-slate-500">Datos extra a pedir o mostrar para los registros de parqueo privado (Ej. Placa, Teléfono)</p>
                       </div>
                       <button
@@ -985,37 +1013,37 @@ export default function AdminPage() {
 
                     <div className="space-y-3 mt-4 mb-6">
                     {privateCustomFields.length === 0 ? (
-                      <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-sm">
+                      <div className="text-center py-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-500 text-sm">
                         No hay campos personalizados configurados para parqueaderos privados.
                       </div>
                     ) : (
                       <div className="space-y-3">
                         {privateCustomFields.map((field, idx) => (
-                          <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                          <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
                             <input
                               type="text"
                               value={field.name || ""}
                               onChange={(e) => updatePrivateCustomField(idx, 'name', e.target.value)}
                               placeholder="Nombre del campo (Ej. Placa)"
-                              className="flex-1 w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                              className="flex-1 w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                               required
                             />
                             <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
                                 <input
                                   type="checkbox"
                                   checked={field.required || false}
                                   onChange={(e) => updatePrivateCustomField(idx, 'required', e.target.checked)}
-                                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-600 focus:ring-emerald-500"
                                 />
                                 Obligatorio
                               </label>
-                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
                                 <input
                                   type="checkbox"
                                   checked={field.visible || false}
                                   onChange={(e) => updatePrivateCustomField(idx, 'visible', e.target.checked)}
-                                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-600 focus:ring-emerald-500"
                                 />
                                 Visible (Vigilante)
                               </label>
