@@ -22,7 +22,6 @@ import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip as 
 
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -305,8 +304,6 @@ export default function AdminPage() {
       custom_fields: customFields,
       private_custom_fields: privateCustomFields,
       settings: parkingSettings,
-      nit: parkingLot?.nit,
-      address: parkingLot?.address,
       entry_grace_period_mins: parkingLot?.entry_grace_period_mins ?? 0,
       shift_grace_period_mins: parkingLot?.shift_grace_period_mins ?? 15
     };
@@ -433,7 +430,6 @@ export default function AdminPage() {
           <span className="truncate">Panel Admin</span>
         </div>
         <div className="flex items-center gap-2">
-          <DarkModeToggle />
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -456,7 +452,6 @@ export default function AdminPage() {
             <span>Admin</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden md:block"><DarkModeToggle /></div>
             <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
               <X size={24} />
             </button>
@@ -755,7 +750,6 @@ export default function AdminPage() {
                         <input
                           type="text"
                           value={parkingLot?.nit || ""}
-                          onChange={(e) => setParkingLot({ ...parkingLot, nit: e.target.value })}
                           className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed"
                           placeholder="Ej. 900.123.456-7"
                           disabled
@@ -767,7 +761,6 @@ export default function AdminPage() {
                         <input
                           type="text"
                           value={parkingLot?.address || ""}
-                          onChange={(e) => setParkingLot({ ...parkingLot, address: e.target.value })}
                           className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed"
                           placeholder="Ej. Calle 123 #45-67"
                           disabled
