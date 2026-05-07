@@ -4,7 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Fingerprint, LogIn, LogOut, Clock, Activity } from "lucide-react";
 
-export default function EmployeeLogs({ parkingLotId }: { parkingLotId: string }) {
+export default function EmployeeLogs({
+  parkingLotId,
+}: {
+  parkingLotId: string;
+}) {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +21,7 @@ export default function EmployeeLogs({ parkingLotId }: { parkingLotId: string })
         .eq("parking_lot_id", parkingLotId)
         .order("created_at", { ascending: false })
         .limit(100);
-        
+
       if (!error && data) {
         setLogs(data);
       }
@@ -35,7 +39,7 @@ export default function EmployeeLogs({ parkingLotId }: { parkingLotId: string })
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -43,16 +47,20 @@ export default function EmployeeLogs({ parkingLotId }: { parkingLotId: string })
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-800">Registro de Turnos / Empleados</h2>
+        <h2 className="text-xl font-bold text-slate-800">
+          Registro de Turnos / Empleados
+        </h2>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
         {logs.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <Activity size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="font-medium">No hay registros recientes o la tabla no ha sido configurada.</p>
-            <pre className="bg-slate-100 text-slate-600 p-4 rounded-xl mt-4 text-sm text-left overflow-x-auto whitespace-pre-wrap border border-slate-200">
-{`CREATE TABLE public.employee_logs (
+            <p className="font-medium">
+              No hay registros recientes o la tabla no ha sido configurada.
+            </p>
+            <pre className="bg-slate-100 text-slate-600 p-4 rounded-2xl mt-4 text-sm text-left overflow-x-auto whitespace-pre-wrap border border-slate-200">
+              {`CREATE TABLE public.employee_logs (
     id uuid not null default gen_random_uuid(),
     parking_lot_id uuid null,
     employee_name text null,
@@ -77,7 +85,10 @@ CREATE POLICY "Public full logs" ON public.employee_logs FOR ALL USING (true) WI
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {logs.map((log: any) => (
-                  <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr
+                    key={log.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2 text-slate-900 font-medium">
                         <Clock size={14} className="text-slate-400" />
@@ -88,11 +99,21 @@ CREATE POLICY "Public full logs" ON public.employee_logs FOR ALL USING (true) WI
                       {log.employee_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
-                        log.action === 'login' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'
-                      }`}>
-                        {log.action === 'login' ? <LogIn size={12} /> : <LogOut size={12} />}
-                        {log.action === 'login' ? 'Inició Turno' : 'Finalizó/Cambió Turno'}
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
+                          log.action === "login"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-orange-100 text-orange-700"
+                        }`}
+                      >
+                        {log.action === "login" ? (
+                          <LogIn size={12} />
+                        ) : (
+                          <LogOut size={12} />
+                        )}
+                        {log.action === "login"
+                          ? "Inició Turno"
+                          : "Finalizó/Cambió Turno"}
                       </span>
                     </td>
                   </tr>
