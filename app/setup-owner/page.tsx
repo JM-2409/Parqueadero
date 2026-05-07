@@ -32,17 +32,12 @@ export default function SetupOwnerPage() {
     }
 
     // Support legacy email logins and new username logins
-    const loginEmail = username.includes("@") 
-      ? username.trim().toLowerCase() 
+    const loginEmail = username.includes("@")
+      ? username.trim().toLowerCase()
       : `${username.toLowerCase().trim()}@parkingapp.local`;
 
     // Create superadmin user
-    const result = await createUser(
-      loginEmail,
-      password,
-      "superadmin",
-      null
-    );
+    const result = await createUser(loginEmail, password, "superadmin", null);
 
     if (!result.success) {
       setError(result.error || "Error al crear el usuario Dueño.");
@@ -56,10 +51,12 @@ export default function SetupOwnerPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <ShieldCheck size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Crear Dueño (Super Admin)</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Crear Dueño (Super Admin)
+          </h1>
           <p className="text-slate-500 mt-2 text-sm">
             Herramienta temporal para recuperar acceso al sistema.
           </p>
@@ -67,15 +64,21 @@ export default function SetupOwnerPage() {
 
         {success ? (
           <div className="text-center space-y-6">
-            <SuccessMessage message={
-              <div className="flex flex-col items-center gap-2">
-                <p className="font-medium">¡Usuario Dueño creado exitosamente!</p>
-                <p className="text-sm">Usuario: <strong>{username}</strong></p>
-              </div>
-            } />
+            <SuccessMessage
+              message={
+                <div className="flex flex-col items-center gap-2">
+                  <p className="font-medium">
+                    ¡Usuario Dueño creado exitosamente!
+                  </p>
+                  <p className="text-sm">
+                    Usuario: <strong>{username}</strong>
+                  </p>
+                </div>
+              }
+            />
             <Link
               href="/login"
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
             >
               Ir a Iniciar Sesión <ArrowRight size={18} />
             </Link>
@@ -83,7 +86,7 @@ export default function SetupOwnerPage() {
         ) : (
           <form onSubmit={handleCreateOwner} className="space-y-5">
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm text-center">
+              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm text-center">
                 {error}
               </div>
             )}
@@ -96,7 +99,7 @@ export default function SetupOwnerPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 placeholder="ej. admin_principal"
                 required
               />
@@ -110,7 +113,7 @@ export default function SetupOwnerPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 placeholder="Mínimo 6 caracteres"
                 required
                 minLength={6}
@@ -120,7 +123,7 @@ export default function SetupOwnerPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

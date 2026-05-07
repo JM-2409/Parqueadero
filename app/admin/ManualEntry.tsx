@@ -8,7 +8,15 @@ import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
-export default function ManualEntry({ parkingLot, allowedVehicles, customFields }: { parkingLot: any, allowedVehicles: string[], customFields: any[] }) {
+export default function ManualEntry({
+  parkingLot,
+  allowedVehicles,
+  customFields,
+}: {
+  parkingLot: any;
+  allowedVehicles: string[];
+  customFields: any[];
+}) {
   const parkingLotId = parkingLot.id;
   const [plate, setPlate] = useState("");
   const [debouncedPlate, setDebouncedPlate] = useState("");
@@ -28,10 +36,10 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
   const [success, setSuccess] = useState("");
 
   const formatTimeInput = (value: string) => {
-    let val = value.replace(/\D/g, ''); // Solo números
+    let val = value.replace(/\D/g, ""); // Solo números
     if (val.length > 4) val = val.slice(0, 4);
     if (val.length >= 3) {
-      val = val.slice(0, 2) + ':' + val.slice(2);
+      val = val.slice(0, 2) + ":" + val.slice(2);
     }
     return val;
   };
@@ -54,12 +62,19 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
           if (allowedVehicles.includes(data.type)) {
             setType(data.type);
           }
-          
+
           const newExtraData = { ...(data.custom_fields_data || {}) };
-          if (data.brand && !newExtraData['Marca'] && !newExtraData['brand']) newExtraData['Marca'] = data.brand;
-          if (data.color && !newExtraData['Color'] && !newExtraData['color']) newExtraData['Color'] = data.color;
-          if (data.owner_name && !newExtraData['Propietario'] && !newExtraData['owner_name']) newExtraData['Propietario'] = data.owner_name;
-          
+          if (data.brand && !newExtraData["Marca"] && !newExtraData["brand"])
+            newExtraData["Marca"] = data.brand;
+          if (data.color && !newExtraData["Color"] && !newExtraData["color"])
+            newExtraData["Color"] = data.color;
+          if (
+            data.owner_name &&
+            !newExtraData["Propietario"] &&
+            !newExtraData["owner_name"]
+          )
+            newExtraData["Propietario"] = data.owner_name;
+
           setExtraData(newExtraData);
         }
       } else {
@@ -81,19 +96,27 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
   }, [parkingLotId]);
 
   useEffect(() => {
-    if (isSpecialFee || !isCompleted || !entryDate || !entryTime || !exitDate || !exitTime) return;
+    if (
+      isSpecialFee ||
+      !isCompleted ||
+      !entryDate ||
+      !entryTime ||
+      !exitDate ||
+      !exitTime
+    )
+      return;
 
     const entry = new Date(`${entryDate}T${entryTime}`);
     const exit = new Date(`${exitDate}T${exitTime}`);
-    
+
     if (isNaN(entry.getTime()) || isNaN(exit.getTime()) || exit <= entry) {
       setTotalFee("");
       return;
     }
 
     const durationMs = exit.getTime() - entry.getTime();
-    
-    const vehicleTariffs = tariffs.filter(t => t.vehicle_type === type);
+
+    const vehicleTariffs = tariffs.filter((t) => t.vehicle_type === type);
     if (vehicleTariffs.length === 0) return;
 
     const calculatedFee = calculateFee(entry, exit, vehicleTariffs, {
@@ -102,7 +125,18 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
     });
 
     setTotalFee(calculatedFee.toString());
-  }, [entryDate, entryTime, exitDate, exitTime, type, tariffs, isSpecialFee, isCompleted, parkingLot.entry_grace_period_mins, parkingLot.shift_grace_period_mins]);
+  }, [
+    entryDate,
+    entryTime,
+    exitDate,
+    exitTime,
+    type,
+    tariffs,
+    isSpecialFee,
+    isCompleted,
+    parkingLot.entry_grace_period_mins,
+    parkingLot.shift_grace_period_mins,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +151,9 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
     }
 
     if (isCompleted && (!exitDate || !exitTime || !totalFee)) {
-      setError("Fecha, hora de salida y tarifa son obligatorios para registros completados");
+      setError(
+        "Fecha, hora de salida y tarifa son obligatorios para registros completados",
+      );
       setLoading(false);
       return;
     }
@@ -137,7 +173,9 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
       const entry = new Date(`${entryDate}T${entryTime}`);
       const exit = new Date(`${exitDate}T${exitTime}`);
       if (exit <= entry) {
-        setError("La fecha y hora de salida deben ser posteriores a la de entrada");
+        setError(
+          "La fecha y hora de salida deben ser posteriores a la de entrada",
+        );
         setLoading(false);
         return;
       }
@@ -159,23 +197,46 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
           .from("vehicles")
           .update({
             type,
-            brand: sanitizeInput(extraData['Marca'] || extraData['brand'] || existingVehicle.brand || ""),
-            color: sanitizeInput(extraData['Color'] || extraData['color'] || existingVehicle.color || ""),
-            owner_name: sanitizeInput(extraData['Propietario'] || extraData['owner_name'] || existingVehicle.owner_name || ""),
-            custom_fields_data: extraData
+            brand: sanitizeInput(
+              extraData["Marca"] ||
+                extraData["brand"] ||
+                existingVehicle.brand ||
+                "",
+            ),
+            color: sanitizeInput(
+              extraData["Color"] ||
+                extraData["color"] ||
+                existingVehicle.color ||
+                "",
+            ),
+            owner_name: sanitizeInput(
+              extraData["Propietario"] ||
+                extraData["owner_name"] ||
+                existingVehicle.owner_name ||
+                "",
+            ),
+            custom_fields_data: extraData,
           })
           .eq("id", vehicleId);
       } else {
         const { data: newVehicle, error: vehicleError } = await supabase
           .from("vehicles")
-          .insert([{
-            plate: sanitizeInput(plate.toUpperCase()),
-            type,
-            brand: sanitizeInput(extraData['Marca'] || extraData['brand'] || ""),
-            color: sanitizeInput(extraData['Color'] || extraData['color'] || ""),
-            owner_name: sanitizeInput(extraData['Propietario'] || extraData['owner_name'] || ""),
-            custom_fields_data: extraData
-          }])
+          .insert([
+            {
+              plate: sanitizeInput(plate.toUpperCase()),
+              type,
+              brand: sanitizeInput(
+                extraData["Marca"] || extraData["brand"] || "",
+              ),
+              color: sanitizeInput(
+                extraData["Color"] || extraData["color"] || "",
+              ),
+              owner_name: sanitizeInput(
+                extraData["Propietario"] || extraData["owner_name"] || "",
+              ),
+              custom_fields_data: extraData,
+            },
+          ])
           .select()
           .single();
 
@@ -185,8 +246,8 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
 
       // Sanitize extraData
       const sanitizedExtraData: Record<string, any> = {};
-      Object.keys(extraData).forEach(key => {
-        if (typeof extraData[key] === 'string') {
+      Object.keys(extraData).forEach((key) => {
+        if (typeof extraData[key] === "string") {
           sanitizedExtraData[key] = sanitizeInput(extraData[key]);
         } else {
           sanitizedExtraData[key] = extraData[key];
@@ -194,8 +255,12 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
       });
 
       // 2. Create session
-      const entryTimestamp = new Date(`${entryDate}T${entryTime}`).toISOString();
-      const exitTimestamp = isCompleted ? new Date(`${exitDate}T${exitTime}`).toISOString() : null;
+      const entryTimestamp = new Date(
+        `${entryDate}T${entryTime}`,
+      ).toISOString();
+      const exitTimestamp = isCompleted
+        ? new Date(`${exitDate}T${exitTime}`).toISOString()
+        : null;
 
       const sessionData: any = {
         parking_lot_id: parkingLotId,
@@ -203,17 +268,28 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
         status: isCompleted ? "completed" : "active",
         entry_time: entryTimestamp,
         entry_employee_name: "Admin (Manual)",
-        extra_data: sanitizedExtraData
+        extra_data: sanitizedExtraData,
       };
 
       if (isCompleted) {
         // Generar consecutivo usando sequence property si se quiere, o autocalculado
-        const { data: lotData } = await supabase.from('parking_lots').select('receipt_sequence').eq('id', parkingLotId).single();
+        const { data: lotData } = await supabase
+          .from("parking_lots")
+          .select("receipt_sequence")
+          .eq("id", parkingLotId)
+          .single();
         const nextSeq = (lotData?.receipt_sequence || 0) + 1;
-        await supabase.from('parking_lots').update({ receipt_sequence: nextSeq }).eq('id', parkingLotId);
+        await supabase
+          .from("parking_lots")
+          .update({ receipt_sequence: nextSeq })
+          .eq("id", parkingLotId);
 
-        const receiptNumber = `REC-${nextSeq.toString().padStart(6, '0')}`;
-        const durationMinutes = Math.round((new Date(exitTimestamp!).getTime() - new Date(entryTimestamp).getTime()) / 60000);
+        const receiptNumber = `REC-${nextSeq.toString().padStart(6, "0")}`;
+        const durationMinutes = Math.round(
+          (new Date(exitTimestamp!).getTime() -
+            new Date(entryTimestamp).getTime()) /
+            60000,
+        );
 
         sessionData.exit_time = exitTimestamp;
         sessionData.exit_employee_name = "Admin (Manual)";
@@ -233,7 +309,7 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
       setPlate("");
       setTotalFee("");
       setExtraData({});
-      
+
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
       setError(err.message || "Error al guardar el registro");
@@ -243,14 +319,18 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
   };
 
   return (
-    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 max-w-3xl mx-auto">
+    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 max-w-3xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+        <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
           <Clock size={28} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Ingreso Manual (Histórico)</h2>
-          <p className="text-sm font-medium text-slate-500 mt-1">Añade registros de vehículos del pasado</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Ingreso Manual (Histórico)
+          </h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Añade registros de vehículos del pasado
+          </p>
         </div>
       </div>
 
@@ -267,29 +347,37 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Vehicle Info */}
           <div className="space-y-5">
-            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-3 text-lg tracking-tight">Datos del Vehículo</h3>
-            
+            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-3 text-lg tracking-tight">
+              Datos del Vehículo
+            </h3>
+
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Placa *</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Placa *
+              </label>
               <input
                 type="text"
                 value={plate}
                 onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold uppercase transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase transition-all"
                 placeholder="ABC-123"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tipo de Vehículo</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Tipo de Vehículo
+              </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium capitalize transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium capitalize transition-all"
               >
-                {allowedVehicles.map(v => (
-                  <option key={v} value={v}>{v}</option>
+                {allowedVehicles.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
                 ))}
               </select>
             </div>
@@ -302,9 +390,11 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                 <input
                   type="text"
                   value={extraData[field.name] || ""}
-                  onChange={(e) => setExtraData({...extraData, [field.name]: e.target.value})}
+                  onChange={(e) =>
+                    setExtraData({ ...extraData, [field.name]: e.target.value })
+                  }
                   required={field.required}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
                 />
               </div>
             ))}
@@ -312,21 +402,27 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
 
           {/* Time Info */}
           <div className="space-y-5">
-            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-3 text-lg tracking-tight">Datos de Tiempo</h3>
+            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-3 text-lg tracking-tight">
+              Datos de Tiempo
+            </h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Fecha Entrada *</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
+                  Fecha Entrada *
+                </label>
                 <input
                   type="date"
                   value={entryDate}
                   onChange={(e) => setEntryDate(e.target.value)}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Entrada *</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
+                  Hora Entrada *
+                </label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -334,8 +430,10 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                   pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
                   title="Formato 24 horas, ej. 14:30"
                   value={entryTime}
-                  onChange={(e) => setEntryTime(formatTimeInput(e.target.value))}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
+                  onChange={(e) =>
+                    setEntryTime(formatTimeInput(e.target.value))
+                  }
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
                   required
                 />
               </div>
@@ -347,9 +445,12 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                 id="isCompleted"
                 checked={isCompleted}
                 onChange={(e) => setIsCompleted(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
+                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 transition-colors"
               />
-              <label htmlFor="isCompleted" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
+              <label
+                htmlFor="isCompleted"
+                className="text-sm font-bold text-slate-700 cursor-pointer select-none"
+              >
                 El vehículo ya salió (Completado)
               </label>
             </div>
@@ -358,17 +459,21 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Fecha Salida *</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
+                      Fecha Salida *
+                    </label>
                     <input
                       type="date"
                       value={exitDate}
                       onChange={(e) => setExitDate(e.target.value)}
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
                       required={isCompleted}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Hora Salida *</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
+                      Hora Salida *
+                    </label>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -376,8 +481,10 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                       pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
                       title="Formato 24 horas, ej. 14:30"
                       value={exitTime}
-                      onChange={(e) => setExitTime(formatTimeInput(e.target.value))}
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
+                      onChange={(e) =>
+                        setExitTime(formatTimeInput(e.target.value))
+                      }
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
                       required={isCompleted}
                     />
                   </div>
@@ -390,22 +497,29 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                       id="isSpecialFee"
                       checked={isSpecialFee}
                       onChange={(e) => setIsSpecialFee(e.target.checked)}
-                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 transition-colors"
                     />
-                    <label htmlFor="isSpecialFee" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
+                    <label
+                      htmlFor="isSpecialFee"
+                      className="text-sm font-bold text-slate-700 cursor-pointer select-none"
+                    >
                       Tarifa especial (Ingresar valor manualmente)
                     </label>
                   </div>
-                  
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4 ml-1">Tarifa Cobrada ($) *</label>
+
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4 ml-1">
+                    Tarifa Cobrada ($) *
+                  </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">
+                      $
+                    </span>
                     <input
                       type="number"
                       value={totalFee}
                       onChange={(e) => setTotalFee(e.target.value)}
                       disabled={!isSpecialFee}
-                      className={`w-full text-base rounded-xl px-4 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? 'bg-slate-100/50 text-slate-500 border border-slate-100' : 'bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-indigo-500 shadow-sm shadow-indigo-100/50'}`}
+                      className={`w-full text-base rounded-2xl px-4 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-blue-500 shadow-md shadow-blue-100/50"}`}
                       placeholder="0.00"
                       min="0"
                       step="0.01"
@@ -413,7 +527,14 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
                     />
                   </div>
                   {!isSpecialFee && (
-                    <p className="text-xs font-medium text-slate-400 mt-2 ml-1">El valor se calcula automáticamente según las tarifas. Marca <span className="font-bold text-slate-500">&quot;Tarifa especial&quot;</span> para modificarlo.</p>
+                    <p className="text-xs font-medium text-slate-400 mt-2 ml-1">
+                      El valor se calcula automáticamente según las tarifas.
+                      Marca{" "}
+                      <span className="font-bold text-slate-500">
+                        &quot;Tarifa especial&quot;
+                      </span>{" "}
+                      para modificarlo.
+                    </p>
                   )}
                 </div>
               </>
@@ -425,7 +546,7 @@ export default function ManualEntry({ parkingLot, allowedVehicles, customFields 
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition-all shadow-sm shadow-indigo-200 flex items-center justify-center gap-3 text-lg mx-auto"
+            className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl font-bold transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-3 text-lg mx-auto"
           >
             {loading ? (
               <Spinner size={24} className="text-white" />

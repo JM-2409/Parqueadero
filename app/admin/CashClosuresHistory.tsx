@@ -4,7 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Clock, Calendar, Hash, DollarSign } from "lucide-react";
 
-export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: string }) {
+export default function CashClosuresHistory({
+  parkingLotId,
+}: {
+  parkingLotId: string;
+}) {
   const [closures, setClosures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,7 +19,7 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
       .eq("parking_lot_id", parkingLotId)
       .order("closed_at", { ascending: false })
       .limit(50);
-      
+
     if (data) setClosures(data);
     setLoading(false);
   }, [parkingLotId]);
@@ -28,7 +32,7 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -40,12 +44,14 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
       </div>
 
       {closures.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm">
+        <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-md">
           <DollarSign size={48} className="mx-auto text-slate-300 mb-4" />
-          <p className="text-slate-500 font-medium">Aún no hay cierres de caja registrados.</p>
+          <p className="text-slate-500 font-medium">
+            Aún no hay cierres de caja registrados.
+          </p>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium uppercase tracking-wider text-[11px]">
@@ -57,8 +63,11 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {closures.map(closure => (
-                  <tr key={closure.id} className="hover:bg-slate-50/50 transition-colors">
+                {closures.map((closure) => (
+                  <tr
+                    key={closure.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       {closure.opened_at ? (
                         <div>
@@ -68,11 +77,20 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
                           </p>
                           <p className="text-slate-500 text-xs flex items-center gap-1 mt-0.5">
                             <Clock size={13} className="text-slate-400" />
-                            {new Date(closure.opened_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            {new Date(closure.opened_at).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              },
+                            )}
                           </p>
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-xs italic">No registrado</span>
+                        <span className="text-slate-400 text-xs italic">
+                          No registrado
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -83,17 +101,29 @@ export default function CashClosuresHistory({ parkingLotId }: { parkingLotId: st
                         </p>
                         <p className="text-slate-500 text-xs flex items-center gap-1 mt-0.5">
                           <Clock size={13} className="text-slate-400" />
-                          {new Date(closure.closed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          {new Date(closure.closed_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                         </p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="font-bold text-emerald-600 text-base">
-                        {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(closure.total_revenue || 0)}
+                        {new Intl.NumberFormat("es-CO", {
+                          style: "currency",
+                          currency: "COP",
+                          minimumFractionDigits: 0,
+                        }).format(closure.total_revenue || 0)}
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-900 font-medium">{closure.profiles?.full_name || closure.notes?.split('-')[1]?.trim() || "Admin"}</p>
+                      <p className="text-slate-900 font-medium">
+                        {closure.profiles?.full_name ||
+                          closure.notes?.split("-")[1]?.trim() ||
+                          "Admin"}
+                      </p>
                     </td>
                   </tr>
                 ))}

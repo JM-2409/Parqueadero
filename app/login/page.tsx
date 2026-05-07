@@ -3,7 +3,15 @@
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogIn, ArrowLeft, UserPlus, ShieldCheck, Car, Eye, EyeOff } from "lucide-react";
+import {
+  LogIn,
+  ArrowLeft,
+  UserPlus,
+  ShieldCheck,
+  Car,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { createUser } from "@/app/actions/auth";
@@ -15,7 +23,7 @@ function LoginContent() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -27,8 +35,9 @@ function LoginContent() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setError("La plataforma ha sido suspendida para este parqueadero.");
     } else if (errParam === "expired") {
-       
-      setError("Tu suscripción ha expirado. Por favor, contacta a ventas o actualiza tu suscripción.");
+      setError(
+        "Tu suscripción ha expirado. Por favor, contacta a ventas o actualiza tu suscripción.",
+      );
     }
   }, [searchParams]);
 
@@ -38,78 +47,101 @@ function LoginContent() {
     setError("");
 
     if (!isSupabaseConfigured) {
-      setError("Error de conexión: Supabase no está configurado. Verifica las variables de entorno.");
+      setError(
+        "Error de conexión: Supabase no está configurado. Verifica las variables de entorno.",
+      );
       setLoading(false);
       return;
     }
 
     try {
-      const loginEmail = username.includes("@") 
-        ? username.trim().toLowerCase() 
+      const loginEmail = username.includes("@")
+        ? username.trim().toLowerCase()
         : `${username.toLowerCase().trim()}@parkingapp.local`;
 
       // LOGIN FLOW
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password,
-      });
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email: loginEmail,
+          password,
+        },
+      );
 
-        if (authError) {
-          setError(authError.message === "Failed to fetch" ? "Error de conexión con el servidor." : authError.message);
-          setLoading(false);
-          return;
-        }
+      if (authError) {
+        setError(
+          authError.message === "Failed to fetch"
+            ? "Error de conexión con el servidor."
+            : authError.message,
+        );
+        setLoading(false);
+        return;
+      }
 
-        let profileData = null;
-        let profileError = null;
-        
-        // Try to fetch with is_suspended first
-        const { data: profileWithSuspended, error: errWithSuspended } = await supabase
+      let profileData = null;
+      let profileError = null;
+
+      // Try to fetch with is_suspended first
+      const { data: profileWithSuspended, error: errWithSuspended } =
+        await supabase
           .from("profiles")
           .select("role, parking_lot_id, parking_lots(is_suspended)")
           .eq("id", data.user.id)
           .single();
-          
-        if (errWithSuspended && errWithSuspended.message.includes("is_suspended")) {
-          // Fallback if column is missing
-          const { data: profileFallback, error: errFallback } = await supabase
-            .from("profiles")
-            .select("role, parking_lot_id, parking_lots(id)")
-            .eq("id", data.user.id)
-            .single();
-            
-          profileData = profileFallback;
-          profileError = errFallback;
+
+      if (
+        errWithSuspended &&
+        errWithSuspended.message.includes("is_suspended")
+      ) {
+        // Fallback if column is missing
+        const { data: profileFallback, error: errFallback } = await supabase
+          .from("profiles")
+          .select("role, parking_lot_id, parking_lots(id)")
+          .eq("id", data.user.id)
+          .single();
+
+        profileData = profileFallback;
+        profileError = errFallback;
+      } else {
+        profileData = profileWithSuspended;
+        profileError = errWithSuspended;
+      }
+
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        if (profileError.code === "PGRST116") {
+          setError(
+            "No se encontró un perfil asociado a esta cuenta. Verifica tu registro o contacta al administrador.",
+          );
         } else {
-          profileData = profileWithSuspended;
-          profileError = errWithSuspended;
+          setError(
+            "Error al obtener perfil de usuario: " + profileError.message,
+          );
         }
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
 
-        if (profileError) {
-          console.error("Profile fetch error:", profileError);
-          if (profileError.code === "PGRST116") {
-            setError("No se encontró un perfil asociado a esta cuenta. Verifica tu registro o contacta al administrador.");
-          } else {
-            setError("Error al obtener perfil de usuario: " + profileError.message);
-          }
-          await supabase.auth.signOut();
-          setLoading(false);
-          return;
-        }
-        
-        // Check suspension
-        if (profileData && profileData.parking_lots && (profileData.parking_lots as any).is_suspended) {
-          await supabase.auth.signOut();
-          setError("La plataforma está suspendida para este parqueadero. Por favor renueva tu suscripción.");
-          setLoading(false);
-          return;
-        }
+      // Check suspension
+      if (
+        profileData &&
+        profileData.parking_lots &&
+        (profileData.parking_lots as any).is_suspended
+      ) {
+        await supabase.auth.signOut();
+        setError(
+          "La plataforma está suspendida para este parqueadero. Por favor renueva tu suscripción.",
+        );
+        setLoading(false);
+        return;
+      }
 
-        if (profileData && profileData.role === "admin") router.push("/admin");
-        else if (profileData && profileData.role === "employee") router.push("/employee");
-        else if (profileData && profileData.role === "superadmin") router.push("/superadmin");
-        else router.push("/");
-
+      if (profileData && profileData.role === "admin") router.push("/admin");
+      else if (profileData && profileData.role === "employee")
+        router.push("/employee");
+      else if (profileData && profileData.role === "superadmin")
+        router.push("/superadmin");
+      else router.push("/");
     } catch (err: any) {
       setError(err.message || "Ocurrió un error inesperado.");
       setLoading(false);
@@ -119,10 +151,10 @@ function LoginContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -137,11 +169,16 @@ function LoginContent() {
         </Link>
 
         <div className="text-center mb-8">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
-            className="w-20 h-20 bg-gradient-to-tr from-indigo-600 to-blue-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/30"
+            transition={{
+              type: "spring",
+              stiffness: 200,
+              damping: 15,
+              delay: 0.1,
+            }}
+            className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-blue-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30"
           >
             <Car size={40} strokeWidth={1.5} />
           </motion.div>
@@ -155,7 +192,7 @@ function LoginContent() {
 
         <AnimatePresence mode="wait">
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -175,12 +212,12 @@ function LoginContent() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all"
+              className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all"
               placeholder="ej. admin123 o correo@ejemplo.com"
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Contraseña
@@ -190,11 +227,11 @@ function LoginContent() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all pr-12"
+                className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all pr-12"
                 placeholder="••••••••"
                 required
               />
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
@@ -209,7 +246,7 @@ function LoginContent() {
             whileTap={{ scale: 0.99 }}
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 disabled:opacity-70 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 mt-4"
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 disabled:opacity-70 text-white rounded-xl font-medium transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 mt-4"
           >
             {loading ? (
               <Spinner size={20} className="text-white" />
@@ -226,7 +263,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center">Cargando...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+          Cargando...
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );
