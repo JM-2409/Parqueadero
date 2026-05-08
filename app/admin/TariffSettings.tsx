@@ -394,11 +394,11 @@ export default function TariffSettings({
                         <button
                           onClick={() => handleDelete(t.id)}
                           disabled={deletingId === t.id}
-                          className="w-10 h-10 flex items-center justify-center rounded-2xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-50"
+                          className="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-red-500 transition-all shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50"
                           title="Eliminar tarifa"
                         >
                           {deletingId === t.id ? (
-                            <Spinner size={18} className="text-red-500" />
+                            <Spinner size={18} className="text-white" />
                           ) : (
                             <Trash2 size={18} />
                           )}

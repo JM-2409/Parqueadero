@@ -154,19 +154,31 @@ export default function ReceiptModal({
                 {Object.entries({
                   ...session.vehicles?.custom_fields_data,
                   ...session.extra_data,
-                }).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="flex justify-between items-start gap-4"
-                  >
-                    <span className="text-slate-500 capitalize min-w-[80px]">
-                      {key}
-                    </span>
-                    <span className="font-medium text-slate-900 text-right break-words">
-                      {value as string}
-                    </span>
-                  </div>
-                ))}
+                }).map(([key, value]) => {
+                  if (key === "observation_photo_url") {
+                    return (
+                      <div key={key} className="flex flex-col gap-2 mt-2">
+                        <span className="text-slate-500 capitalize">Foto de Observación</span>
+                        <a href={value as string} target="_blank" rel="noopener noreferrer" className="block max-h-48 overflow-hidden rounded-xl border border-slate-200">
+                          <img src={value as string} alt="Observación" className="w-full object-cover" />
+                        </a>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={key}
+                      className="flex justify-between items-start gap-4"
+                    >
+                      <span className="text-slate-500 capitalize min-w-[80px]">
+                        {key}
+                      </span>
+                      <span className="font-medium text-slate-900 text-right break-words">
+                        {value as string}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
