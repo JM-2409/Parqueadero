@@ -20,7 +20,7 @@ export default function Home() {
   const appName = process.env.NEXT_PUBLIC_APP_NAME || "Sistema de Parqueaderos";
 
   return (
-    <div className="min-h-screen flex flex-col  selection:bg-blue-200 selection:text-blue-900 bg-white">
+    <div className="min-h-screen flex flex-col selection:bg-blue-200 selection:text-blue-900 bg-white">
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-lg border-b border-slate-100 sticky top-0 z-50 transition-all duration-300 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">

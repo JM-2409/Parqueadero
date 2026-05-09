@@ -158,9 +158,20 @@ export default function ReceiptModal({
                   if (key === "observation_photo_url") {
                     return (
                       <div key={key} className="flex flex-col gap-2 mt-2">
-                        <span className="text-slate-500 capitalize">Foto de Observación</span>
-                        <a href={value as string} target="_blank" rel="noopener noreferrer" className="block max-h-48 overflow-hidden rounded-xl border border-slate-200">
-                          <img src={value as string} alt="Observación" className="w-full object-cover" />
+                        <span className="text-slate-500 capitalize">
+                          Foto de Observación
+                        </span>
+                        <a
+                          href={value as string}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block max-h-48 overflow-hidden rounded-xl border border-slate-200"
+                        >
+                          <img
+                            src={value as string}
+                            alt="Observación"
+                            className="w-full object-cover"
+                          />
                         </a>
                       </div>
                     );

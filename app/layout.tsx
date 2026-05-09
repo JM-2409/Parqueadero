@@ -12,7 +12,8 @@ const appName = process.env.NEXT_PUBLIC_APP_NAME || "Sistema de Parqueaderos";
 
 export const metadata: Metadata = {
   title: `${appName} - Gestión Inteligente de Parqueaderos`,
-  description: "Plataforma integral SaaS para la administración corporativa y operativa de múltiples parqueaderos en tiempo real.",
+  description:
+    "Plataforma integral SaaS para la administración corporativa y operativa de múltiples parqueaderos en tiempo real.",
 };
 
 export default function RootLayout({
@@ -22,7 +23,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className="scroll-smooth">
-      <body suppressHydrationWarning className={`${poppins.className} antialiased text-slate-800 bg-slate-50 min-h-screen flex flex-col`}>
+      <body
+        suppressHydrationWarning
+        className={`${poppins.className} antialiased text-slate-800 bg-slate-50 min-h-screen flex flex-col`}
+      >
         {children}
       </body>
     </html>

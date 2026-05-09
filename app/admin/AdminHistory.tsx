@@ -810,8 +810,16 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                               <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                                                 Foto de Observación
                                               </span>
-                                              <a href={v as string} target="_blank" rel="noopener noreferrer">
-                                                <img src={v as string} alt="Observación" className="h-24 w-auto rounded-lg border border-slate-100 object-cover" />
+                                              <a
+                                                href={v as string}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                              >
+                                                <img
+                                                  src={v as string}
+                                                  alt="Observación"
+                                                  className="h-24 w-auto rounded-lg border border-slate-100 object-cover"
+                                                />
                                               </a>
                                             </div>
                                           </div>

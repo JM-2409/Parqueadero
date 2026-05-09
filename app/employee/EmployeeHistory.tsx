@@ -1,4 +1,6 @@
 "use client";
+import { DeleteButton } from "@/components/ui/DeleteButton";
+
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
@@ -12,7 +14,6 @@ import {
   Palette,
   Tag,
   FileText,
-  Trash2,
 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
 import * as XLSX from "xlsx";
@@ -418,8 +419,16 @@ export default function EmployeeHistory({
                                             <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                                               Foto de Observación
                                             </span>
-                                            <a href={v as string} target="_blank" rel="noopener noreferrer">
-                                              <img src={v as string} alt="Observación" className="h-24 w-auto rounded-lg border border-slate-100 object-cover" />
+                                            <a
+                                              href={v as string}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                            >
+                                              <img
+                                                src={v as string}
+                                                alt="Observación"
+                                                className="h-24 w-auto rounded-lg border border-slate-100 object-cover"
+                                              />
                                             </a>
                                           </div>
                                         </div>
