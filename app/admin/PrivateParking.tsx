@@ -561,7 +561,7 @@ export default function PrivateParking({
                           </button>
                           <button
                             onClick={() => handleDeleteSpace(space.id)}
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-colors border border-transparent hover:border-red-100"
+                            className="p-2 text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all border border-transparent shadow-sm hover:shadow-md active:scale-95"
                             title="Eliminar"
                           >
                             <Trash2 size={16} />

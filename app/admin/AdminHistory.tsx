@@ -700,15 +700,30 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                               {Object.entries({
                                 ...session.vehicles?.custom_fields_data,
                                 ...session.extra_data,
-                              }).map(([k, v]) => (
-                                <span
-                                  key={k}
-                                  className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 px-1.5 py-1 rounded-md text-slate-500 truncate"
-                                  title={`${k}: ${v}`}
-                                >
-                                  {k}: {v as string}
-                                </span>
-                              ))}
+                              }).map(([k, v]) => {
+                                if (k === "observation_photo_url") {
+                                  return (
+                                    <a
+                                      key={k}
+                                      href={v as string}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 px-1.5 py-1 rounded-md flex items-center gap-1 hover:bg-blue-100 transition-colors w-max"
+                                    >
+                                      Ver Foto
+                                    </a>
+                                  );
+                                }
+                                return (
+                                  <span
+                                    key={k}
+                                    className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 px-1.5 py-1 rounded-md text-slate-500 truncate max-w-[120px]"
+                                    title={`${k}: ${v}`}
+                                  >
+                                    {k}: {v as string}
+                                  </span>
+                                );
+                              })}
                             </div>
                           ) : (
                             <span className="text-slate-300 font-medium">
@@ -784,25 +799,44 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                     {Object.entries({
                                       ...session.vehicles?.custom_fields_data,
                                       ...session.extra_data,
-                                    }).map(([k, v]) => (
-                                      <div
-                                        key={k}
-                                        className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2"
-                                      >
-                                        <Tag
-                                          size={14}
-                                          className="text-slate-400 mt-0.5 flex-shrink-0"
-                                        />
-                                        <div className="flex flex-col">
-                                          <span className="text-[10px] uppercase font-bold text-slate-400">
-                                            {k}
-                                          </span>
-                                          <span className="text-xs font-medium text-slate-800">
-                                            {v as string}
-                                          </span>
+                                    }).map(([k, v]) => {
+                                      if (k === "observation_photo_url") {
+                                        return (
+                                          <div
+                                            key={k}
+                                            className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2 col-span-2"
+                                          >
+                                            <div className="flex flex-col w-full">
+                                              <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                                                Foto de Observación
+                                              </span>
+                                              <a href={v as string} target="_blank" rel="noopener noreferrer">
+                                                <img src={v as string} alt="Observación" className="h-24 w-auto rounded-lg border border-slate-100 object-cover" />
+                                              </a>
+                                            </div>
+                                          </div>
+                                        );
+                                      }
+                                      return (
+                                        <div
+                                          key={k}
+                                          className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2"
+                                        >
+                                          <Tag
+                                            size={14}
+                                            className="text-slate-400 mt-0.5 flex-shrink-0"
+                                          />
+                                          <div className="flex flex-col">
+                                            <span className="text-[10px] uppercase font-bold text-slate-400">
+                                              {k}
+                                            </span>
+                                            <span className="text-xs font-medium text-slate-800 break-all">
+                                              {v as string}
+                                            </span>
+                                          </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 ) : (
                                   <p className="text-sm text-slate-400 italic">
@@ -848,7 +882,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                     e.stopPropagation();
                                     setSessionToDelete(session.id);
                                   }}
-                                  className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl text-xs font-bold transition-colors flex items-center gap-2 w-full justify-center md:justify-end"
+                                  className="px-4 py-2 bg-white text-slate-500 border border-slate-200 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-2xl text-xs font-bold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2 w-full justify-center md:justify-end"
                                 >
                                   <Trash2 size={16} />
                                   Borrar Registro
@@ -994,7 +1028,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               </button>
               <button
                 onClick={confirmDeleteSession}
-                className="px-5 py-2.5 font-bold text-white bg-red-600 hover:bg-red-700 rounded-2xl transition-colors w-full flex items-center justify-center gap-2"
+                className="px-5 py-2.5 font-bold text-white bg-red-500 hover:bg-red-600 rounded-2xl transition-all shadow-sm hover:shadow-md active:scale-95 w-full flex items-center justify-center gap-2"
               >
                 <Trash2 size={18} />
                 Borrar

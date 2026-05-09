@@ -731,7 +731,7 @@ export default function SuperAdminPage() {
                             </button>
                             <button
                               onClick={() => openDeleteModal(lot.id, lot.name)}
-                              className="absolute top-3 right-3 p-2 bg-red-50 text-red-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 focus:opacity-100"
+                              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white bg-slate-50 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:shadow-md active:scale-95 focus:opacity-100"
                               title="Eliminar parqueadero permanentemente"
                             >
                               <Trash2 size={16} />
@@ -825,7 +825,7 @@ export default function SuperAdminPage() {
                                               admin.email,
                                             )
                                           }
-                                          className="text-red-400 opacity-0 group-hover/admin:opacity-100 hover:text-red-600 transition-opacity p-1"
+                                          className="text-slate-400 opacity-0 group-hover/admin:opacity-100 hover:text-white hover:bg-red-500 rounded-full transition-all p-1 w-6 h-6 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95"
                                           title="Eliminar administrador"
                                         >
                                           <Trash2 size={14} />
@@ -1075,7 +1075,7 @@ export default function SuperAdminPage() {
                           onClick={() =>
                             handleDeleteAdmin(admin.id, admin.email)
                           }
-                          className="p-2 text-red-400 hover:text-red-700 hover:bg-red-50 rounded-2xl opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                          className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shadow-sm hover:shadow-md active:scale-95"
                           title="Eliminar administrador"
                         >
                           <Trash2 size={18} />

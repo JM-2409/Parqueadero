@@ -255,7 +255,7 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
                         </div>
                         <button
                           onClick={() => handleRemove(item.id, item.plate)}
-                          className="text-slate-300 hover:text-red-600 w-8 h-8 flex items-center justify-center hover:bg-red-50 rounded-2xl transition-colors"
+                          className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
                           title="Remover de lista negra"
                         >
                           <Trash2 size={16} />

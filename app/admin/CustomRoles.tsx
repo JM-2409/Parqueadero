@@ -405,7 +405,7 @@ export default function CustomRoles({
                 </button>
                 <button
                   onClick={() => handleDeleteRole(role.id)}
-                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-white rounded-2xl transition-all"
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
                   title="Eliminar rol"
                 >
                   <Trash2 size={16} />

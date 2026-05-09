@@ -317,16 +317,31 @@ export default function EmployeeHistory({
                             {Object.entries({
                               ...session.vehicles?.custom_fields_data,
                               ...session.extra_data,
-                            }).map(([k, v]) => (
-                              <span
-                                key={k}
-                                className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 truncate max-w-[120px]"
-                                title={`${k}: ${v}`}
-                              >
-                                <span className="font-medium">{k}:</span>{" "}
-                                {v as string}
-                              </span>
-                            ))}
+                            }).map(([k, v]) => {
+                              if (k === "observation_photo_url") {
+                                return (
+                                  <a
+                                    key={k}
+                                    href={v as string}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded flex items-center gap-1 w-max hover:bg-blue-100 transition-colors"
+                                  >
+                                    Ver Foto
+                                  </a>
+                                );
+                              }
+                              return (
+                                <span
+                                  key={k}
+                                  className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 truncate max-w-[120px]"
+                                  title={`${k}: ${v}`}
+                                >
+                                  <span className="font-medium">{k}:</span>{" "}
+                                  {v as string}
+                                </span>
+                              );
+                            })}
                           </div>
                         ) : (
                           <span className="text-xs text-slate-400">-</span>
@@ -392,25 +407,44 @@ export default function EmployeeHistory({
                                   {Object.entries({
                                     ...session.vehicles?.custom_fields_data,
                                     ...session.extra_data,
-                                  }).map(([k, v]) => (
-                                    <div
-                                      key={k}
-                                      className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2"
-                                    >
-                                      <Tag
-                                        size={14}
-                                        className="text-slate-400 mt-0.5 flex-shrink-0"
-                                      />
-                                      <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">
-                                          {k}
-                                        </span>
-                                        <span className="text-xs font-medium text-slate-800">
-                                          {v as string}
-                                        </span>
+                                  }).map(([k, v]) => {
+                                    if (k === "observation_photo_url") {
+                                      return (
+                                        <div
+                                          key={k}
+                                          className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2 col-span-2"
+                                        >
+                                          <div className="flex flex-col w-full">
+                                            <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                                              Foto de Observación
+                                            </span>
+                                            <a href={v as string} target="_blank" rel="noopener noreferrer">
+                                              <img src={v as string} alt="Observación" className="h-24 w-auto rounded-lg border border-slate-100 object-cover" />
+                                            </a>
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+                                    return (
+                                      <div
+                                        key={k}
+                                        className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2"
+                                      >
+                                        <Tag
+                                          size={14}
+                                          className="text-slate-400 mt-0.5 flex-shrink-0"
+                                        />
+                                        <div className="flex flex-col">
+                                          <span className="text-[10px] uppercase font-bold text-slate-400">
+                                            {k}
+                                          </span>
+                                          <span className="text-xs font-medium text-slate-800 break-all">
+                                            {v as string}
+                                          </span>
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               ) : (
                                 <p className="text-sm text-slate-400 italic">

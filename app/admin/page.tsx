@@ -68,10 +68,16 @@ export default function AdminPage() {
   const [privateCustomFields, setPrivateCustomFields] = useState<
     { name: string; required: boolean; visible: boolean }[]
   >([]);
-  const [parkingSettings, setParkingSettings] = useState({
+  const [parkingSettings, setParkingSettings] = useState<{
+    autoPrint: boolean;
+    confirmEntry: boolean;
+    showNotes: boolean;
+    requirePhoto?: boolean;
+  }>({
     autoPrint: false,
     confirmEntry: true,
     showNotes: false,
+    requirePhoto: false,
   });
   const [showSqlAlert, setShowSqlAlert] = useState(false);
 
@@ -763,7 +769,7 @@ export default function AdminPage() {
                     <button
                       onClick={handleCloseRegister}
                       disabled={isClosingRegister || todayStats.revenue === 0}
-                      className="w-full sm:w-auto px-4 py-2 bg-blue-950 hover:bg-blue-900 disabled:opacity-50 text-white rounded-2xl text-sm font-medium transition-colors whitespace-nowrap"
+                      className="w-full sm:w-auto px-4 py-2 bg-blue-950 hover:bg-blue-900 disabled:opacity-50 text-white rounded-2xl text-sm font-medium transition-colors truncate"
                     >
                       {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
                     </button>
@@ -1128,6 +1134,30 @@ export default function AdminPage() {
                           className="w-5 h-5 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
                         />
                       </label>
+
+                      {parkingSettings?.showNotes && (
+                        <label className="flex items-center justify-between p-4 border border-slate-200  rounded-2xl cursor-pointer hover:bg-slate-50  transition-colors animate-in fade-in slide-in-from-top-2">
+                          <div>
+                            <span className="text-slate-900  font-medium block">
+                              Exigir Foto de Observación
+                            </span>
+                            <span className="text-slate-500 text-xs mt-0.5 block">
+                              Obliga a tomar una foto con la cámara si hay observaciones.
+                            </span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={parkingSettings?.requirePhoto || false}
+                            onChange={(e) =>
+                              setParkingSettings({
+                                ...parkingSettings,
+                                requirePhoto: e.target.checked,
+                              })
+                            }
+                            className="w-5 h-5 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
+                          />
+                        </label>
+                      )}
                     </div>
                   </div>
 
@@ -1298,7 +1328,7 @@ export default function AdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => removeCustomField(idx)}
-                                  className="p-2 text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
                                   title="Eliminar campo"
                                 >
                                   <Trash2 size={18} />
@@ -1393,7 +1423,7 @@ export default function AdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => removePrivateCustomField(idx)}
-                                  className="p-2 text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
                                   title="Eliminar campo"
                                 >
                                   <Trash2 size={18} />

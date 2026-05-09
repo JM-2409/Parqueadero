@@ -20,8 +20,10 @@ import {
   Bike,
   Truck,
   AlertTriangle,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useRef } from "react";
 import EmployeeHistory from "./EmployeeHistory";
 import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
@@ -58,6 +60,10 @@ export default function EmployeePage() {
   const [prefSound, setPrefSound] = useState(true);
   const [prefConfirmEntry, setPrefConfirmEntry] = useState(true);
   const [prefShowNotes, setPrefShowNotes] = useState(false);
+  const [prefRequirePhoto, setPrefRequirePhoto] = useState(false);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   // Receipt Modal
   const [selectedSession, setSelectedSession] = useState<any>(null);
@@ -188,6 +194,8 @@ export default function EmployeePage() {
             setPrefConfirmEntry(data.settings.confirmEntry);
           if (typeof data.settings.showNotes === "boolean")
             setPrefShowNotes(data.settings.showNotes);
+          if (typeof data.settings.requirePhoto === "boolean")
+            setPrefRequirePhoto(data.settings.requirePhoto);
         }
       }
 
@@ -496,6 +504,12 @@ export default function EmployeePage() {
       return;
     }
 
+    if (prefShowNotes && prefRequirePhoto && !photoDataUrl) {
+      playBeep("error");
+      setError("Es obligatorio tomar una foto de observación");
+      return;
+    }
+
     if (prefConfirmEntry) {
       setShowConfirmEntry(true);
     } else {
@@ -615,6 +629,33 @@ export default function EmployeePage() {
         }
       });
 
+      // Handle photo upload if exists
+      if (prefShowNotes && photoFile) {
+        const fileExt = photoFile.name.split('.').pop() || 'jpeg';
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${parkingLot.id}/${fileName}`;
+
+        try {
+          const arrayBuffer = await photoFile.arrayBuffer();
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('observations')
+            .upload(filePath, arrayBuffer, {
+              contentType: photoFile.type || 'image/jpeg',
+            });
+
+          if (!uploadError && uploadData) {
+            const { data: publicUrlData } = supabase.storage
+              .from('observations')
+              .getPublicUrl(filePath);
+            sanitizedExtraData['observation_photo_url'] = publicUrlData.publicUrl;
+          } else {
+             console.error("Error uploading photo", uploadError);
+          }
+        } catch (err) {
+          console.error("Failed to process photo buffer", err);
+        }
+      }
+
       const { error: sessionError } = await supabase
         .from("parking_sessions")
         .insert([
@@ -650,6 +691,9 @@ export default function EmployeePage() {
         setPlate("");
         setDebouncedPlate("");
         setExtraData({});
+        setPhotoDataUrl(null);
+        setPhotoFile(null);
+        if (photoInputRef.current) photoInputRef.current.value = "";
         setIsNewVehicle(true);
         await fetchActiveSessions(parkingLot.id);
         setTimeout(() => setSuccess(""), 3000);
@@ -1012,7 +1056,7 @@ export default function EmployeePage() {
                 <button
                   onClick={handleCloseRegister}
                   disabled={isClosingRegister || accumulatedRevenue === 0}
-                  className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold transition-colors whitespace-nowrap"
+                  className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold transition-colors truncate"
                 >
                   {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
                 </button>
@@ -1200,7 +1244,7 @@ export default function EmployeePage() {
                     {prefShowNotes && (
                       <div>
                         <label className="block text-sm font-medium text-slate-700  mb-1">
-                          Observaciones (Opcional)
+                          Observaciones {prefRequirePhoto ? "(Obligatorio con foto)" : "(Opcional)"}
                         </label>
                         <textarea
                           value={extraData["Observaciones"] || ""}
@@ -1210,10 +1254,64 @@ export default function EmployeePage() {
                               ["Observaciones"]: e.target.value,
                             })
                           }
-                          className="w-full p-3 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                          className="w-full p-3 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none resize-none mb-3"
                           placeholder="Daños, rayones o notas importantes..."
                           rows={2}
+                          required={prefRequirePhoto}
                         />
+                        {prefRequirePhoto && (
+                          <div className="flex flex-col gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              ref={photoInputRef}
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setPhotoFile(file);
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setPhotoDataUrl(reader.result as string);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => photoInputRef.current?.click()}
+                                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2 border border-slate-200"
+                              >
+                                <Camera size={20} />
+                                {photoDataUrl ? "Volver a tomar foto" : "Tomar foto"}
+                              </button>
+                            </div>
+                            {photoDataUrl && (
+                              <div className="mt-2 relative rounded-2xl overflow-hidden border border-slate-200 max-h-48 flex justify-center bg-slate-50">
+                                <img
+                                  src={photoDataUrl}
+                                  alt="Observación"
+                                  className="object-contain h-full"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPhotoDataUrl(null);
+                                    setPhotoFile(null);
+                                    if (photoInputRef.current) photoInputRef.current.value = "";
+                                  }}
+                                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm"
+                                  title="Eliminar foto"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1549,19 +1647,33 @@ export default function EmployeePage() {
                           Información Adicional
                         </h4>
                         {Object.entries(viewingSession.extra_data).map(
-                          ([k, v]) => (
-                            <div
-                              key={k}
-                              className="flex justify-between items-center text-sm border-b border-blue-100/50 pb-2 last:border-0 last:pb-0"
-                            >
-                              <span className="text-slate-600  font-medium">
-                                {k}
-                              </span>
-                              <span className="text-slate-900  font-semibold">
-                                {v as string}
-                              </span>
-                            </div>
-                          ),
+                          ([k, v]) => {
+                            if (k === "observation_photo_url") {
+                              return (
+                                <div key={k} className="flex flex-col gap-2 border-b border-blue-100/50 pb-2 last:border-0 last:pb-0">
+                                  <span className="text-slate-600 font-medium">
+                                    Foto de Observación
+                                  </span>
+                                  <a href={v as string} target="_blank" rel="noopener noreferrer" className="block max-h-48 overflow-hidden rounded-xl border border-blue-200 bg-white">
+                                    <img src={v as string} alt="Observación" className="w-full object-cover" />
+                                  </a>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div
+                                key={k}
+                                className="flex justify-between items-center text-sm border-b border-blue-100/50 pb-2 last:border-0 last:pb-0"
+                              >
+                                <span className="text-slate-600  font-medium">
+                                  {k}
+                                </span>
+                                <span className="text-slate-900  font-semibold">
+                                  {v as string}
+                                </span>
+                              </div>
+                            );
+                          }
                         )}
                       </div>
                     )}

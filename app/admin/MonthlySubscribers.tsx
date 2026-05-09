@@ -479,7 +479,7 @@ export default function MonthlySubscribers({
                                 onClick={() =>
                                   handleRemove(item.id, item.plate)
                                 }
-                                className="text-slate-400 hover:text-red-600 w-8 h-8 flex items-center justify-center mx-auto hover:bg-white border hover:border-red-100 border-transparent rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                                className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center mx-auto hover:bg-red-500 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-sm hover:shadow-md active:scale-95"
                                 title="Eliminar abonado"
                               >
                                 <Trash2 size={16} />
