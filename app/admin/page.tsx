@@ -537,9 +537,9 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-50  flex flex-col md:flex-row">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-blue-950 text-white p-4 flex justify-between items-center sticky top-0 z-30">
+      <div className="md:hidden bg-white border-r border-slate-200 text-slate-900 p-4 flex justify-between items-center sticky top-0 z-30">
         <div className="flex items-center gap-2 font-bold text-lg">
-          <Settings size={24} className="text-blue-400" />
+          <Settings size={24} className="text-slate-800" />
           <span className="truncate">Panel Admin</span>
         </div>
         <div className="flex items-center gap-2">
@@ -555,23 +555,23 @@ export default function AdminPage() {
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-blue-950/50 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 transition-transform duration-300 w-64 bg-blue-950 text-slate-300 flex-shrink-0 flex flex-col h-screen`}
+        className={`${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 transition-transform duration-300 w-64 bg-white border-r border-slate-200 text-slate-500 flex-shrink-0 flex flex-col h-screen`}
       >
         <div className="p-6 flex items-center justify-between gap-3 border-b border-blue-900">
-          <div className="flex items-center gap-3 font-bold text-xl text-white">
-            <Settings size={28} className="text-blue-400" />
+          <div className="flex items-center gap-3 font-bold text-xl text-slate-900">
+            <Settings size={28} className="text-slate-800" />
             <span>Admin</span>
           </div>
           <div className="flex items-center gap-2">
             <button
-              className="md:hidden text-slate-400 hover:text-white"
+              className="md:hidden text-slate-400 hover:text-slate-900"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <X size={24} />
@@ -582,7 +582,9 @@ export default function AdminPage() {
           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">
             Parqueadero
           </p>
-          <p className="text-white font-medium truncate">{parkingLot?.name}</p>
+          <p className="text-slate-900 font-medium truncate">
+            {parkingLot?.name}
+          </p>
         </div>
         <nav className="p-4 flex flex-col gap-2 flex-1 overflow-y-auto">
           <button
@@ -590,7 +592,7 @@ export default function AdminPage() {
               setActiveTab("dashboard");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "dashboard" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "dashboard" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <LayoutDashboard size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -602,7 +604,7 @@ export default function AdminPage() {
               setActiveTab("cash_closures");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "cash_closures" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "cash_closures" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <DollarSign size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -614,7 +616,7 @@ export default function AdminPage() {
               setActiveTab("manual_entry");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "manual_entry" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "manual_entry" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <FileEdit size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -626,7 +628,7 @@ export default function AdminPage() {
               setActiveTab("tariffs");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "tariffs" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "tariffs" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <DollarSign size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -638,7 +640,7 @@ export default function AdminPage() {
               setActiveTab("employees");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "employees" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "employees" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <Users size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -650,7 +652,7 @@ export default function AdminPage() {
               setActiveTab("employee_logs");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "employee_logs" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "employee_logs" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <Activity size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -662,7 +664,7 @@ export default function AdminPage() {
               setActiveTab("private_parking");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "private_parking" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "private_parking" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <Home size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -674,7 +676,7 @@ export default function AdminPage() {
               setActiveTab("subscribers");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "subscribers" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "subscribers" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <Users size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -686,7 +688,7 @@ export default function AdminPage() {
               setActiveTab("blacklist");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "blacklist" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "blacklist" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <Shield size={20} className="text-red-400" />
             <span className="font-medium whitespace-nowrap text-left">
@@ -698,7 +700,7 @@ export default function AdminPage() {
               setActiveTab("settings");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === "settings" ? "bg-blue-600 text-white" : "hover:bg-blue-900 hover:text-white"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "settings" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
           >
             <Settings size={20} />
             <span className="font-medium whitespace-nowrap text-left">
@@ -710,7 +712,7 @@ export default function AdminPage() {
           <Link
             href="/"
             onClick={() => supabase.auth.signOut()}
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
+            className="flex items-center gap-3 px-4 py-3 rounded-3xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
           >
             <LogOut size={20} />
             <span className="font-medium">Cerrar Sesión</span>
@@ -722,7 +724,7 @@ export default function AdminPage() {
       <div className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
         <div className="max-w-5xl mx-auto">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-2">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-2">
               <X size={20} className="flex-shrink-0" />
               <p>{error}</p>
             </div>
@@ -734,8 +736,8 @@ export default function AdminPage() {
           {activeTab === "dashboard" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white  p-6 rounded-2xl shadow-md border border-slate-100  flex items-center gap-4">
-                  <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+                <div className="bg-white  p-6 rounded-3xl shadow-sm border border-slate-200 border border-slate-100  flex items-center gap-4">
+                  <div className="p-4 bg-slate-100 text-slate-800 rounded-3xl">
                     <Car size={32} />
                   </div>
                   <div>
@@ -747,10 +749,10 @@ export default function AdminPage() {
                     </p>
                   </div>
                 </div>
-                <div className="bg-white  p-6 rounded-2xl shadow-md border border-slate-100  flex flex-col justify-center">
+                <div className="bg-white  p-6 rounded-3xl shadow-sm border border-slate-200 border border-slate-100  flex flex-col justify-center">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
+                      <div className="p-4 bg-emerald-50 text-emerald-600 rounded-3xl shrink-0">
                         <DollarSign size={32} />
                       </div>
                       <div className="min-w-0">
@@ -769,7 +771,7 @@ export default function AdminPage() {
                     <button
                       onClick={handleCloseRegister}
                       disabled={isClosingRegister || todayStats.revenue === 0}
-                      className="w-full sm:w-auto px-4 py-2 bg-blue-950 hover:bg-blue-900 disabled:opacity-50 text-white rounded-2xl text-sm font-medium transition-colors truncate"
+                      className="w-full sm:w-auto px-4 py-2 bg-white border-r border-slate-200 hover:bg-blue-900 disabled:opacity-50 text-slate-900 rounded-3xl text-sm font-medium transition-colors truncate"
                     >
                       {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
                     </button>
@@ -778,7 +780,7 @@ export default function AdminPage() {
               </div>
 
               {weeklyStats.length > 0 && (
-                <div className="bg-white  p-6 rounded-2xl shadow-md border border-slate-100 ">
+                <div className="bg-white  p-6 rounded-3xl shadow-sm border border-slate-200 border border-slate-100 ">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
                     <h3 className="text-slate-700  font-semibold break-words">
                       Ingresos Acumulados (
@@ -806,7 +808,7 @@ export default function AdminPage() {
                         setStatPeriod(newPeriod);
                         fetchStats(parkingLot.id, newPeriod);
                       }}
-                      className="px-3 py-1.5 border border-slate-200  text-sm rounded-2xl outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-3 py-1.5 border border-slate-200  text-sm rounded-3xl outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="7days">Últimos 7 días</option>
                       <option value="30days">Últimos 30 días</option>
@@ -841,7 +843,7 @@ export default function AdminPage() {
                           content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                               return (
-                                <div className="bg-blue-900 text-white text-xs py-1.5 px-3 rounded shadow-lg border border-slate-700">
+                                <div className="bg-blue-900 text-slate-900 text-xs py-1.5 px-3 rounded shadow-sm border border-slate-200 border border-slate-700">
                                   <p className="font-medium mb-1">
                                     {payload[0].payload.date}
                                   </p>
@@ -941,9 +943,9 @@ export default function AdminPage() {
           {/* TAB: CONFIGURACIÓN */}
           {activeTab === "settings" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white  p-6 rounded-2xl shadow-md border border-slate-100 ">
+              <div className="bg-white  p-6 rounded-3xl shadow-sm border border-slate-200 border border-slate-100 ">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-slate-100 text-slate-600  rounded-2xl">
+                  <div className="p-3 bg-slate-100 text-slate-600  rounded-3xl">
                     <Settings size={24} />
                   </div>
                   <div>
@@ -965,7 +967,7 @@ export default function AdminPage() {
                       <input
                         type="text"
                         value={parkingLot?.nit || ""}
-                        className="w-full p-3 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50  text-slate-500 cursor-not-allowed"
+                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50  text-slate-500 cursor-not-allowed"
                         placeholder="Ej. 900.123.456-7"
                         disabled
                         readOnly
@@ -978,7 +980,7 @@ export default function AdminPage() {
                       <input
                         type="text"
                         value={parkingLot?.address || ""}
-                        className="w-full p-3 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50  text-slate-500 cursor-not-allowed"
+                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50  text-slate-500 cursor-not-allowed"
                         placeholder="Ej. Calle 123 #45-67"
                         disabled
                         readOnly
@@ -992,7 +994,7 @@ export default function AdminPage() {
                         type="number"
                         value={capacity || ""}
                         onChange={(e) => setCapacity(e.target.value)}
-                        className="w-full p-3 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none"
                         placeholder="Ej. 100"
                         min="1"
                       />
@@ -1011,7 +1013,7 @@ export default function AdminPage() {
                               parseInt(e.target.value) || 0,
                           })
                         }
-                        className="w-full p-3 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none"
                         placeholder="Ej. 0"
                         min="0"
                       />
@@ -1034,7 +1036,7 @@ export default function AdminPage() {
                               parseInt(e.target.value) || 0,
                           })
                         }
-                        className="w-full p-3 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none"
                         placeholder="Ej. 15"
                         min="0"
                       />
@@ -1048,12 +1050,12 @@ export default function AdminPage() {
                       <label className="block text-sm font-medium text-slate-700  mb-3">
                         Opciones de Visibilidad
                       </label>
-                      <label className="flex items-center gap-3 p-3 border border-slate-200  rounded-2xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className="flex items-center gap-3 p-3 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
                         <input
                           type="checkbox"
                           checked={showRevenue}
                           onChange={(e) => setShowRevenue(e.target.checked)}
-                          className="w-5 h-5 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
+                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-blue-500"
                         />
                         <span className="text-slate-700  font-medium">
                           Mostrar recaudo a usuarios (operarios)
@@ -1067,7 +1069,7 @@ export default function AdminPage() {
                       Preferencias Globales para Empleados
                     </label>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-2xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
                         <div>
                           <span className="text-slate-900  font-medium block">
                             Impresión Automática
@@ -1086,11 +1088,11 @@ export default function AdminPage() {
                               autoPrint: e.target.checked,
                             })
                           }
-                          className="w-5 h-5 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
+                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-blue-500"
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-2xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
                         <div>
                           <span className="text-slate-900  font-medium block">
                             Confirmación de Ingreso
@@ -1109,11 +1111,11 @@ export default function AdminPage() {
                               confirmEntry: e.target.checked,
                             })
                           }
-                          className="w-5 h-5 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
+                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-blue-500"
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-2xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
                         <div>
                           <span className="text-slate-900  font-medium block">
                             Mostar Observaciones Adicionales
@@ -1131,18 +1133,19 @@ export default function AdminPage() {
                               showNotes: e.target.checked,
                             })
                           }
-                          className="w-5 h-5 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
+                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-blue-500"
                         />
                       </label>
 
                       {parkingSettings?.showNotes && (
-                        <label className="flex items-center justify-between p-4 border border-slate-200  rounded-2xl cursor-pointer hover:bg-slate-50  transition-colors animate-in fade-in slide-in-from-top-2">
+                        <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors animate-in fade-in slide-in-from-top-2">
                           <div>
                             <span className="text-slate-900  font-medium block">
                               Exigir Foto de Observación
                             </span>
                             <span className="text-slate-500 text-xs mt-0.5 block">
-                              Obliga a tomar una foto con la cámara si hay observaciones.
+                              Obliga a tomar una foto con la cámara si hay
+                              observaciones.
                             </span>
                           </div>
                           <input
@@ -1154,7 +1157,7 @@ export default function AdminPage() {
                                 requirePhoto: e.target.checked,
                               })
                             }
-                            className="w-5 h-5 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
+                            className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-blue-500"
                           />
                         </label>
                       )}
@@ -1171,9 +1174,9 @@ export default function AdminPage() {
                           key={type}
                           type="button"
                           onClick={() => toggleVehicleType(type)}
-                          className={`px-4 py-2 rounded-2xl font-medium text-sm transition-colors border ${
+                          className={`px-4 py-2 rounded-3xl font-medium text-sm transition-colors border ${
                             allowedVehicles.includes(type)
-                              ? "bg-blue-600 text-white border-blue-600"
+                              ? "bg-slate-800 text-slate-900 border-blue-600"
                               : "bg-white  text-slate-600  border-slate-200  hover:border-blue-300"
                           }`}
                         >
@@ -1194,13 +1197,13 @@ export default function AdminPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-6 bg-slate-50  p-4 rounded-2xl border border-slate-200 ">
+                    <div className="grid md:grid-cols-2 gap-6 bg-slate-50  p-4 rounded-3xl border border-slate-200 ">
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700  mb-1">
                             Fecha de Expiración
                           </label>
-                          <div className="w-full p-2.5 border border-slate-200  rounded-2xl bg-white  text-slate-600  font-mono text-sm cursor-not-allowed">
+                          <div className="w-full p-2.5 border border-slate-200  rounded-3xl bg-white  text-slate-600  font-mono text-sm cursor-not-allowed">
                             {parkingLot?.subscription_end_date
                               ? new Date(
                                   parkingLot.subscription_end_date,
@@ -1214,7 +1217,7 @@ export default function AdminPage() {
                       </div>
 
                       <div className="flex flex-col justify-center gap-4">
-                        <div className="flex items-center gap-3 p-3 border border-slate-200  rounded-2xl bg-white ">
+                        <div className="flex items-center gap-3 p-3 border border-slate-200  rounded-3xl bg-white ">
                           <div
                             className={`w-3 h-3 rounded-full ${parkingLot?.is_suspended ? "bg-red-500" : "bg-emerald-500"}`}
                           ></div>
@@ -1235,7 +1238,7 @@ export default function AdminPage() {
                         </div>
 
                         {parkingLot?.subscription_plans ? (
-                          <div className="p-3 border border-slate-200  rounded-2xl bg-white  space-y-1">
+                          <div className="p-3 border border-slate-200  rounded-3xl bg-white  space-y-1">
                             <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
                               Plan Actual
                             </div>
@@ -1258,7 +1261,7 @@ export default function AdminPage() {
                             </div>
                           </div>
                         ) : (
-                          <div className="p-3 border border-amber-200 bg-amber-50 rounded-2xl text-sm text-amber-700">
+                          <div className="p-3 border border-amber-200 bg-amber-50 rounded-3xl text-sm text-amber-700">
                             Sin plan específico configurado.
                           </div>
                         )}
@@ -1280,7 +1283,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={addCustomField}
-                        className="flex items-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-2xl transition-colors"
+                        className="flex items-center gap-2 text-sm font-medium text-slate-800 bg-slate-100 hover:bg-blue-100 px-3 py-2 rounded-3xl transition-colors"
                       >
                         <Plus size={16} />
                         Añadir Campo
@@ -1289,7 +1292,7 @@ export default function AdminPage() {
 
                     <div className="space-y-3 mt-4 mb-6">
                       {customFields.length === 0 ? (
-                        <div className="text-center py-6 bg-slate-50  rounded-2xl border border-dashed border-slate-200  text-slate-500 text-sm">
+                        <div className="text-center py-6 bg-slate-50  rounded-3xl border border-dashed border-slate-200  text-slate-500 text-sm">
                           No hay campos personalizados configurados.
                         </div>
                       ) : (
@@ -1297,7 +1300,7 @@ export default function AdminPage() {
                           {customFields.map((field, idx) => (
                             <div
                               key={idx}
-                              className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50  border border-slate-200  rounded-2xl"
+                              className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50  border border-slate-200  rounded-3xl"
                             >
                               <input
                                 type="text"
@@ -1306,7 +1309,7 @@ export default function AdminPage() {
                                   updateCustomField(idx, "name", e.target.value)
                                 }
                                 placeholder="Nombre del campo (Ej. Casco)"
-                                className="flex-1 w-full p-2 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                className="flex-1 w-full p-2 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                                 required
                               />
                               <div className="flex items-center justify-between w-full sm:w-auto gap-4">
@@ -1321,14 +1324,14 @@ export default function AdminPage() {
                                         e.target.checked,
                                       )
                                     }
-                                    className="w-4 h-4 text-blue-600 rounded border-slate-300  focus:ring-blue-500"
+                                    className="w-4 h-4 text-slate-800 rounded border-slate-300  focus:ring-blue-500"
                                   />
                                   Obligatorio
                                 </label>
                                 <button
                                   type="button"
                                   onClick={() => removeCustomField(idx)}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-sm border border-slate-200 active:scale-95"
                                   title="Eliminar campo"
                                 >
                                   <Trash2 size={18} />
@@ -1355,7 +1358,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={addPrivateCustomField}
-                        className="flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-2xl transition-colors"
+                        className="flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-3xl transition-colors"
                       >
                         <Plus size={16} />
                         Añadir Campo Privado
@@ -1364,7 +1367,7 @@ export default function AdminPage() {
 
                     <div className="space-y-3 mt-4 mb-6">
                       {privateCustomFields.length === 0 ? (
-                        <div className="text-center py-6 bg-slate-50  rounded-2xl border border-dashed border-slate-200  text-slate-500 text-sm">
+                        <div className="text-center py-6 bg-slate-50  rounded-3xl border border-dashed border-slate-200  text-slate-500 text-sm">
                           No hay campos personalizados configurados para
                           parqueaderos privados.
                         </div>
@@ -1373,7 +1376,7 @@ export default function AdminPage() {
                           {privateCustomFields.map((field, idx) => (
                             <div
                               key={idx}
-                              className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50  border border-slate-200  rounded-2xl"
+                              className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50  border border-slate-200  rounded-3xl"
                             >
                               <input
                                 type="text"
@@ -1386,7 +1389,7 @@ export default function AdminPage() {
                                   )
                                 }
                                 placeholder="Nombre del campo (Ej. Placa)"
-                                className="flex-1 w-full p-2 border border-slate-200  rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                                className="flex-1 w-full p-2 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                                 required
                               />
                               <div className="flex items-center justify-between w-full sm:w-auto gap-4">
@@ -1423,7 +1426,7 @@ export default function AdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => removePrivateCustomField(idx)}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-sm border border-slate-200 active:scale-95"
                                   title="Eliminar campo"
                                 >
                                   <Trash2 size={18} />
@@ -1438,7 +1441,7 @@ export default function AdminPage() {
 
                   <div className="pt-4">
                     {showSqlAlert && (
-                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3">
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-3xl space-y-3">
                         <h4 className="text-red-800 font-bold flex items-center gap-2">
                           <CheckCircle2 size={20} />
                           Comando de Base de Datos Requerido
@@ -1449,7 +1452,7 @@ export default function AdminPage() {
                           <code>settings</code> jsonb en tu base de datos
                           mediante el editor SQL de Supabase:
                         </p>
-                        <pre className="p-3 bg-red-950 text-red-50 font-mono text-sm rounded-2xl overflow-x-auto">
+                        <pre className="p-3 bg-red-950 text-red-50 font-mono text-sm rounded-3xl overflow-x-auto">
                           ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS
                           settings JSONB DEFAULT
                           &apos;&#123;&quot;autoPrint&quot;:
@@ -1467,10 +1470,10 @@ export default function AdminPage() {
                     <button
                       type="submit"
                       disabled={isUpdatingSettings}
-                      className="w-full md:w-auto py-3 px-8 bg-blue-950 hover:bg-blue-900 disabled:bg-slate-600 text-white rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
+                      className="w-full md:w-auto py-3 px-8 bg-white border-r border-slate-200 hover:bg-blue-900 disabled:bg-slate-600 text-slate-900 rounded-3xl font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       {isUpdatingSettings ? (
-                        <Spinner size={20} className="text-white" />
+                        <Spinner size={20} className="text-slate-900" />
                       ) : (
                         <Settings size={20} />
                       )}

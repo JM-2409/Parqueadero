@@ -178,7 +178,7 @@ function LoginContent() {
               damping: 15,
               delay: 0.1,
             }}
-            className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-blue-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30"
+            className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-blue-500 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200 shadow-blue-500/30"
           >
             <Car size={40} strokeWidth={1.5} />
           </motion.div>
@@ -196,7 +196,7 @@ function LoginContent() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-xl text-sm text-center"
+              className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-2xl text-sm text-center"
             >
               {error}
             </motion.div>
@@ -212,7 +212,7 @@ function LoginContent() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all"
+              className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all"
               placeholder="ej. admin123 o correo@ejemplo.com"
               required
             />
@@ -227,7 +227,7 @@ function LoginContent() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all pr-12"
+                className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all pr-12"
                 placeholder="••••••••"
                 required
               />
@@ -246,7 +246,7 @@ function LoginContent() {
             whileTap={{ scale: 0.99 }}
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 disabled:opacity-70 text-white rounded-xl font-medium transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 mt-4"
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 disabled:opacity-70 text-white rounded-2xl font-medium transition-all shadow-sm border border-slate-200 shadow-blue-500/25 flex items-center justify-center gap-2 mt-4"
           >
             {loading ? (
               <Spinner size={20} className="text-white" />
