@@ -186,31 +186,31 @@ export default function MonthlySubscribers({
             Gestiona los clientes con mensualidad y su periodo de validez.
           </p>
         </div>
-        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl hidden md:block">
+        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-3xl hidden md:block">
           <Users size={28} />
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-2xl text-sm font-medium">
+        <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-3xl text-sm font-bold">
           {error}
         </div>
       )}
       {success && (
-        <div className="p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-2xl text-sm font-medium">
+        <div className="p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-3xl text-sm font-bold">
           {success}
         </div>
       )}
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 border border-slate-100 shadow-md rounded-3xl bg-white p-6 sticky top-24 h-max">
-          <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
-            <PlusCircle size={20} className="text-blue-500" />
+        <div className="lg:col-span-1 border border-slate-100 shadow-xl border border-slate-100 rounded-3xl bg-white p-6 sticky top-34 h-max">
+          <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-3">
+            <PlusCircle size={20} className="text-indigo-500" />
             Nuevo Abonado
           </h3>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Placa *
               </label>
               <input
@@ -219,7 +219,7 @@ export default function MonthlySubscribers({
                 onChange={(e) =>
                   setNewSub({ ...newSub, plate: e.target.value.toUpperCase() })
                 }
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold uppercase transition-all"
                 placeholder="ABC123"
                 maxLength={6}
                 required
@@ -227,7 +227,7 @@ export default function MonthlySubscribers({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Nombre Completo *
               </label>
               <input
@@ -236,14 +236,14 @@ export default function MonthlySubscribers({
                 onChange={(e) =>
                   setNewSub({ ...newSub, owner_name: e.target.value })
                 }
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                 placeholder="Juan Pérez"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Documento (CC/NIT)
               </label>
               <input
@@ -252,14 +252,14 @@ export default function MonthlySubscribers({
                 onChange={(e) =>
                   setNewSub({ ...newSub, owner_document: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-3 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                 placeholder="1000000000"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                   Documento
                 </label>
                 <input
@@ -268,12 +268,12 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, owner_document: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   placeholder="CC / NIT"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                   Celular
                 </label>
                 <input
@@ -282,7 +282,7 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, phone: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   placeholder="300..."
                 />
               </div>
@@ -290,7 +290,7 @@ export default function MonthlySubscribers({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                   Tipo de Veh.
                 </label>
                 <div className="relative">
@@ -299,7 +299,7 @@ export default function MonthlySubscribers({
                     onChange={(e) =>
                       setNewSub({ ...newSub, vehicle_type: e.target.value })
                     }
-                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 appearance-none outline-none font-medium transition-all"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 appearance-none outline-none font-bold transition-all"
                   >
                     <option value="carros">Carro</option>
                     <option value="motos">Moto</option>
@@ -312,7 +312,7 @@ export default function MonthlySubscribers({
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                   Valor ($)
                 </label>
                 <input
@@ -324,7 +324,7 @@ export default function MonthlySubscribers({
                       amount_paid: Number(e.target.value),
                     })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                   min="0"
                 />
               </div>
@@ -341,7 +341,7 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, start_date: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 />
               </div>
               <div>
@@ -354,7 +354,7 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, end_date: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 />
               </div>
             </div>
@@ -362,7 +362,7 @@ export default function MonthlySubscribers({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-4 py-3.5 font-bold transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-70"
+              className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl px-5 py-3.5 font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-70"
             >
               {isSubmitting ? (
                 <Spinner size={18} className="text-white" />
@@ -375,9 +375,9 @@ export default function MonthlySubscribers({
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <div className="border border-slate-100 rounded-3xl bg-white overflow-hidden flex flex-col shadow-md">
+          <div className="border border-slate-100 rounded-3xl bg-white overflow-hidden flex flex-col shadow-xl border border-slate-100">
             <div className="p-6 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
-              <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
+              <h3 className="font-bold text-lg text-slate-900 flex items-center gap-3">
                 Abonados Activos ({filteredList.length})
               </h3>
               <div className="relative w-full sm:w-72">
@@ -390,7 +390,7 @@ export default function MonthlySubscribers({
                   placeholder="Buscar placa o nombre..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 />
               </div>
             </div>
@@ -398,16 +398,16 @@ export default function MonthlySubscribers({
             <div className="flex-1 overflow-y-auto p-0 sm:p-6 bg-slate-50/50">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <Spinner className="text-blue-500 mb-2" />
+                  <Spinner className="text-indigo-500 mb-2" />
                   <p className="text-slate-500 text-sm">Cargando...</p>
                 </div>
               ) : filteredList.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-200 rounded-2xl bg-white m-4 sm:m-0">
+                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-200 rounded-3xl bg-white m-4 sm:m-0">
                   <Users size={32} className="mx-auto text-slate-300 mb-3" />
-                  <p className="font-medium">No hay abonados registrados.</p>
+                  <p className="font-bold">No hay abonados registrados.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto bg-white sm:rounded-2xl border-y sm:border border-slate-100 shadow-md">
+                <div className="overflow-x-auto bg-white sm:rounded-3xl border-y sm:border border-slate-100 shadow-xl border border-slate-100">
                   <table className="w-full text-left text-sm border-collapse">
                     <thead>
                       <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-[10px] uppercase tracking-wider">
@@ -431,7 +431,7 @@ export default function MonthlySubscribers({
                             className="hover:bg-slate-50/80 transition-colors group"
                           >
                             <td className="py-4 px-5">
-                              <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md inline-block">
+                              <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                                 {item.plate}
                               </span>
                               <div className="text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest">
@@ -443,13 +443,13 @@ export default function MonthlySubscribers({
                                 {item.owner_name}
                               </div>
                               {item.phone && (
-                                <div className="text-xs font-medium text-slate-500 mt-1">
+                                <div className="text-xs font-bold text-slate-500 mt-1">
                                   {item.phone}
                                 </div>
                               )}
                             </td>
                             <td className="py-4 px-5">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-3">
                                 {isExpired ? (
                                   <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
                                 ) : (
@@ -458,8 +458,8 @@ export default function MonthlySubscribers({
                                 <span
                                   className={
                                     isExpired
-                                      ? "text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded-md"
-                                      : "text-emerald-700 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md"
+                                      ? "text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded-3xl"
+                                      : "text-emerald-700 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-3xl"
                                   }
                                 >
                                   Hasta{" "}
@@ -479,7 +479,7 @@ export default function MonthlySubscribers({
                                 onClick={() =>
                                   handleRemove(item.id, item.plate)
                                 }
-                                className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center mx-auto hover:bg-red-500 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-sm hover:shadow-md active:scale-95"
+                                className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center mx-auto hover:bg-red-500 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
                                 title="Eliminar abonado"
                               >
                                 <Trash2 size={16} />

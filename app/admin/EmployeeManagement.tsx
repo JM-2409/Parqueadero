@@ -134,7 +134,7 @@ export default function EmployeeManagement({
   return (
     <div className="space-y-8">
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 font-medium text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3 font-bold text-sm">
           <X size={20} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
@@ -142,16 +142,16 @@ export default function EmployeeManagement({
 
       {success && <SuccessMessage message={success} />}
 
-      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 max-w-2xl mx-auto">
+      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+          <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center">
             <UserPlus size={28} />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
               Crear Usuario u Operario
             </h2>
-            <p className="text-sm font-medium text-slate-500 mt-1">
+            <p className="text-sm font-bold text-slate-500 mt-1">
               Registra nuevos operarios
             </p>
           </div>
@@ -159,7 +159,7 @@ export default function EmployeeManagement({
 
         <form onSubmit={handleCreateEmployee} className="space-y-6">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
               Usuario
             </label>
             <input
@@ -171,18 +171,18 @@ export default function EmployeeManagement({
                   username: e.target.value.toLowerCase().replace(/\s/g, ""),
                 })
               }
-              className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
+              className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
               placeholder="ej. empleado_1"
               required
             />
-            <p className="text-xs text-slate-400 mt-2 font-medium">
+            <p className="text-xs text-slate-400 mt-2 font-bold">
               Solo minúsculas, números y guiones bajos. Mínimo 4 caracteres.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Contraseña
               </label>
               <div className="relative">
@@ -192,7 +192,7 @@ export default function EmployeeManagement({
                   onChange={(e) =>
                     setNewEmployee({ ...newEmployee, password: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 pr-12 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                   placeholder="Mínimo 8 caracteres"
                   required
                 />
@@ -229,7 +229,7 @@ export default function EmployeeManagement({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Confirmar Contraseña
               </label>
               <div className="relative">
@@ -242,12 +242,12 @@ export default function EmployeeManagement({
                       confirmPassword: e.target.value,
                     })
                   }
-                  className={`w-full text-sm rounded-2xl px-4 py-3 border-2 outline-none font-medium transition-all ${
+                  className={`w-full text-sm rounded-3xl px-5 py-3 border-2 outline-none font-bold transition-all ${
                     newEmployee.confirmPassword
                       ? newEmployee.password === newEmployee.confirmPassword
                         ? "border-emerald-100 bg-emerald-50/30 focus:border-emerald-400 text-emerald-900"
                         : "border-red-100 bg-red-50/30 focus:border-red-400 text-red-900"
-                      : "bg-slate-50 border-transparent focus:border-blue-500"
+                      : "bg-slate-50 border-transparent focus:border-indigo-500"
                   }`}
                   placeholder="Repita la contraseña"
                   required
@@ -266,7 +266,7 @@ export default function EmployeeManagement({
           <button
             type="submit"
             disabled={isCreatingEmployee}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl font-bold transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-2 mt-4"
+            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 mt-4"
           >
             {isCreatingEmployee ? (
               <Spinner size={20} className="text-white" />
@@ -278,14 +278,14 @@ export default function EmployeeManagement({
         </form>
       </div>
 
-      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 max-w-2xl mx-auto">
+      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 max-w-2xl mx-auto">
         <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">
           Usuarios Registrados
         </h2>
         {employees.length === 0 ? (
-          <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
+          <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
             <UserPlus size={32} className="mx-auto text-slate-300 mb-3" />
-            <p className="font-medium text-slate-500">
+            <p className="font-bold text-slate-500">
               No hay usuarios registrados aún.
             </p>
           </div>
@@ -294,10 +294,10 @@ export default function EmployeeManagement({
             {employees.map((emp) => (
               <div
                 key={emp.id}
-                className="flex items-center justify-between p-4 border border-slate-100 rounded-2xl hover:border-blue-100 hover:shadow-md transition-all bg-white group"
+                className="flex items-center justify-between p-4 border border-slate-100 rounded-3xl hover:border-indigo-100 hover:shadow-xl border border-slate-100 transition-all bg-white group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-lg group-hover:bg-blue-100 transition-colors">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center font-black text-lg group-hover:bg-indigo-100 transition-colors">
                     {(emp.email || emp.full_name || "U")
                       .replace("@parkingapp.local", "")
                       .charAt(0)

@@ -3,20 +3,10 @@
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  LogIn,
-  ArrowLeft,
-  UserPlus,
-  ShieldCheck,
-  Car,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { LogIn, ArrowLeft, Car, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { createUser } from "@/app/actions/auth";
 import { Spinner } from "@/components/ui/Spinner";
-import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 function LoginContent() {
@@ -149,77 +139,76 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 relative overflow-hidden ">
+      {/* Decorative background matching Landing Page */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-50/50 via-white to-white -z-10"></div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 relative z-10"
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="max-w-md w-full bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-10 relative z-10"
       >
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 mb-8 transition-colors"
         >
-          <ArrowLeft size={16} />
-          <span className="text-sm font-medium">Volver al inicio</span>
+          <ArrowLeft size={18} />
+          <span className="text-sm font-bold">Regresar</span>
         </Link>
 
-        <div className="text-center mb-8">
+        <div className="text-center mb-10">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{
               type: "spring",
               stiffness: 200,
-              damping: 15,
+              damping: 20,
               delay: 0.1,
             }}
-            className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-blue-500 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200 shadow-blue-500/30"
+            className="w-20 h-20 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-200"
           >
-            <Car size={40} strokeWidth={1.5} />
+            <Car size={36} strokeWidth={2} />
           </motion.div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-            Bienvenido de nuevo
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Iniciar Sesión
           </h1>
-          <p className="text-slate-500 mt-2">
-            Ingresa tus credenciales para continuar
+          <p className="text-slate-500 mt-2 font-medium">
+            Accede al panel de control
           </p>
         </div>
 
         <AnimatePresence mode="wait">
           {error && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-2xl text-sm text-center"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center"
             >
               {error}
             </motion.div>
           )}
         </AnimatePresence>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-bold text-slate-700 mb-2">
               Usuario o Correo
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all"
-              placeholder="ej. admin123 o correo@ejemplo.com"
+              className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all"
+              placeholder="tu_usuario"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-bold text-slate-700 mb-2">
               Contraseña
             </label>
             <div className="relative">
@@ -227,33 +216,33 @@ function LoginContent() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3.5 bg-slate-50/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all pr-12"
+                className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all pr-12"
                 placeholder="••••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
               </button>
             </div>
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 disabled:opacity-70 text-white rounded-2xl font-medium transition-all shadow-sm border border-slate-200 shadow-blue-500/25 flex items-center justify-center gap-2 mt-4"
+            className="w-full py-4 bg-slate-900 hover:bg-indigo-600 disabled:opacity-70 disabled:hover:bg-slate-900 text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 mt-8"
           >
             {loading ? (
-              <Spinner size={20} className="text-white" />
+              <Spinner size={22} className="text-white" />
             ) : (
-              <LogIn size={20} />
+              <LogIn size={22} />
             )}
-            {loading ? "Procesando..." : "Iniciar Sesión"}
+            {loading ? "Verificando..." : "Entrar al Sistema"}
           </motion.button>
         </form>
       </motion.div>
@@ -265,7 +254,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center text-indigo-600 font-bold">
           Cargando...
         </div>
       }

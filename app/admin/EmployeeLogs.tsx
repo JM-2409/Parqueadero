@@ -39,7 +39,7 @@ export default function EmployeeLogs({
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -52,14 +52,14 @@ export default function EmployeeLogs({
         </h2>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
         {logs.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <Activity size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="font-medium">
+            <p className="font-bold">
               No hay registros recientes o la tabla no ha sido configurada.
             </p>
-            <pre className="bg-slate-100 text-slate-600 p-4 rounded-2xl mt-4 text-sm text-left overflow-x-auto whitespace-pre-wrap border border-slate-200">
+            <pre className="bg-slate-100 text-slate-600 p-4 rounded-3xl mt-4 text-sm text-left overflow-x-auto whitespace-pre-wrap border border-slate-200">
               {`CREATE TABLE public.employee_logs (
     id uuid not null default gen_random_uuid(),
     parking_lot_id uuid null,
@@ -76,7 +76,7 @@ CREATE POLICY "Public full logs" ON public.employee_logs FOR ALL USING (true) WI
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium uppercase tracking-wider text-[11px]">
+              <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="px-6 py-4">Fecha y Hora</th>
                   <th className="px-6 py-4">Operario</th>
@@ -90,7 +90,7 @@ CREATE POLICY "Public full logs" ON public.employee_logs FOR ALL USING (true) WI
                     className="hover:bg-slate-50/50 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 text-slate-900 font-medium">
+                      <div className="flex items-center gap-3 text-slate-900 font-bold">
                         <Clock size={14} className="text-slate-400" />
                         {new Date(log.created_at).toLocaleString()}
                       </div>
@@ -100,7 +100,7 @@ CREATE POLICY "Public full logs" ON public.employee_logs FOR ALL USING (true) WI
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-3xl text-[11px] font-bold uppercase tracking-wider ${
                           log.action === "login"
                             ? "bg-emerald-100 text-emerald-700"
                             : "bg-orange-100 text-orange-700"

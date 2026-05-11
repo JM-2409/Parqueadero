@@ -79,9 +79,9 @@ export default function PrivateSpaces({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100">
+      <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h3 className="text-lg font-medium text-slate-900">
+          <h3 className="text-lg font-bold text-slate-900">
             Parqueaderos Privados
           </h3>
           <div className="relative w-full sm:w-64">
@@ -90,7 +90,7 @@ export default function PrivateSpaces({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar espacios..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+              className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
             />
             <Search
               size={18}
@@ -100,9 +100,9 @@ export default function PrivateSpaces({
         </div>
 
         {spaces.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+          <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50">
             <Home size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="text-slate-500 font-medium">
+            <p className="text-slate-500 font-bold">
               No hay parqueaderos privados registrados.
             </p>
           </div>
@@ -116,9 +116,9 @@ export default function PrivateSpaces({
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3">Parqueadero</th>
+                  <th className="px-5 py-3">Parqueadero</th>
                   {configFields.map((field) => (
-                    <th key={field.name} className="px-4 py-3">
+                    <th key={field.name} className="px-5 py-3">
                       {field.name}
                     </th>
                   ))}
@@ -130,11 +130,11 @@ export default function PrivateSpaces({
                     key={space.id}
                     className="border-b border-slate-100 hover:bg-slate-50/50"
                   >
-                    <td className="px-4 py-3 font-medium text-slate-900">
+                    <td className="px-5 py-3 font-bold text-slate-900">
                       {space.space_number}
                     </td>
                     {configFields.map((field) => (
-                      <td key={field.name} className="px-4 py-3 text-slate-600">
+                      <td key={field.name} className="px-5 py-3 text-slate-600">
                         {space.custom_fields_data?.[field.name] || "-"}
                       </td>
                     ))}

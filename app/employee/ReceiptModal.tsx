@@ -88,7 +88,7 @@ export default function ReceiptModal({
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
       <div
-        className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-[80mm] print:p-0 flex flex-col max-h-[90vh] md:max-h-none print:h-auto print:max-h-none print:block print:m-0"
+        className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-[80mm] print:p-0 flex flex-col max-h-[90vh] md:max-h-none print:h-auto print:max-h-none print:block print:m-0"
         style={{ pageBreakInside: "avoid" }}
       >
         <button
@@ -105,10 +105,10 @@ export default function ReceiptModal({
               <img
                 src={appSettings.logo_url}
                 alt="Logo"
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 shadow-md"
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 shadow-xl border border-slate-100"
               />
             ) : (
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border border-slate-100">
                 <Car size={32} />
               </div>
             )}
@@ -137,7 +137,7 @@ export default function ReceiptModal({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Tipo</span>
-              <span className="font-medium text-slate-900 capitalize">
+              <span className="font-bold text-slate-900 capitalize">
                 {session.vehicles.type}
               </span>
             </div>
@@ -148,7 +148,7 @@ export default function ReceiptModal({
                 Object.keys(session.vehicles.custom_fields_data).length >
                   0)) && (
               <div className="border-t border-slate-100 pt-4 mt-4 space-y-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
+                <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2 block">
                   Datos Adicionales
                 </span>
                 {Object.entries({
@@ -157,7 +157,7 @@ export default function ReceiptModal({
                 }).map(([key, value]) => {
                   if (key === "observation_photo_url") {
                     return (
-                      <div key={key} className="flex flex-col gap-2 mt-2">
+                      <div key={key} className="flex flex-col gap-3 mt-2">
                         <span className="text-slate-500 capitalize">
                           Foto de Observación
                         </span>
@@ -165,7 +165,7 @@ export default function ReceiptModal({
                           href={value as string}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block max-h-48 overflow-hidden rounded-xl border border-slate-200"
+                          className="block max-h-48 overflow-hidden rounded-3xl border border-slate-200"
                         >
                           <img
                             src={value as string}
@@ -184,7 +184,7 @@ export default function ReceiptModal({
                       <span className="text-slate-500 capitalize min-w-[80px]">
                         {key}
                       </span>
-                      <span className="font-medium text-slate-900 text-right break-words">
+                      <span className="font-bold text-slate-900 text-right break-words">
                         {value as string}
                       </span>
                     </div>
@@ -196,26 +196,26 @@ export default function ReceiptModal({
             <div className="border-t border-slate-100 pt-4 mt-4 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Ingreso</span>
-                <span className="font-medium text-slate-900">
+                <span className="font-bold text-slate-900">
                   {entryTime.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Salida</span>
-                <span className="font-medium text-slate-900">
+                <span className="font-bold text-slate-900">
                   {exitTime.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Tiempo Total</span>
-                <span className="font-medium text-slate-900">
+                <span className="font-bold text-slate-900">
                   {hours}h {minutes}m
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-2xl mt-6 mb-6 print:bg-transparent print:border-t print:border-dashed print:border-slate-300 print:rounded-none">
+          <div className="bg-slate-50 p-4 rounded-3xl mt-6 mb-6 print:bg-transparent print:border-t print:border-dashed print:border-slate-300 print:rounded-none">
             <div className="flex justify-between items-center">
               <span className="font-bold text-slate-700">TOTAL A PAGAR</span>
               <span className="text-2xl font-bold text-emerald-600">
@@ -231,22 +231,22 @@ export default function ReceiptModal({
         </div>
 
         <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 md:rounded-b-2xl flex flex-col gap-3 print:hidden">
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="flex flex-col gap-3">
+            <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
               Enviar SMS / WhatsApp
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <input
                 type="tel"
                 placeholder="Nº WhatsApp (ej. 3001234567)"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
+                className="flex-1 px-3 py-3 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
               />
               <button
                 onClick={handleSendWhatsAppAPI}
                 disabled={isSending}
-                className="px-4 py-2 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-[#25D366]/50 text-white rounded-2xl transition-colors flex items-center justify-center gap-2"
+                className="px-5 py-3 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-[#25D366]/50 text-white rounded-3xl transition-colors flex items-center justify-center gap-3"
                 title="Enviar por WhatsApp"
               >
                 {isSending ? (
@@ -258,7 +258,7 @@ export default function ReceiptModal({
             </div>
 
             {sendResult === "success" && (
-              <p className="text-xs text-emerald-600 font-medium">
+              <p className="text-xs text-emerald-600 font-bold">
                 ¡Mensaje enviado exitosamente!
               </p>
             )}
@@ -270,17 +270,17 @@ export default function ReceiptModal({
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-2 pt-4 border-t border-slate-200">
+          <div className="flex flex-wrap gap-3 mt-2 pt-4 border-t border-slate-200">
             <button
               onClick={handlePrint}
-              className="flex-auto md:flex-1 py-3 px-4 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-2xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
+              className="flex-auto md:flex-1 py-3 px-5 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 text-sm md:text-base"
             >
               <Printer size={18} />
               Imprimir
             </button>
             <button
               onClick={onClose}
-              className="flex-auto py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-2xl font-medium transition-colors w-full md:w-auto md:flex-1 text-sm md:text-base"
+              className="flex-auto py-3 px-5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-3xl font-bold transition-colors w-full md:w-auto md:flex-1 text-sm md:text-base"
             >
               Cerrar
             </button>
