@@ -32,7 +32,7 @@ export default function CashClosuresHistory({
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -44,17 +44,17 @@ export default function CashClosuresHistory({
       </div>
 
       {closures.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-md">
+        <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-xl border border-slate-100">
           <DollarSign size={48} className="mx-auto text-slate-300 mb-4" />
-          <p className="text-slate-500 font-medium">
+          <p className="text-slate-500 font-bold">
             Aún no hay cierres de caja registrados.
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium uppercase tracking-wider text-[11px]">
+              <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="px-6 py-4">Apertura</th>
                   <th className="px-6 py-4">Cierre</th>
@@ -71,7 +71,7 @@ export default function CashClosuresHistory({
                     <td className="px-6 py-4 whitespace-nowrap">
                       {closure.opened_at ? (
                         <div>
-                          <p className="text-slate-900 font-medium flex items-center gap-1">
+                          <p className="text-slate-900 font-bold flex items-center gap-1">
                             <Calendar size={13} className="text-slate-400" />
                             {new Date(closure.opened_at).toLocaleDateString()}
                           </p>
@@ -95,7 +95,7 @@ export default function CashClosuresHistory({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <p className="text-slate-900 font-medium flex items-center gap-1">
+                        <p className="text-slate-900 font-bold flex items-center gap-1">
                           <Calendar size={13} className="text-slate-400" />
                           {new Date(closure.closed_at).toLocaleDateString()}
                         </p>
@@ -119,7 +119,7 @@ export default function CashClosuresHistory({
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-900 font-medium">
+                      <p className="text-slate-900 font-bold">
                         {closure.profiles?.full_name ||
                           closure.notes?.split("-")[1]?.trim() ||
                           "Admin"}

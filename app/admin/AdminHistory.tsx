@@ -477,17 +477,17 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
 
   return (
     <>
-      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 mt-8 relative group hover:border-blue-100 transition-all">
+      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mt-8 relative group hover:border-indigo-100 transition-all">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
               <History size={28} />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                 Historial de Vehículos
               </h2>
-              <p className="text-sm font-medium text-slate-500 mt-1">
+              <p className="text-sm font-bold text-slate-500 mt-1">
                 Registro de ingresos y salidas
               </p>
             </div>
@@ -496,7 +496,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <button
               onClick={exportToCSV}
               disabled={isExporting || sessions.length === 0}
-              className="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-md text-sm"
+              className="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 rounded-3xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl border border-slate-100 text-sm"
             >
               <FileText size={18} />
               {isExporting ? "Exportando..." : "Exportar CSV"}
@@ -505,29 +505,29 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
         </div>
 
         {/* Status Tabs */}
-        <div className="flex gap-2 border-b border-slate-100 mb-6 overflow-x-auto hide-scrollbar pb-1">
+        <div className="flex gap-3 border-b border-slate-100 mb-6 overflow-x-auto hide-scrollbar pb-1">
           <button
             onClick={() => setFilterStatus("active")}
-            className={`px-6 py-2.5 font-bold text-sm rounded-2xl transition-all whitespace-nowrap ${filterStatus === "active" ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "active" ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
           >
             En Sistema
           </button>
           <button
             onClick={() => setFilterStatus("completed")}
-            className={`px-6 py-2.5 font-bold text-sm rounded-2xl transition-all whitespace-nowrap ${filterStatus === "completed" ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "completed" ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
           >
             Salieron (Completados)
           </button>
           <button
             onClick={() => setFilterStatus("all")}
-            className={`px-6 py-2.5 font-bold text-sm rounded-2xl transition-all whitespace-nowrap ${filterStatus === "all" ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "all" ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
           >
             Todos
           </button>
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 bg-slate-50/50 p-2 sm:p-4 rounded-3xl border border-slate-100/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 bg-slate-50/50 p-3 sm:p-4 rounded-3xl border border-slate-100/50">
           <div className="relative">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -538,7 +538,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               placeholder="Placa..."
               value={localSearchTerm}
               onChange={(e) => setLocalSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm w-full font-bold uppercase transition-all shadow-md"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full font-bold uppercase transition-all shadow-xl border border-slate-100"
             />
           </div>
           <div className="relative">
@@ -551,7 +551,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               placeholder="Operario..."
               value={localEmployeeSearchTerm}
               onChange={(e) => setLocalEmployeeSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm w-full transition-all shadow-md"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full transition-all shadow-xl border border-slate-100"
             />
           </div>
           <div className="relative">
@@ -562,7 +562,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm w-full appearance-none transition-all shadow-md"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full appearance-none transition-all shadow-xl border border-slate-100"
             >
               <option value="all">Todos los vehículos</option>
               <option value="motos">Motos</option>
@@ -580,27 +580,27 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm w-full text-slate-600 transition-all shadow-md font-medium"
+            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
             title="Fecha Inicio"
           />
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm w-full text-slate-600 transition-all shadow-md font-medium"
+            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
             title="Fecha Fin"
           />
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-4">
-            <Spinner className="text-blue-500 w-8 h-8" />
-            <span className="font-medium text-sm tracking-wide">
+          <div className="flex flex-col items-center justify-center py-30 text-slate-500 gap-4">
+            <Spinner className="text-indigo-500 w-8 h-8" />
+            <span className="font-bold text-sm tracking-wide">
               Cargando historial...
             </span>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-md bg-white">
+          <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-xl border border-slate-100 bg-white">
             <table className="w-full text-left text-sm border-collapse">
               <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                 <tr>
@@ -626,22 +626,22 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                   return (
                     <React.Fragment key={session.id}>
                       <tr
-                        className={`hover:bg-slate-50/80 transition-colors cursor-pointer group ${expandedRow === session.id ? "bg-blue-50/30" : ""}`}
+                        className={`hover:bg-slate-50/80 transition-colors cursor-pointer group ${expandedRow === session.id ? "bg-indigo-50/30" : ""}`}
                         onClick={() =>
                           setExpandedRow(
                             expandedRow === session.id ? null : session.id,
                           )
                         }
                       >
-                        <td className="p-5 text-slate-500 font-mono text-xs font-medium">
+                        <td className="p-5 text-slate-500 font-mono text-xs font-bold">
                           {session.receipt_number || "-"}
                         </td>
                         <td className="p-5">
-                          <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md inline-block">
+                          <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                             {session.vehicles.plate}
                           </span>
                           {expandedRow !== session.id && (
-                            <div className="text-[10px] text-blue-500 font-bold uppercase tracking-wider md:hidden mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="text-[10px] text-indigo-500 font-bold uppercase tracking-wider md:hidden mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               Ver más
                             </div>
                           )}
@@ -649,7 +649,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                         <td className="p-5 text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest hidden md:table-cell">
                           {session.vehicles.type}
                         </td>
-                        <td className="p-5 text-slate-600 font-medium">
+                        <td className="p-5 text-slate-600 font-bold">
                           {new Date(session.entry_time).toLocaleString(
                             undefined,
                             {
@@ -658,7 +658,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                             },
                           )}
                         </td>
-                        <td className="p-5 text-slate-600 font-medium">
+                        <td className="p-5 text-slate-600 font-bold">
                           {isCompleted ? (
                             new Date(session.exit_time).toLocaleString(
                               undefined,
@@ -676,7 +676,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                             <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] mr-1">
                               In:
                             </span>
-                            <span className="font-medium text-slate-700">
+                            <span className="font-bold text-slate-700">
                               {session.entry_employee_name || "N/A"}
                             </span>
                           </div>
@@ -685,7 +685,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                               <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] mr-1">
                                 Out:
                               </span>
-                              <span className="font-medium text-slate-700">
+                              <span className="font-bold text-slate-700">
                                 {session.exit_employee_name || "N/A"}
                               </span>
                             </div>
@@ -708,7 +708,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                       href={v as string}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 px-1.5 py-1 rounded-md flex items-center gap-1 hover:bg-blue-100 transition-colors w-max"
+                                      className="text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 px-1.5 py-1 rounded-3xl flex items-center gap-1 hover:bg-indigo-100 transition-colors w-max"
                                     >
                                       Ver Foto
                                     </a>
@@ -717,7 +717,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                 return (
                                   <span
                                     key={k}
-                                    className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 px-1.5 py-1 rounded-md text-slate-500 truncate max-w-[120px]"
+                                    className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 px-1.5 py-1 rounded-3xl text-slate-500 truncate max-w-[120px]"
                                     title={`${k}: ${v}`}
                                   >
                                     {k}: {v as string}
@@ -726,17 +726,15 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                               })}
                             </div>
                           ) : (
-                            <span className="text-slate-300 font-medium">
-                              -
-                            </span>
+                            <span className="text-slate-300 font-bold">-</span>
                           )}
                         </td>
                         <td className="p-5">
                           <span
-                            className={`px-3 py-1.5 rounded-2xl text-[10px] font-bold uppercase tracking-wider ${
+                            className={`px-3 py-1.5 rounded-3xl text-[10px] font-bold uppercase tracking-wider ${
                               isCompleted
                                 ? "bg-slate-100 text-slate-500"
-                                : "bg-emerald-50 text-emerald-600 shadow-md shadow-emerald-100"
+                                : "bg-emerald-50 text-emerald-600 shadow-xl border border-slate-100 shadow-emerald-100"
                             }`}
                           >
                             {isCompleted ? "Completado" : "En Sistema"}
@@ -744,14 +742,14 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                         </td>
                         <td className="p-5 font-black text-slate-900 text-sm tracking-tight border-l border-slate-50 bg-slate-50/30">
                           {isCompleted ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
                               <span>{formatCurrency(currentFee)}</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setViewingReceipt(session);
                                 }}
-                                className="text-blue-600 hover:text-blue-800 p-1"
+                                className="text-indigo-600 hover:text-indigo-800 p-1"
                                 title="Ver Recibo"
                               >
                                 <FileText size={16} />
@@ -769,7 +767,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                 handleExit(session);
                               }}
                               disabled={isSubmittingExit === session.id}
-                              className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded-2xl text-xs font-bold transition-all shadow-md hover:shadow-blue-200 disabled:opacity-50 flex items-center justify-center min-w-[100px] w-full"
+                              className="px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-3xl text-xs font-bold transition-all shadow-xl border border-slate-100 hover:shadow-indigo-200 disabled:opacity-50 flex items-center justify-center min-w-[100px] w-full"
                             >
                               {isSubmittingExit === session.id ? (
                                 <Spinner className="w-4 h-4" />
@@ -783,9 +781,9 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
 
                       {/* Expanded details row */}
                       {expandedRow === session.id && (
-                        <tr className="bg-blue-50/30 border-b border-slate-100">
+                        <tr className="bg-indigo-50/30 border-b border-slate-100">
                           <td colSpan={10} className="p-4 px-6 relative">
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-400"></div>
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400"></div>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                               <div className="space-y-3 col-span-3 md:col-span-2">
                                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -795,7 +793,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                   ...session.vehicles?.custom_fields_data,
                                   ...session.extra_data,
                                 }).length > 0 ? (
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className="grid grid-cols-2 gap-3">
                                     {Object.entries({
                                       ...session.vehicles?.custom_fields_data,
                                       ...session.extra_data,
@@ -804,7 +802,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                         return (
                                           <div
                                             key={k}
-                                            className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2 col-span-2"
+                                            className="bg-white p-3 border border-slate-200 rounded-3xl flex items-start gap-3 col-span-2"
                                           >
                                             <div className="flex flex-col w-full">
                                               <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
@@ -818,7 +816,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                                 <img
                                                   src={v as string}
                                                   alt="Observación"
-                                                  className="h-24 w-auto rounded-lg border border-slate-100 object-cover"
+                                                  className="h-24 w-auto rounded-3xl border border-slate-100 object-cover"
                                                 />
                                               </a>
                                             </div>
@@ -828,7 +826,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                       return (
                                         <div
                                           key={k}
-                                          className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2"
+                                          className="bg-white p-3 border border-slate-200 rounded-3xl flex items-start gap-3"
                                         >
                                           <Tag
                                             size={14}
@@ -838,7 +836,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                             <span className="text-[10px] uppercase font-bold text-slate-400">
                                               {k}
                                             </span>
-                                            <span className="text-xs font-medium text-slate-800 break-all">
+                                            <span className="text-xs font-bold text-slate-800 break-all">
                                               {v as string}
                                             </span>
                                           </div>
@@ -880,7 +878,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                     setSessionToEdit(session);
                                     setNewPlate(session.vehicles.plate);
                                   }}
-                                  className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl text-xs font-bold transition-colors flex items-center gap-2 mb-2 w-full justify-center md:justify-end"
+                                  className="px-5 py-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-3xl text-xs font-bold transition-colors flex items-center gap-3 mb-2 w-full justify-center md:justify-end"
                                 >
                                   <Edit2 size={16} />
                                   Editar Placa
@@ -890,7 +888,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                     e.stopPropagation();
                                     setSessionToDelete(session.id);
                                   }}
-                                  className="px-4 py-2 bg-white text-slate-500 border border-slate-200 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-2xl text-xs font-bold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2 w-full justify-center md:justify-end"
+                                  className="px-5 py-3 bg-white text-slate-500 border border-slate-200 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-3xl text-xs font-bold transition-all shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95 flex items-center gap-3 w-full justify-center md:justify-end"
                                 >
                                   <Trash2 size={16} />
                                   Borrar Registro
@@ -921,18 +919,18 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <p className="text-sm text-slate-500">
               Página {page} de {totalPages}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-3 border border-slate-200 rounded-3xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={18} />
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-2 border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-3 border border-slate-200 rounded-3xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={18} />
               </button>
@@ -944,14 +942,14 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
       {/* Modal Salida Forzada */}
       {forceExitConfig && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-lg">
                 Forzar Salida: {forceExitConfig.session.vehicles.plate}
               </h3>
               <button
                 onClick={() => setForceExitConfig(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-2xl hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-3xl hover:bg-slate-100"
               >
                 <X size={20} />
               </button>
@@ -962,7 +960,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                   Ingresa la fecha y hora exacta de salida. Si dejas esto como
                   está, se utilizará la hora actual.
                 </p>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-700 mb-1">
                   Fecha de Salida
                 </label>
                 <input
@@ -974,11 +972,11 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                       customDate: e.target.value,
                     })
                   }
-                  className="w-full p-2.5 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 w-full outline-none"
+                  className="w-full p-3.5 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 w-full outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-700 mb-1">
                   Hora de Salida (24h)
                 </label>
                 <input
@@ -990,20 +988,20 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                       customTime: e.target.value,
                     })
                   }
-                  className="w-full p-2.5 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 w-full outline-none"
+                  className="w-full p-3.5 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 w-full outline-none"
                 />
               </div>
             </div>
             <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
               <button
                 onClick={() => setForceExitConfig(null)}
-                className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-2xl transition-colors"
+                className="px-5 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-3xl transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmForceExit}
-                className="px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-colors flex items-center justify-center min-w-[120px]"
+                className="px-5 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-3xl transition-colors flex items-center justify-center min-w-[120px]"
               >
                 Confirmar Salida
               </button>
@@ -1014,7 +1012,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
 
       {sessionToDelete && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Trash2 size={32} />
@@ -1030,13 +1028,13 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-center">
               <button
                 onClick={() => setSessionToDelete(null)}
-                className="px-5 py-2.5 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-2xl transition-colors w-full"
+                className="px-5 py-3.5 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-3xl transition-colors w-full"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDeleteSession}
-                className="px-5 py-2.5 font-bold text-white bg-red-500 hover:bg-red-600 rounded-2xl transition-all shadow-sm hover:shadow-md active:scale-95 w-full flex items-center justify-center gap-2"
+                className="px-5 py-3.5 font-bold text-white bg-red-500 hover:bg-red-600 rounded-3xl transition-all shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95 w-full flex items-center justify-center gap-3"
               >
                 <Trash2 size={18} />
                 Borrar
@@ -1048,25 +1046,25 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
 
       {sessionToEdit && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-lg">Editar Placa</h3>
               <button
                 onClick={() => setSessionToEdit(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-2xl hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-3xl hover:bg-slate-100"
               >
                 <X size={20} />
               </button>
             </div>
             <div className="p-5">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-bold text-slate-700 mb-2">
                 Nueva Placa
               </label>
               <input
                 type="text"
                 value={newPlate}
                 onChange={(e) => setNewPlate(e.target.value.toUpperCase())}
-                className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono text-lg font-bold"
+                className="w-full p-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono text-lg font-bold"
                 placeholder="ABC-123"
                 autoFocus
               />
@@ -1078,14 +1076,14 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
               <button
                 onClick={() => setSessionToEdit(null)}
-                className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-2xl transition-colors"
+                className="px-5 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-3xl transition-colors"
                 disabled={isEditingPlate}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveEditReceipt}
-                className="px-4 py-2 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-colors flex items-center gap-2"
+                className="px-5 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-3xl transition-colors flex items-center gap-3"
                 disabled={isEditingPlate || !newPlate.trim()}
               >
                 {isEditingPlate ? (

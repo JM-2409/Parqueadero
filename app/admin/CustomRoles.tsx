@@ -224,9 +224,9 @@ export default function CustomRoles({
   if (showSqlScript) {
     return (
       <div className="space-y-6">
-        <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex flex-col gap-4">
+        <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-100 rounded-2xl text-red-600">
+            <div className="p-3 bg-red-100 rounded-3xl text-red-600">
               <X size={24} />
             </div>
             <div>
@@ -248,7 +248,7 @@ export default function CustomRoles({
                 setLoading(true);
                 fetchRoles();
               }}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-2xl transition-colors"
+              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-3xl transition-colors"
             >
               Recargar
             </button>
@@ -272,7 +272,7 @@ export default function CustomRoles({
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="px-5 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 flex items-center gap-2"
+            className="px-5 py-3 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors shadow-xl border border-slate-100 shadow-indigo-200 flex items-center gap-3"
           >
             <Plus size={20} />
             Nuevo Rol
@@ -281,7 +281,7 @@ export default function CustomRoles({
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 font-medium text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3 font-bold text-sm">
           <X size={20} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
@@ -290,27 +290,27 @@ export default function CustomRoles({
       {success && <SuccessMessage message={success} />}
 
       {isCreating && (
-        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 mb-6">
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-6">
           <h3 className="text-lg font-bold text-slate-900 mb-6">
             {editingRoleId ? "Editar Rol" : "Crear Nuevo Rol"}
           </h3>
           <form onSubmit={handleCreateRole} className="space-y-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Nombre del Rol
               </label>
               <input
                 type="text"
                 value={newRoleName}
                 onChange={(e) => setNewRoleName(e.target.value)}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                 placeholder="ej. Supervisor, Cajero, Auditor"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-3">
                 Permisos Asignados
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -318,16 +318,16 @@ export default function CustomRoles({
                   <div
                     key={perm.id}
                     onClick={() => togglePermission(perm.id)}
-                    className={`p-4 rounded-2xl border cursor-pointer flex items-center gap-3 transition-all ${
+                    className={`p-4 rounded-3xl border cursor-pointer flex items-center gap-3 transition-all ${
                       newRolePermissions.includes(perm.id)
-                        ? "bg-blue-50 border-blue-200 text-blue-700 shadow-md"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xl border border-slate-100"
                         : "bg-slate-50 border-transparent text-slate-600 hover:bg-white hover:border-slate-200"
                     }`}
                   >
                     {newRolePermissions.includes(perm.id) ? (
                       <CheckSquare
                         size={20}
-                        className="text-blue-600 flex-shrink-0"
+                        className="text-indigo-600 flex-shrink-0"
                       />
                     ) : (
                       <Square
@@ -347,13 +347,13 @@ export default function CustomRoles({
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="px-6 py-3 border-2 border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 transition-colors w-full sm:w-auto text-center"
+                className="px-6 py-3 border-2 border-slate-200 text-slate-600 rounded-3xl font-bold hover:bg-slate-50 transition-colors w-full sm:w-auto text-center"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-200 w-full sm:w-auto"
+                className="px-6 py-3 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200 w-full sm:w-auto"
               >
                 <Save size={20} />
                 {editingRoleId ? "Actualizar Rol" : "Guardar Rol"}
@@ -371,7 +371,7 @@ export default function CustomRoles({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar roles..."
-            className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-2xl pl-10 pr-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-md"
+            className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-xl border border-slate-100"
           />
           <Search
             size={18}
@@ -384,28 +384,28 @@ export default function CustomRoles({
         {filteredRoles.map((role) => (
           <div
             key={role.id}
-            className="bg-white p-6 rounded-3xl shadow-md border border-slate-100 flex flex-col group hover:border-blue-100 hover:shadow-md transition-all"
+            className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 flex flex-col group hover:border-indigo-100 hover:shadow-xl border border-slate-100 transition-all"
           >
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-3xl flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
                   <Shield size={24} />
                 </div>
                 <h3 className="font-black text-slate-900 text-xl tracking-tight">
                   {role.name}
                 </h3>
               </div>
-              <div className="flex gap-1 bg-slate-50 p-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-1 bg-slate-50 p-1 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => handleEditClick(role)}
-                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-2xl transition-all"
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-white rounded-3xl transition-all"
                   title="Editar rol"
                 >
                   <Edit2 size={16} />
                 </button>
                 <button
                   onClick={() => handleDeleteRole(role.id)}
-                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
                   title="Eliminar rol"
                 >
                   <Trash2 size={16} />
@@ -413,7 +413,7 @@ export default function CustomRoles({
               </div>
             </div>
 
-            <div className="flex-1 bg-slate-50/50 rounded-2xl p-4 border border-slate-50">
+            <div className="flex-1 bg-slate-50/50 rounded-3xl p-4 border border-slate-50">
               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
                 Permisos ({role.permissions?.length || 0})
               </h4>
@@ -425,9 +425,9 @@ export default function CustomRoles({
                   return (
                     <li
                       key={permId}
-                      className="text-sm font-medium text-slate-600 flex items-start gap-2"
+                      className="text-sm font-bold text-slate-600 flex items-start gap-3"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
                       <span className="leading-tight">
                         {perm ? perm.label : permId}
                       </span>
@@ -435,12 +435,12 @@ export default function CustomRoles({
                   );
                 })}
                 {role.permissions?.length > 4 && (
-                  <li className="text-xs font-bold text-blue-500 pt-2">
+                  <li className="text-xs font-bold text-indigo-500 pt-2">
                     + {role.permissions.length - 4} más
                   </li>
                 )}
                 {(!role.permissions || role.permissions.length === 0) && (
-                  <li className="text-sm text-slate-400 font-medium italic">
+                  <li className="text-sm text-slate-400 font-bold italic">
                     Sin permisos asignados
                   </li>
                 )}
@@ -462,7 +462,7 @@ export default function CustomRoles({
             </p>
             <button
               onClick={() => setIsCreating(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors inline-flex items-center gap-2 shadow-md shadow-blue-200"
+              className="px-6 py-3 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors inline-flex items-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200"
             >
               <Plus size={20} />
               Crear el primer rol
@@ -470,7 +470,7 @@ export default function CustomRoles({
           </div>
         )}
         {roles.length > 0 && filteredRoles.length === 0 && (
-          <div className="col-span-full p-12 text-center font-medium text-slate-500 bg-white rounded-3xl border border-slate-100">
+          <div className="col-span-full p-12 text-center font-bold text-slate-500 bg-white rounded-3xl border border-slate-100">
             No se encontraron roles que coincidan con &quot;{searchQuery}&quot;.
           </div>
         )}

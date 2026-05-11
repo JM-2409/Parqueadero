@@ -1,7 +1,6 @@
 "use client";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 
-
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -178,14 +177,14 @@ export default function EmployeeHistory({
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md mt-8">
+    <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 mt-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-slate-100 text-slate-600 rounded-2xl">
+          <div className="p-3 bg-slate-100 text-slate-600 rounded-3xl">
             <History size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">
+            <h2 className="text-xl font-extrabold text-slate-900">
               Historial (Últimos 7 días)
             </h2>
             <p className="text-sm text-slate-500">
@@ -205,12 +204,12 @@ export default function EmployeeHistory({
               placeholder="Buscar placa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
-              className="pl-10 pr-4 py-2 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-500 outline-none text-sm w-full sm:w-64"
+              className="pl-10 pr-4 py-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none text-sm w-full sm:w-64"
             />
           </div>
           <button
             onClick={exportToExcel}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-2xl transition-colors font-medium text-sm whitespace-nowrap"
+            className="flex items-center justify-center gap-3 px-5 py-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-3xl transition-colors font-bold text-sm whitespace-nowrap"
           >
             <FileText size={16} />
             Exportar
@@ -227,19 +226,19 @@ export default function EmployeeHistory({
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
-                <th className="p-4 font-medium rounded-tl-xl">Placa</th>
-                <th className="p-4 font-medium hidden md:table-cell">Tipo</th>
-                <th className="p-4 font-medium">Ingreso</th>
-                <th className="p-4 font-medium">Salida</th>
-                <th className="p-4 font-medium hidden lg:table-cell">
+                <th className="p-4 font-bold rounded-tl-xl">Placa</th>
+                <th className="p-4 font-bold hidden md:table-cell">Tipo</th>
+                <th className="p-4 font-bold">Ingreso</th>
+                <th className="p-4 font-bold">Salida</th>
+                <th className="p-4 font-bold hidden lg:table-cell">
                   Atendido Por
                 </th>
-                <th className="p-4 font-medium hidden md:table-cell">
+                <th className="p-4 font-bold hidden md:table-cell">
                   Datos Extra
                 </th>
-                <th className="p-4 font-medium">Estado</th>
+                <th className="p-4 font-bold">Estado</th>
                 {showRevenue && (
-                  <th className="p-4 font-medium rounded-tr-xl">Cobro</th>
+                  <th className="p-4 font-bold rounded-tr-xl">Cobro</th>
                 )}
               </tr>
             </thead>
@@ -267,7 +266,7 @@ export default function EmployeeHistory({
                 return (
                   <React.Fragment key={session.id}>
                     <tr
-                      className={`hover:bg-slate-50 transition-colors cursor-pointer ${expandedRow === session.id ? "bg-blue-50/50" : ""}`}
+                      className={`hover:bg-slate-50 transition-colors cursor-pointer ${expandedRow === session.id ? "bg-indigo-50/50" : ""}`}
                       onClick={() =>
                         setExpandedRow(
                           expandedRow === session.id ? null : session.id,
@@ -277,7 +276,7 @@ export default function EmployeeHistory({
                       <td className="p-4 font-bold text-slate-900">
                         {session.vehicles.plate}
                         {expandedRow !== session.id && (
-                          <div className="text-[10px] text-blue-500 font-medium md:hidden mt-1">
+                          <div className="text-[10px] text-indigo-500 font-bold md:hidden mt-1">
                             Toca para ver detalles
                           </div>
                         )}
@@ -295,14 +294,14 @@ export default function EmployeeHistory({
                       </td>
                       <td className="p-4 text-slate-600 hidden lg:table-cell">
                         <div className="text-xs">
-                          <span className="font-semibold text-slate-500">
+                          <span className="font-extrabold text-slate-500">
                             In:
                           </span>{" "}
                           {session.entry_employee_name || "N/A"}
                         </div>
                         {isCompleted && (
                           <div className="text-xs mt-1">
-                            <span className="font-semibold text-slate-500">
+                            <span className="font-extrabold text-slate-500">
                               Out:
                             </span>{" "}
                             {session.exit_employee_name || "N/A"}
@@ -326,7 +325,7 @@ export default function EmployeeHistory({
                                     href={v as string}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded flex items-center gap-1 w-max hover:bg-blue-100 transition-colors"
+                                    className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded flex items-center gap-1 w-max hover:bg-indigo-100 transition-colors"
                                   >
                                     Ver Foto
                                   </a>
@@ -338,7 +337,7 @@ export default function EmployeeHistory({
                                   className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 truncate max-w-[120px]"
                                   title={`${k}: ${v}`}
                                 >
-                                  <span className="font-medium">{k}:</span>{" "}
+                                  <span className="font-bold">{k}:</span>{" "}
                                   {v as string}
                                 </span>
                               );
@@ -350,7 +349,7 @@ export default function EmployeeHistory({
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             isCompleted
                               ? "bg-slate-100 text-slate-600"
                               : "bg-emerald-100 text-emerald-700"
@@ -360,9 +359,9 @@ export default function EmployeeHistory({
                         </span>
                       </td>
                       {showRevenue && (
-                        <td className="p-4 font-medium text-slate-900 text-sm">
+                        <td className="p-4 font-bold text-slate-900 text-sm">
                           {isCompleted ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
                               <span>
                                 {formatCurrency(
                                   session.fee || session.total_charged || 0,
@@ -373,7 +372,7 @@ export default function EmployeeHistory({
                                   e.stopPropagation();
                                   setViewingReceipt(session);
                                 }}
-                                className="text-blue-600 hover:text-blue-800 p-1"
+                                className="text-indigo-600 hover:text-indigo-800 p-1"
                                 title="Ver Recibo"
                               >
                                 <FileText size={16} />
@@ -389,12 +388,12 @@ export default function EmployeeHistory({
                     </tr>
                     {/* Expanded details row */}
                     {expandedRow === session.id && (
-                      <tr className="bg-blue-50/30 border-b border-slate-100">
+                      <tr className="bg-indigo-50/30 border-b border-slate-100">
                         <td
                           colSpan={showRevenue ? 8 : 7}
                           className="p-4 px-6 relative"
                         >
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-400"></div>
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400"></div>
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div className="space-y-3 col-span-3 md:col-span-2">
                               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -404,7 +403,7 @@ export default function EmployeeHistory({
                                 ...session.vehicles?.custom_fields_data,
                                 ...session.extra_data,
                               }).length > 0 ? (
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-3">
                                   {Object.entries({
                                     ...session.vehicles?.custom_fields_data,
                                     ...session.extra_data,
@@ -413,7 +412,7 @@ export default function EmployeeHistory({
                                       return (
                                         <div
                                           key={k}
-                                          className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2 col-span-2"
+                                          className="bg-white p-3 border border-slate-200 rounded-3xl flex items-start gap-3 col-span-2"
                                         >
                                           <div className="flex flex-col w-full">
                                             <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
@@ -427,7 +426,7 @@ export default function EmployeeHistory({
                                               <img
                                                 src={v as string}
                                                 alt="Observación"
-                                                className="h-24 w-auto rounded-lg border border-slate-100 object-cover"
+                                                className="h-24 w-auto rounded-3xl border border-slate-100 object-cover"
                                               />
                                             </a>
                                           </div>
@@ -437,7 +436,7 @@ export default function EmployeeHistory({
                                     return (
                                       <div
                                         key={k}
-                                        className="bg-white p-2 border border-slate-200 rounded-2xl flex items-start gap-2"
+                                        className="bg-white p-3 border border-slate-200 rounded-3xl flex items-start gap-3"
                                       >
                                         <Tag
                                           size={14}
@@ -447,7 +446,7 @@ export default function EmployeeHistory({
                                           <span className="text-[10px] uppercase font-bold text-slate-400">
                                             {k}
                                           </span>
-                                          <span className="text-xs font-medium text-slate-800 break-all">
+                                          <span className="text-xs font-bold text-slate-800 break-all">
                                             {v as string}
                                           </span>
                                         </div>
@@ -489,7 +488,7 @@ export default function EmployeeHistory({
                                     e.stopPropagation();
                                     onExitSession(session.id);
                                   }}
-                                  className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded-2xl text-xs font-bold transition-colors flex items-center gap-2 shadow-md"
+                                  className="px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-3xl text-xs font-bold transition-colors flex items-center gap-3 shadow-xl border border-slate-100"
                                 >
                                   Dar Salida
                                 </button>
@@ -523,18 +522,18 @@ export default function EmployeeHistory({
           <p className="text-sm text-slate-500">
             Página {page} de {totalPages}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-2 border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-3 border border-slate-200 rounded-3xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-2 border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-3 border border-slate-200 rounded-3xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={18} />
             </button>

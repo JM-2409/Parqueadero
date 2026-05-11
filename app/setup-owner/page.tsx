@@ -49,9 +49,9 @@ export default function SetupOwnerPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
             <ShieldCheck size={32} />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">
@@ -66,8 +66,8 @@ export default function SetupOwnerPage() {
           <div className="text-center space-y-6">
             <SuccessMessage
               message={
-                <div className="flex flex-col items-center gap-2">
-                  <p className="font-medium">
+                <div className="flex flex-col items-center gap-3">
+                  <p className="font-bold">
                     ¡Usuario Dueño creado exitosamente!
                   </p>
                   <p className="text-sm">
@@ -78,7 +78,7 @@ export default function SetupOwnerPage() {
             />
             <Link
               href="/login"
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3"
             >
               Ir a Iniciar Sesión <ArrowRight size={18} />
             </Link>
@@ -86,34 +86,34 @@ export default function SetupOwnerPage() {
         ) : (
           <form onSubmit={handleCreateOwner} className="space-y-5">
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm text-center">
+              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl text-sm text-center">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-bold text-slate-700 mb-1">
                 Nombre de Usuario (Dueño)
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full p-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 placeholder="ej. admin_principal"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-bold text-slate-700 mb-1">
                 Contraseña
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full p-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 placeholder="Mínimo 6 caracteres"
                 required
                 minLength={6}
@@ -123,7 +123,7 @@ export default function SetupOwnerPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3"
             >
               {loading ? (
                 <>

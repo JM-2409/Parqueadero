@@ -361,7 +361,7 @@ export default function PrivateParking({
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
             Parqueaderos Privados
           </h2>
-          <p className="text-sm font-medium text-slate-500 mt-1">
+          <p className="text-sm font-bold text-slate-500 mt-1">
             Gestiona los espacios asignados a residentes o propietarios
           </p>
         </div>
@@ -369,13 +369,13 @@ export default function PrivateParking({
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <button
               onClick={handleExportCSV}
-              className="flex-1 md:flex-none justify-center px-4 py-2.5 bg-white text-slate-700 border-2 border-slate-100 rounded-2xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-2"
+              className="flex-1 md:flex-none justify-center px-5 py-3.5 bg-white text-slate-700 border-2 border-slate-100 rounded-3xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-3"
               title="Exportar archivo CSV con los datos actuales"
             >
               <Download size={18} />
               Exportar
             </button>
-            <label className="flex-1 md:flex-none justify-center cursor-pointer px-4 py-2.5 bg-white text-slate-700 border-2 border-slate-100 rounded-2xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-2">
+            <label className="flex-1 md:flex-none justify-center cursor-pointer px-5 py-3.5 bg-white text-slate-700 border-2 border-slate-100 rounded-3xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-3">
               {isImporting ? <Spinner size={18} /> : <Upload size={18} />}
               Importar
               <input
@@ -388,7 +388,7 @@ export default function PrivateParking({
             </label>
             <button
               onClick={() => setIsCreating(true)}
-              className="flex-1 md:flex-none justify-center px-4 py-2.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md shadow-blue-200"
+              className="flex-1 md:flex-none justify-center px-5 py-3.5 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors flex items-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200"
             >
               <Plus size={18} />
               Crear Nuevo
@@ -398,7 +398,7 @@ export default function PrivateParking({
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 font-medium text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3 font-bold text-sm">
           <X size={20} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
@@ -407,14 +407,14 @@ export default function PrivateParking({
       {success && <SuccessMessage message={success} />}
 
       {isCreating && (
-        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 mb-6">
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-6">
           <h3 className="text-lg font-bold text-slate-900 mb-6 tracking-tight">
             {editingSpaceId ? "Editar Espacio" : "Crear Nuevo Espacio"}
           </h3>
           <form onSubmit={handleSaveSpace} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                   Número de Parqueadero *
                 </label>
                 <input
@@ -423,7 +423,7 @@ export default function PrivateParking({
                   onChange={(e) =>
                     setSpaceData({ ...spaceData, space_number: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                   placeholder="ej. P-101"
                   required
                 />
@@ -433,7 +433,7 @@ export default function PrivateParking({
               {configFields &&
                 configFields.map((field) => (
                   <div key={field.name}>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                       {field.name} {field.required ? "*" : ""}
                     </label>
                     <input
@@ -445,7 +445,7 @@ export default function PrivateParking({
                           [field.name]: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                       placeholder={`ej. ${field.name}`}
                       required={field.required}
                     />
@@ -457,13 +457,13 @@ export default function PrivateParking({
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="flex-1 py-4 bg-white border-2 border-slate-100 hover:bg-slate-50 text-slate-700 rounded-2xl font-bold transition-colors"
+                className="flex-1 py-4 bg-white border-2 border-slate-100 hover:bg-slate-50 text-slate-700 rounded-3xl font-bold transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-200"
+                className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200"
               >
                 <Save size={20} />
                 {editingSpaceId ? "Actualizar Espacio" : "Guardar Espacio"}
@@ -474,7 +474,7 @@ export default function PrivateParking({
       )}
 
       {!isCreating && (
-        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100">
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">
               Listado de Espacios
@@ -485,7 +485,7 @@ export default function PrivateParking({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar espacios..."
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
               />
               <Search
                 size={18}
@@ -496,25 +496,25 @@ export default function PrivateParking({
 
           {spaces.length === 0 ? (
             <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
-              <div className="w-16 h-16 bg-white border border-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-md">
+              <div className="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-xl border border-slate-100">
                 <Home size={32} />
               </div>
               <p className="text-slate-900 font-bold text-lg mb-1">
                 No hay parqueaderos privados
               </p>
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-sm font-bold text-slate-500">
                 Crea espacios para llevar un control de los parqueaderos
                 asignados.
               </p>
             </div>
           ) : filteredSpaces.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 font-medium bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+            <div className="text-center py-12 text-slate-500 font-bold bg-slate-50 rounded-3xl border border-slate-100 border-dashed">
               No se encontraron espacios que coincidan con &quot;
               <span className="text-slate-700 font-bold">{searchQuery}</span>
               &quot;.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-slate-100">
+            <div className="overflow-x-auto rounded-3xl border border-slate-100">
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                   <tr>
@@ -535,7 +535,7 @@ export default function PrivateParking({
                       className="hover:bg-slate-50/80 transition-colors group"
                     >
                       <td className="px-5 py-4">
-                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md inline-block">
+                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                           {space.space_number}
                         </span>
                       </td>
@@ -543,7 +543,7 @@ export default function PrivateParking({
                         configFields.map((cf) => (
                           <td
                             key={cf.name}
-                            className="px-5 py-4 text-slate-600 font-medium"
+                            className="px-5 py-4 text-slate-600 font-bold"
                           >
                             {space.custom_fields_data?.[cf.name] || (
                               <span className="text-slate-300">-</span>
@@ -551,17 +551,17 @@ export default function PrivateParking({
                           </td>
                         ))}
                       <td className="px-5 py-4 text-right">
-                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex justify-end gap-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleEditClick(space)}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-colors border border-transparent hover:border-blue-100"
+                            className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-3xl transition-colors border border-transparent hover:border-indigo-100"
                             title="Editar"
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteSpace(space.id)}
-                            className="p-2 text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all border border-transparent shadow-sm hover:shadow-md active:scale-95"
+                            className="p-3 text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all border border-transparent shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
                             title="Eliminar"
                           >
                             <Trash2 size={16} />

@@ -843,7 +843,7 @@ export default function EmployeePage() {
     return (
       <div className="fixed inset-0 bg-white border-r border-slate-200/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div className="bg-white  rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
-          <div className="w-16 h-16 bg-blue-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 bg-indigo-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
             <User size={32} />
           </div>
           <h2 className="text-2xl font-bold text-center text-slate-900  mb-2">
@@ -860,12 +860,12 @@ export default function EmployeePage() {
               value={shiftName || ""}
               onChange={(e) => setShiftName(e.target.value)}
               placeholder="Ej. Juan Pérez"
-              className="w-full p-4 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none text-lg text-center mb-4"
+              className="w-full p-4 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg text-center mb-4"
               required
             />
             <button
               type="submit"
-              className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-900 rounded-3xl font-bold text-lg transition-colors shadow-sm border border-slate-200 shadow-blue-200"
+              className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-900 rounded-3xl font-bold text-lg transition-colors shadow-md border border-slate-100 shadow-indigo-200"
             >
               Comenzar Turno
             </button>
@@ -891,15 +891,15 @@ export default function EmployeePage() {
           </h3>
 
           <div className="bg-slate-50  p-6 rounded-3xl border border-slate-200  mb-8">
-            <p className="text-center text-slate-600  mb-2 font-medium">
+            <p className="text-center text-slate-600  mb-2 font-bold">
               El vehículo con placa:
             </p>
             <div className="text-center mb-4">
-              <span className="inline-block px-4 py-2 bg-white border-r border-slate-200 text-slate-900 font-mono text-3xl font-bold tracking-widest rounded-3xl">
+              <span className="inline-block px-5 py-3 bg-white border-r border-slate-200 text-slate-900 font-mono text-3xl font-bold tracking-widest rounded-3xl">
                 {blacklistAlert.plate}
               </span>
             </div>
-            <p className="text-center text-slate-600  font-medium">
+            <p className="text-center text-slate-600  font-bold">
               Motivo del veto:
             </p>
             <p className="text-center text-red-600 font-bold text-lg mt-1">
@@ -912,7 +912,7 @@ export default function EmployeePage() {
               setBlacklistAlert(null);
               setPlate("");
             }}
-            className="w-full py-5 bg-red-600 hover:bg-red-700 text-slate-900 rounded-3xl font-bold text-lg uppercase tracking-wider transition-colors shadow-sm border border-slate-200 shadow-red-200 focus:outline-none focus:ring-4 focus:ring-red-500/50"
+            className="w-full py-5 bg-red-600 hover:bg-red-700 text-slate-900 rounded-3xl font-bold text-lg uppercase tracking-wider transition-colors shadow-md border border-slate-100 shadow-red-200 focus:outline-none focus:ring-4 focus:ring-red-500/50"
           >
             Entendido, Rechazar Ingreso
           </button>
@@ -924,17 +924,17 @@ export default function EmployeePage() {
   return (
     <div className="h-screen bg-slate-50  flex flex-col md:flex-row w-full overflow-hidden font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-slate-800 text-white p-4 flex justify-between items-center shadow-sm border border-slate-200 z-30 shrink-0">
-        <div className="flex items-center gap-2 font-bold text-lg">
+      <div className="md:hidden bg-slate-800 text-white p-4 flex justify-between items-center shadow-md border border-slate-100 z-30 shrink-0">
+        <div className="flex items-center gap-3 font-bold text-lg">
           <Car size={24} className="text-slate-900 opacity-90" />
-          <span className="truncate max-w-[200px] drop-shadow-sm border border-slate-200">
+          <span className="truncate max-w-[200px] drop-shadow-md border border-slate-100">
             {parkingLot?.name}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 bg-blue-700/50 hover:bg-slate-700 rounded-3xl transition-colors active:scale-95"
+            className="p-3 bg-indigo-700/50 hover:bg-slate-700 rounded-3xl transition-colors active:scale-95"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -953,12 +953,12 @@ export default function EmployeePage() {
       <div
         className={`${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} md:translate-x-0 fixed md:relative top-0 left-0 z-50 transition-transform duration-300 w-72 bg-white border-r border-slate-200 text-slate-500 flex-shrink-0 flex flex-col h-full`}
       >
-        <div className="p-6 flex items-center justify-between gap-3 border-b border-blue-900">
+        <div className="p-6 flex items-center justify-between gap-3 border-b border-indigo-900">
           <div className="flex items-center gap-3 font-bold text-xl text-slate-900">
             <Car size={28} className="text-slate-800" />
             <span>Operación</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               className="md:hidden text-slate-400 hover:text-slate-900"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -968,9 +968,9 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        <div className="p-4 border-b border-blue-900">
+        <div className="p-4 border-b border-indigo-900">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-extrabold">
               Turno Actual
             </p>
             <button
@@ -980,27 +980,27 @@ export default function EmployeePage() {
                 setIsShiftSet(false);
                 setShiftName("");
               }}
-              className="text-[10px] bg-blue-900 hover:bg-slate-700 text-slate-500 px-2 py-0.5 rounded transition-colors"
+              className="text-[10px] bg-indigo-900 hover:bg-slate-700 text-slate-500 px-2 py-0.5 rounded transition-colors"
             >
               Cambiar
             </button>
           </div>
-          <div className="flex items-center gap-2 text-slate-900 bg-blue-900 p-2 rounded-3xl">
+          <div className="flex items-center gap-3 text-slate-900 bg-indigo-900 p-3 rounded-3xl">
             <User size={16} className="text-slate-800 shrink-0" />
-            <span className="font-medium truncate">{shiftName}</span>
+            <span className="font-bold truncate">{shiftName}</span>
           </div>
         </div>
 
-        <nav className="p-4 flex flex-col gap-2 flex-1 overflow-y-auto">
+        <nav className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
           <button
             onClick={() => {
               setActiveTab("operation");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "operation" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "operation" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
           >
             <LogIn size={20} />
-            <span className="font-medium whitespace-nowrap">
+            <span className="font-bold whitespace-nowrap">
               Ingreso / Salida
             </span>
           </button>
@@ -1009,29 +1009,27 @@ export default function EmployeePage() {
               setActiveTab("history");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "history" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "history" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
           >
             <History size={20} />
-            <span className="font-medium whitespace-nowrap">Historial</span>
+            <span className="font-bold whitespace-nowrap">Historial</span>
           </button>
           <button
             onClick={() => {
               setActiveTab("private");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-3xl transition-colors ${activeTab === "private" ? "bg-slate-800 text-slate-900" : "hover:bg-blue-900 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "private" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
           >
             <Home size={20} className="flex-shrink-0" />
-            <span className="font-medium whitespace-nowrap">
-              Parq. Privados
-            </span>
+            <span className="font-bold whitespace-nowrap">Parq. Privados</span>
           </button>
         </nav>
 
-        <div className="p-4 mt-auto border-t border-blue-900">
+        <div className="p-4 mt-auto border-t border-indigo-900">
           <div className="mb-4 px-2">
             <p className="text-xs text-slate-500 mb-1">Ocupación</p>
-            <div className="w-full bg-blue-900 rounded-full h-2.5">
+            <div className="w-full bg-indigo-900 rounded-full h-2.5">
               <div
                 className="bg-slate-1000 h-2.5 rounded-full"
                 style={{
@@ -1068,17 +1066,17 @@ export default function EmployeePage() {
 
           <button
             onClick={() => setShowPreferences(true)}
-            className="flex items-center gap-3 px-4 py-3 rounded-3xl text-slate-500 hover:bg-blue-900 transition-colors w-full mb-2"
+            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-slate-500 hover:bg-indigo-900 transition-colors w-full mb-2"
           >
             <Menu size={20} />
-            <span className="font-medium">Preferencias</span>
+            <span className="font-bold">Preferencias</span>
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-3xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
+            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
           >
             <LogOut size={20} />
-            <span className="font-medium">Cerrar Sesión</span>
+            <span className="font-bold">Cerrar Sesión</span>
           </button>
         </div>
       </div>
@@ -1087,7 +1085,7 @@ export default function EmployeePage() {
       <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50  relative">
         <div className="max-w-7xl mx-auto w-full p-4 lg:p-8 xl:p-12 pb-24 md:pb-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-2">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
               <X size={20} className="flex-shrink-0" />
               <p>{error}</p>
             </div>
@@ -1100,23 +1098,23 @@ export default function EmployeePage() {
             <div className="flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Resumen Rápido */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                <div className="bg-white  p-6 rounded-3xl shadow-sm border border-slate-200 border border-slate-100  flex items-center justify-between">
+                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">
+                    <p className="text-sm font-bold text-slate-500 mb-1">
                       Vehículos Parqueados
                     </p>
                     <p className="text-3xl font-black text-slate-900 ">
                       {activeSessions.length}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-slate-100 text-slate-800 rounded-3xl flex items-center justify-center border border-blue-100">
+                  <div className="w-12 h-12 bg-slate-100 text-slate-800 rounded-3xl flex items-center justify-center border border-indigo-100">
                     <Car size={24} />
                   </div>
                 </div>
 
-                <div className="bg-white  p-6 rounded-3xl shadow-sm border border-slate-200 border border-slate-100  flex items-center justify-between">
+                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">
+                    <p className="text-sm font-bold text-slate-500 mb-1">
                       Suscripciones Activas
                     </p>
                     <p className="text-3xl font-black text-emerald-600">
@@ -1128,9 +1126,9 @@ export default function EmployeePage() {
                   </div>
                 </div>
 
-                <div className="bg-white  p-6 rounded-3xl shadow-sm border border-slate-200 border border-slate-100  flex items-center justify-between">
+                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">
+                    <p className="text-sm font-bold text-slate-500 mb-1">
                       Vehículos Vetados
                     </p>
                     <p className="text-3xl font-black text-red-600">
@@ -1145,9 +1143,9 @@ export default function EmployeePage() {
 
               <div className="flex flex-col xl:flex-row gap-6 lg:gap-8">
                 {/* Entry Form */}
-                <div className="xl:w-[380px] shrink-0 bg-white  p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 border border-slate-100  h-fit">
+                <div className="xl:w-[380px] shrink-0 bg-white  p-6 lg:p-8 rounded-3xl shadow-md border border-slate-100  h-fit">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3.5 bg-slate-100 text-slate-800 rounded-3xl ring-1 ring-blue-100">
+                    <div className="p-3.5 bg-slate-100 text-slate-800 rounded-3xl ring-1 ring-indigo-100">
                       <LogIn size={24} />
                     </div>
                     <h2 className="text-2xl font-bold text-slate-900  tracking-tight">
@@ -1157,13 +1155,13 @@ export default function EmployeePage() {
 
                   <form onSubmit={handleEntrySubmit} className="space-y-5">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700  mb-2">
+                      <label className="block text-sm font-bold text-slate-700  mb-2">
                         Placa *
                       </label>
-                      <div className="relative flex items-center gap-2">
+                      <div className="relative flex items-center gap-3">
                         <div className="relative flex-1 group">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <div className="w-8 h-6 bg-yellow-400 rounded-sm flex items-center justify-center shadow-sm border border-slate-200 border border-yellow-500">
+                            <div className="w-8 h-6 bg-yellow-400 rounded-sm flex items-center justify-center shadow-md border border-slate-100 border border-yellow-500">
                               <span className="text-[10px] font-black text-slate-900  tracking-tighter">
                                 COL
                               </span>
@@ -1173,7 +1171,7 @@ export default function EmployeePage() {
                             type="text"
                             value={plate || ""}
                             onChange={(e) => handleSearchPlate(e.target.value)}
-                            className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-50  border border-slate-200  group-hover:border-slate-300  rounded-3xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white  outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-slate-900  transition-all shadow-inner placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal text-center"
+                            className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-50  border border-slate-200  group-hover:border-slate-300  rounded-3xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white  outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-slate-900  transition-all shadow-inner placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal text-center"
                             placeholder="ABC-123"
                             maxLength={7}
                             required
@@ -1181,7 +1179,7 @@ export default function EmployeePage() {
                         </div>
                       </div>
                       {!isNewVehicle && plate.length >= 5 && (
-                        <p className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1.5 px-1 bg-emerald-50 w-fit py-1 px-2 rounded-md border border-emerald-100">
+                        <p className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1.5 px-1 bg-emerald-50 w-fit py-1 px-2 rounded-3xl border border-emerald-100">
                           <CheckCircle2 size={14} /> Vehículo registrado
                           anteriormente
                         </p>
@@ -1189,7 +1187,7 @@ export default function EmployeePage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700  mb-2">
+                      <label className="block text-sm font-bold text-slate-700  mb-2">
                         Tipo de Vehículo *
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -1198,9 +1196,9 @@ export default function EmployeePage() {
                             key={v}
                             type="button"
                             onClick={() => setType(v)}
-                            className={`p-4 md:p-5 rounded-3xl border flex flex-col items-center justify-center gap-2 transition-all active:scale-95 ${
+                            className={`p-4 md:p-5 rounded-3xl border flex flex-col items-center justify-center gap-3 transition-all active:scale-95 ${
                               type === v
-                                ? "bg-slate-100 border-blue-500 text-slate-700 shadow-sm border border-slate-200 scale-[1.02]"
+                                ? "bg-slate-100 border-indigo-500 text-slate-700 shadow-md border border-slate-100 scale-[1.02]"
                                 : "bg-white  border-slate-200  text-slate-500 hover:border-slate-300  hover:bg-slate-50 "
                             }`}
                           >
@@ -1211,7 +1209,7 @@ export default function EmployeePage() {
                             ) : (
                               <Truck size={32} />
                             )}
-                            <span className="font-semibold capitalize text-base md:text-lg">
+                            <span className="font-extrabold capitalize text-base md:text-lg">
                               {v}
                             </span>
                           </button>
@@ -1223,7 +1221,7 @@ export default function EmployeePage() {
                     {parkingLot?.custom_fields?.map(
                       (field: any, idx: number) => (
                         <div key={idx}>
-                          <label className="block text-sm font-medium text-slate-700  mb-1">
+                          <label className="block text-sm font-bold text-slate-700  mb-1">
                             {field.name} {field.required && "*"}
                           </label>
                           <input
@@ -1235,7 +1233,7 @@ export default function EmployeePage() {
                                 [field.name]: e.target.value,
                               })
                             }
-                            className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none"
                             placeholder={`Ingresar ${field.name.toLowerCase()}`}
                             required={field.required}
                           />
@@ -1245,7 +1243,7 @@ export default function EmployeePage() {
 
                     {prefShowNotes && (
                       <div>
-                        <label className="block text-sm font-medium text-slate-700  mb-1">
+                        <label className="block text-sm font-bold text-slate-700  mb-1">
                           Observaciones{" "}
                           {prefRequirePhoto
                             ? "(Obligatorio con foto)"
@@ -1259,13 +1257,13 @@ export default function EmployeePage() {
                               ["Observaciones"]: e.target.value,
                             })
                           }
-                          className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none resize-none mb-3"
+                          className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-3"
                           placeholder="Daños, rayones o notas importantes..."
                           rows={2}
                           required={prefRequirePhoto}
                         />
                         {prefRequirePhoto && (
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-3">
                             <input
                               type="file"
                               accept="image/*"
@@ -1288,7 +1286,7 @@ export default function EmployeePage() {
                               <button
                                 type="button"
                                 onClick={() => photoInputRef.current?.click()}
-                                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl font-medium transition-colors flex items-center justify-center gap-2 border border-slate-200"
+                                className="flex-1 py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 border border-slate-200"
                               >
                                 <Camera size={20} />
                                 {photoDataUrl
@@ -1311,7 +1309,7 @@ export default function EmployeePage() {
                                     if (photoInputRef.current)
                                       photoInputRef.current.value = "";
                                   }}
-                                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-slate-900 rounded-full hover:bg-red-600 transition-colors shadow-sm"
+                                  className="absolute top-3 right-2 p-1.5 bg-red-500 text-slate-900 rounded-full hover:bg-red-600 transition-colors shadow-md border border-slate-100"
                                   title="Eliminar foto"
                                 >
                                   <X size={14} />
@@ -1326,7 +1324,7 @@ export default function EmployeePage() {
                     <button
                       type="submit"
                       disabled={isSubmittingEntry}
-                      className="w-full py-4 md:py-5 bg-slate-800 hover:bg-slate-700 disabled:bg-blue-400 text-slate-900 rounded-3xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-6 shadow-sm border border-slate-200 shadow-blue-200/50 text-lg"
+                      className="w-full py-4 md:py-5 bg-slate-800 hover:bg-slate-700 disabled:bg-indigo-400 text-slate-900 rounded-3xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-6 shadow-md border border-slate-100 shadow-indigo-200/50 text-lg"
                     >
                       {isSubmittingEntry ? (
                         <Spinner size={24} className="text-slate-900" />
@@ -1339,13 +1337,13 @@ export default function EmployeePage() {
                 </div>
 
                 {/* Active Sessions */}
-                <div className="flex-1 bg-white  p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 border border-slate-100  min-w-0">
+                <div className="flex-1 bg-white  p-6 lg:p-8 rounded-3xl shadow-md border border-slate-100  min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-4">
                       <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-3xl ring-1 ring-emerald-100">
                         <Car size={24} />
                       </div>
-                      <h2 className="text-2xl font-bold text-slate-900  tracking-tight flex items-center gap-2">
+                      <h2 className="text-2xl font-bold text-slate-900  tracking-tight flex items-center gap-3">
                         Parqueadero
                         <span className="bg-slate-100 text-slate-600  text-sm font-bold px-2.5 py-0.5 rounded-full">
                           {activeSessions.length}
@@ -1353,7 +1351,7 @@ export default function EmployeePage() {
                       </h2>
                     </div>
                     {parkingLot?.show_revenue && (
-                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-3xl text-sm font-medium border border-emerald-100 max-w-full overflow-hidden">
+                      <div className="flex items-center gap-3 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-3xl text-sm font-bold border border-emerald-100 max-w-full overflow-hidden">
                         <DollarSign size={16} className="shrink-0" />
                         <span className="font-bold truncate">
                           Recaudo:{" "}
@@ -1370,7 +1368,7 @@ export default function EmployeePage() {
                   {activeSessions.length === 0 ? (
                     <div className="text-center py-16 border-2 border-dashed border-slate-200  rounded-3xl bg-slate-50 ">
                       <Car size={48} className="mx-auto text-slate-500 mb-4" />
-                      <p className="text-slate-500 font-medium">
+                      <p className="text-slate-500 font-bold">
                         No hay vehículos en el parqueadero.
                       </p>
                     </div>
@@ -1379,7 +1377,7 @@ export default function EmployeePage() {
                       {activeSessions.map((session) => (
                         <div
                           key={session.id}
-                          className={`border border-slate-200  p-4 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-slate-50  ${viewingSession?.id === session.id ? "border-blue-400 shadow-sm border border-slate-200 ring-1 ring-blue-400" : "hover:border-blue-300 hover:shadow-sm border border-slate-200"}`}
+                          className={`border border-slate-200  p-4 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-slate-50  ${viewingSession?.id === session.id ? "border-indigo-400 shadow-md border border-slate-100 ring-1 ring-indigo-400" : "hover:border-indigo-300 hover:shadow-md border border-slate-100"}`}
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div
@@ -1392,19 +1390,19 @@ export default function EmployeePage() {
                                 )
                               }
                             >
-                              <div className="w-20 h-16 bg-white  rounded-3xl flex items-center justify-center font-mono font-bold text-lg text-slate-800  border-2 border-slate-200  shadow-sm border border-slate-200 shrink-0 group-hover:border-blue-300 transition-colors">
+                              <div className="w-20 h-16 bg-white  rounded-3xl flex items-center justify-center font-mono font-bold text-lg text-slate-800  border-2 border-slate-200  shadow-md border border-slate-100 shrink-0 group-hover:border-indigo-300 transition-colors">
                                 {session.vehicles.plate}
                               </div>
                               <div>
-                                <div className="flex items-center gap-2">
-                                  <p className="font-semibold text-slate-900  capitalize">
+                                <div className="flex items-center gap-3">
+                                  <p className="font-extrabold text-slate-900  capitalize">
                                     {session.vehicles.type}
                                   </p>
                                   {subscribers.some(
                                     (sub) =>
                                       sub.plate === session.vehicles.plate,
                                   ) && (
-                                    <span className="bg-blue-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                    <span className="bg-indigo-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                                       Abonado
                                     </span>
                                   )}
@@ -1420,7 +1418,7 @@ export default function EmployeePage() {
                                     })}
                                   </span>
                                   <span
-                                    className={`ml-2 text-xs font-medium transition-colors ${viewingSession?.id === session.id ? "text-slate-800" : "text-slate-400 group-hover:text-blue-500"}`}
+                                    className={`ml-2 text-xs font-bold transition-colors ${viewingSession?.id === session.id ? "text-slate-800" : "text-slate-400 group-hover:text-indigo-500"}`}
                                   >
                                     {viewingSession?.id === session.id
                                       ? "(Ocultar detalles)"
@@ -1431,12 +1429,12 @@ export default function EmployeePage() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0 border-t sm:border-0 pt-4 sm:pt-0 border-slate-100 ">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:block">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider hidden sm:block">
                                   Cobro:
                                 </span>
-                                <div className="bg-slate-50  border border-slate-200  rounded-3xl py-2 px-3 flex items-center shadow-sm border border-slate-200 w-full sm:w-auto overflow-hidden">
-                                  <span className="text-slate-400 font-medium mr-1.5">
+                                <div className="bg-slate-50  border border-slate-200  rounded-3xl py-3 px-3 flex items-center shadow-md border border-slate-100 w-full sm:w-auto overflow-hidden">
+                                  <span className="text-slate-400 font-bold mr-1.5">
                                     $
                                   </span>
                                   <span
@@ -1472,7 +1470,7 @@ export default function EmployeePage() {
                                   handleExit(session.id);
                                 }}
                                 disabled={isSubmittingExit === session.id}
-                                className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:bg-blue-400 text-slate-900 rounded-3xl text-sm font-bold transition-all shadow-sm border border-slate-200 shadow-blue-200 flex items-center justify-center gap-2 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98]"
+                                className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 disabled:bg-indigo-400 text-slate-900 rounded-3xl text-sm font-bold transition-all shadow-md border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98]"
                               >
                                 {isSubmittingExit === session.id ? (
                                   <>
@@ -1491,13 +1489,13 @@ export default function EmployeePage() {
 
                           {/* Dropdown Extra Data / Entry Summary */}
                           {viewingSession?.id === session.id && (
-                            <div className="mt-2 text-sm border-t border-slate-200  pt-3 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="mt-2 text-sm border-t border-slate-200  pt-3 flex flex-col gap-3 animate-in fade-in slide-in-from-top-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="flex justify-between items-center bg-white  p-3 rounded-3xl border border-slate-100 ">
                                   <span className="text-slate-500">
                                     Registrado por:
                                   </span>
-                                  <span className="font-medium text-slate-800 ">
+                                  <span className="font-bold text-slate-800 ">
                                     {session.entry_employee_name || "N/A"}
                                   </span>
                                 </div>
@@ -1505,7 +1503,7 @@ export default function EmployeePage() {
                                   <span className="text-slate-500">
                                     Hora Entrada:
                                   </span>
-                                  <span className="font-medium text-slate-800 ">
+                                  <span className="font-bold text-slate-800 ">
                                     {new Date(
                                       session.entry_time,
                                     ).toLocaleString()}
@@ -1525,7 +1523,7 @@ export default function EmployeePage() {
                                         "El recibo oficial se genera al darle salida.",
                                       );
                                     }}
-                                    className="text-slate-800 font-medium hover:underline text-xs"
+                                    className="text-slate-800 font-bold hover:underline text-xs"
                                   >
                                     Pendiente factura
                                   </button>
@@ -1540,22 +1538,22 @@ export default function EmployeePage() {
                                   Object.keys(session.extra_data).length >
                                     0)) && (
                                 <div className="bg-white  p-3 rounded-3xl border border-slate-100  mt-2">
-                                  <span className="text-slate-500 block mb-2 font-medium">
+                                  <span className="text-slate-500 block mb-2 font-bold">
                                     Datos Extra:
                                   </span>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     {Object.entries({
                                       ...session.vehicles.custom_fields_data,
                                       ...session.extra_data,
                                     }).map(([k, v]) => (
                                       <div
                                         key={k}
-                                        className="text-xs bg-slate-50  p-2 rounded border border-slate-100 "
+                                        className="text-xs bg-slate-50  p-3 rounded border border-slate-100 "
                                       >
-                                        <span className="font-medium block text-slate-500 uppercase mb-[2px] text-[10px] tracking-wide">
+                                        <span className="font-bold block text-slate-500 uppercase mb-[2px] text-[10px] tracking-wide">
                                           {k}
                                         </span>
-                                        <span className="text-slate-900  font-medium">
+                                        <span className="text-slate-900  font-bold">
                                           {v as string}
                                         </span>
                                       </div>
@@ -1612,7 +1610,7 @@ export default function EmployeePage() {
                   </h3>
                   <button
                     onClick={() => setViewingSession(null)}
-                    className="p-1 hover:bg-blue-900 rounded-3xl transition-colors"
+                    className="p-1 hover:bg-indigo-900 rounded-3xl transition-colors"
                   >
                     <X size={20} />
                   </button>
@@ -1621,18 +1619,18 @@ export default function EmployeePage() {
                 <div className="p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50  p-3 rounded-3xl border border-slate-100 ">
-                      <p className="text-xs text-slate-500 font-medium mb-1">
+                      <p className="text-xs text-slate-500 font-bold mb-1">
                         Tipo
                       </p>
-                      <p className="font-semibold text-slate-900  capitalize">
+                      <p className="font-extrabold text-slate-900  capitalize">
                         {viewingSession.vehicles.type}
                       </p>
                     </div>
                     <div className="bg-slate-50  p-3 rounded-3xl border border-slate-100 ">
-                      <p className="text-xs text-slate-500 font-medium mb-1">
+                      <p className="text-xs text-slate-500 font-bold mb-1">
                         Hora Ingreso
                       </p>
-                      <p className="font-semibold text-slate-900 ">
+                      <p className="font-extrabold text-slate-900 ">
                         {new Date(viewingSession.entry_time).toLocaleTimeString(
                           [],
                           { hour: "2-digit", minute: "2-digit" },
@@ -1641,10 +1639,10 @@ export default function EmployeePage() {
                     </div>
                     {viewingSession.entry_employee_name && (
                       <div className="bg-slate-50  p-3 rounded-3xl border border-slate-100  col-span-2">
-                        <p className="text-xs text-slate-500 font-medium mb-1">
+                        <p className="text-xs text-slate-500 font-bold mb-1">
                           Registrado por
                         </p>
-                        <p className="font-semibold text-slate-900 ">
+                        <p className="font-extrabold text-slate-900 ">
                           {viewingSession.entry_employee_name}
                         </p>
                       </div>
@@ -1653,8 +1651,8 @@ export default function EmployeePage() {
 
                   {viewingSession.extra_data &&
                     Object.keys(viewingSession.extra_data).length > 0 && (
-                      <div className="bg-slate-100/50 p-4 rounded-3xl border border-blue-100 space-y-2 mt-4">
-                        <h4 className="font-semibold text-blue-900 text-sm mb-3">
+                      <div className="bg-slate-100/50 p-4 rounded-3xl border border-indigo-100 space-y-2 mt-4">
+                        <h4 className="font-extrabold text-indigo-900 text-sm mb-3">
                           Información Adicional
                         </h4>
                         {Object.entries(viewingSession.extra_data).map(
@@ -1663,16 +1661,16 @@ export default function EmployeePage() {
                               return (
                                 <div
                                   key={k}
-                                  className="flex flex-col gap-2 border-b border-blue-100/50 pb-2 last:border-0 last:pb-0"
+                                  className="flex flex-col gap-3 border-b border-indigo-100/50 pb-2 last:border-0 last:pb-0"
                                 >
-                                  <span className="text-slate-600 font-medium">
+                                  <span className="text-slate-600 font-bold">
                                     Foto de Observación
                                   </span>
                                   <a
                                     href={v as string}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block max-h-48 overflow-hidden rounded-2xl border border-blue-200 bg-white"
+                                    className="block max-h-48 overflow-hidden rounded-3xl border border-indigo-200 bg-white"
                                   >
                                     <img
                                       src={v as string}
@@ -1686,12 +1684,12 @@ export default function EmployeePage() {
                             return (
                               <div
                                 key={k}
-                                className="flex justify-between items-center text-sm border-b border-blue-100/50 pb-2 last:border-0 last:pb-0"
+                                className="flex justify-between items-center text-sm border-b border-indigo-100/50 pb-2 last:border-0 last:pb-0"
                               >
-                                <span className="text-slate-600  font-medium">
+                                <span className="text-slate-600  font-bold">
                                   {k}
                                 </span>
-                                <span className="text-slate-900  font-semibold">
+                                <span className="text-slate-900  font-extrabold">
                                   {v as string}
                                 </span>
                               </div>
@@ -1728,7 +1726,7 @@ export default function EmployeePage() {
                       // Focus the input if possible or handle exit directly?
                       // The prompt said "ver el resumen sin tener que ir al modal de recibo", so they can read and then click close or proceed.
                     }}
-                    className="w-full py-3 bg-white  border border-slate-200  text-slate-900  rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-2"
+                    className="w-full py-3 bg-white  border border-slate-200  text-slate-900  rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-3"
                   >
                     Cerrar Detalle
                   </button>
@@ -1741,13 +1739,13 @@ export default function EmployeePage() {
             <div className="fixed inset-0 bg-white border-r border-slate-200/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
               <div className="bg-white  rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-6 text-center">
-                  <div className="w-16 h-16 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm border border-slate-200">
+                  <div className="w-16 h-16 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-md border border-slate-100">
                     <AlertTriangle size={32} />
                   </div>
                   <h3 className="font-bold text-slate-900  text-xl mb-2">
                     Confirmar Ingreso
                   </h3>
-                  <p className="text-sm text-slate-500 font-medium">
+                  <p className="text-sm text-slate-500 font-bold">
                     ¿Estás seguro de registrar el ingreso de la placa{" "}
                     <span className="text-slate-900  font-bold uppercase">
                       {plate}
@@ -1765,7 +1763,7 @@ export default function EmployeePage() {
                   </button>
                   <button
                     onClick={processEntry}
-                    className="px-5 py-3 font-bold text-white bg-slate-800 hover:bg-slate-700 rounded-3xl transition-all w-full flex items-center justify-center gap-2 active:scale-95"
+                    className="px-5 py-3 font-bold text-white bg-slate-800 hover:bg-slate-700 rounded-3xl transition-all w-full flex items-center justify-center gap-3 active:scale-95"
                     disabled={isSubmittingEntry}
                   >
                     {isSubmittingEntry ? (
@@ -1783,7 +1781,7 @@ export default function EmployeePage() {
             <div className="fixed inset-0 bg-white border-r border-slate-200/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
               <div className="bg-white  rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="bg-white border-r border-slate-200 text-slate-900 p-5 flex justify-between items-center">
-                  <h3 className="font-bold text-lg flex items-center gap-2">
+                  <h3 className="font-bold text-lg flex items-center gap-3">
                     <Menu size={20} />
                     Preferencias Adicionales
                   </h3>

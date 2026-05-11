@@ -319,23 +319,23 @@ export default function ManualEntry({
   };
 
   return (
-    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 max-w-3xl mx-auto">
+    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 max-w-3xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+        <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center">
           <Clock size={28} />
         </div>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
             Ingreso Manual (Histórico)
           </h2>
-          <p className="text-sm font-medium text-slate-500 mt-1">
+          <p className="text-sm font-bold text-slate-500 mt-1">
             Añade registros de vehículos del pasado
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 font-medium text-sm">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3 font-bold text-sm">
           <X size={20} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
@@ -352,27 +352,27 @@ export default function ManualEntry({
             </h3>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Placa *
               </label>
               <input
                 type="text"
                 value={plate}
                 onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold uppercase transition-all"
                 placeholder="ABC-123"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Tipo de Vehículo
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium capitalize transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold capitalize transition-all"
               >
                 {allowedVehicles.map((v) => (
                   <option key={v} value={v}>
@@ -384,7 +384,7 @@ export default function ManualEntry({
 
             {customFields?.map((field, idx) => (
               <div key={idx}>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                   {field.name} {field.required && "*"}
                 </label>
                 <input
@@ -394,7 +394,7 @@ export default function ManualEntry({
                     setExtraData({ ...extraData, [field.name]: e.target.value })
                   }
                   required={field.required}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                 />
               </div>
             ))}
@@ -415,7 +415,7 @@ export default function ManualEntry({
                   type="date"
                   value={entryDate}
                   onChange={(e) => setEntryDate(e.target.value)}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                   required
                 />
               </div>
@@ -433,19 +433,19 @@ export default function ManualEntry({
                   onChange={(e) =>
                     setEntryTime(formatTimeInput(e.target.value))
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                   required
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-3 mt-6 mb-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="flex items-center gap-3 mt-6 mb-2 p-4 bg-slate-50 rounded-3xl border border-slate-100">
               <input
                 type="checkbox"
                 id="isCompleted"
                 checked={isCompleted}
                 onChange={(e) => setIsCompleted(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 transition-colors"
+                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
               />
               <label
                 htmlFor="isCompleted"
@@ -466,7 +466,7 @@ export default function ManualEntry({
                       type="date"
                       value={exitDate}
                       onChange={(e) => setExitDate(e.target.value)}
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                       required={isCompleted}
                     />
                   </div>
@@ -484,20 +484,20 @@ export default function ManualEntry({
                       onChange={(e) =>
                         setExitTime(formatTimeInput(e.target.value))
                       }
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                       required={isCompleted}
                     />
                   </div>
                 </div>
 
                 <div className="mt-6">
-                  <div className="flex items-center gap-3 mb-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-3 mb-3 p-4 bg-slate-50 rounded-3xl border border-slate-100">
                     <input
                       type="checkbox"
                       id="isSpecialFee"
                       checked={isSpecialFee}
                       onChange={(e) => setIsSpecialFee(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 transition-colors"
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
                     />
                     <label
                       htmlFor="isSpecialFee"
@@ -507,7 +507,7 @@ export default function ManualEntry({
                     </label>
                   </div>
 
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4 ml-1">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 mt-4 ml-1">
                     Tarifa Cobrada ($) *
                   </label>
                   <div className="relative">
@@ -519,7 +519,7 @@ export default function ManualEntry({
                       value={totalFee}
                       onChange={(e) => setTotalFee(e.target.value)}
                       disabled={!isSpecialFee}
-                      className={`w-full text-base rounded-2xl px-4 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-blue-500 shadow-md shadow-blue-100/50"}`}
+                      className={`w-full text-base rounded-3xl px-5 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-indigo-500 shadow-xl border border-slate-100 shadow-indigo-100/50"}`}
                       placeholder="0.00"
                       min="0"
                       step="0.01"
@@ -527,7 +527,7 @@ export default function ManualEntry({
                     />
                   </div>
                   {!isSpecialFee && (
-                    <p className="text-xs font-medium text-slate-400 mt-2 ml-1">
+                    <p className="text-xs font-bold text-slate-400 mt-2 ml-1">
                       El valor se calcula automáticamente según las tarifas.
                       Marca{" "}
                       <span className="font-bold text-slate-500">
@@ -546,7 +546,7 @@ export default function ManualEntry({
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl font-bold transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-3 text-lg mx-auto"
+            className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 text-lg mx-auto"
           >
             {loading ? (
               <Spinner size={24} className="text-white" />

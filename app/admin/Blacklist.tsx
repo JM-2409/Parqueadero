@@ -121,31 +121,31 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
             parqueadero.
           </p>
         </div>
-        <div className="p-3 bg-red-50 text-red-600 rounded-2xl hidden md:block">
+        <div className="p-3 bg-red-50 text-red-600 rounded-3xl hidden md:block">
           <AlertTriangle size={28} />
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-2xl text-sm font-medium">
+        <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-3xl text-sm font-bold">
           {error}
         </div>
       )}
       {success && (
-        <div className="p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-2xl text-sm font-medium">
+        <div className="p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-3xl text-sm font-bold">
           {success}
         </div>
       )}
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 border border-slate-100 shadow-md rounded-3xl bg-white p-6 sticky top-24 h-max">
-          <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+        <div className="lg:col-span-1 border border-slate-100 shadow-xl border border-slate-100 rounded-3xl bg-white p-6 sticky top-34 h-max">
+          <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-3">
             <PlusCircle size={20} className="text-red-500" />
             Vedar Vehículo
           </h3>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Placa
               </label>
               <input
@@ -157,14 +157,14 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
                     plate: e.target.value.toUpperCase(),
                   })
                 }
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none uppercase font-bold transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-red-500 outline-none uppercase font-bold transition-all"
                 placeholder="Ej: ABC123"
                 maxLength={6}
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                 Motivo / Razón
               </label>
               <textarea
@@ -172,7 +172,7 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
                 onChange={(e) =>
                   setNewEntry({ ...newEntry, reason: e.target.value })
                 }
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none min-h-[120px] resize-none transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-red-500 outline-none min-h-[120px] resize-none transition-all"
                 placeholder="Detalle de por qué se veda este vehículo..."
                 required
               />
@@ -180,7 +180,7 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white rounded-2xl px-4 py-3.5 font-bold transition-all shadow-md shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-70"
+              className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white rounded-3xl px-5 py-3.5 font-bold transition-all shadow-xl border border-slate-100 shadow-red-200 flex items-center justify-center gap-3 disabled:opacity-70"
             >
               {isSubmitting ? (
                 <Spinner size={18} className="text-white" />
@@ -193,9 +193,9 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <div className="border border-slate-100 rounded-3xl bg-white overflow-hidden flex flex-col shadow-md">
+          <div className="border border-slate-100 rounded-3xl bg-white overflow-hidden flex flex-col shadow-xl border border-slate-100">
             <div className="p-6 border-b border-slate-50 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
+              <h3 className="font-bold text-lg text-slate-900 flex items-center gap-3">
                 Vehículos Vetados ({filteredList.length})
               </h3>
               <div className="relative w-full sm:w-72">
@@ -208,7 +208,7 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
                   placeholder="Buscar placa..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-red-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3.5 focus:ring-2 focus:ring-red-500 outline-none transition-all"
                 />
               </div>
             </div>
@@ -220,12 +220,12 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
                   <p className="text-slate-500 text-sm">Cargando...</p>
                 </div>
               ) : filteredList.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-200 rounded-2xl bg-white">
+                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-200 rounded-3xl bg-white">
                   <AlertTriangle
                     size={32}
                     className="mx-auto text-slate-300 mb-3"
                   />
-                  <p className="font-medium">
+                  <p className="font-bold">
                     No hay vehículos vetados que coincidan.
                   </p>
                 </div>
@@ -234,11 +234,11 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
                   {filteredList.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-white p-5 border border-slate-100 rounded-2xl flex flex-col gap-3 hover:border-red-200 hover:shadow-md transition-all group"
+                      className="bg-white p-5 border border-slate-100 rounded-3xl flex flex-col gap-3 hover:border-red-200 hover:shadow-xl border border-slate-100 transition-all group"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-600 flex-shrink-0 border border-red-100 group-hover:bg-red-100 transition-colors">
+                          <div className="w-12 h-12 bg-red-50 rounded-3xl flex items-center justify-center text-red-600 flex-shrink-0 border border-red-100 group-hover:bg-red-100 transition-colors">
                             <span className="font-black tracking-widest">
                               {item.plate.substring(0, 3)}
                             </span>
@@ -255,19 +255,19 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
                         </div>
                         <button
                           onClick={() => handleRemove(item.id, item.plate)}
-                          className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center hover:bg-red-500 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95"
+                          className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
                           title="Remover de lista negra"
                         >
                           <Trash2 size={16} />
                         </button>
                       </div>
 
-                      <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                      <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-3xl border border-slate-100">
                         {item.reason}
                       </p>
 
                       <div className="mt-auto pt-2 flex items-center justify-between border-t border-slate-50">
-                        <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                        <span className="text-[10px] text-slate-500 flex items-center gap-1 font-bold">
                           <User size={12} className="text-slate-400" /> Añadido
                           por:{" "}
                           {item.profiles?.email?.split("@")[0] || "Desconocido"}

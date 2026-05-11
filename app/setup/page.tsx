@@ -63,7 +63,7 @@ export default function VersionsPage() {
       case "feature":
         return <Zap size={20} className="text-amber-500" />;
       case "release":
-        return <Star size={20} className="text-blue-500" />;
+        return <Star size={20} className="text-indigo-500" />;
       case "security":
         return <ShieldCheck size={20} className="text-emerald-500" />;
       default:
@@ -73,10 +73,10 @@ export default function VersionsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 py-12">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-8 font-medium"
+          className="inline-flex items-center gap-3 text-slate-500 hover:text-indigo-600 transition-colors mb-8 font-bold"
         >
           <ArrowLeft size={20} />
           Volver al inicio
@@ -105,10 +105,10 @@ export default function VersionsPage() {
 
                 <div className="md:col-span-3 relative">
                   {/* Timeline line */}
-                  <div className="absolute left-[-31px] md:left-[-17px] top-2 bottom-[-48px] w-px bg-slate-200 last:hidden"></div>
+                  <div className="absolute left-[-31px] md:left-[-17px] top-3 bottom-[-48px] w-px bg-slate-200 last:hidden"></div>
 
                   {/* Timeline dot */}
-                  <div className="absolute left-[-39px] md:left-[-25px] top-1 w-4 h-4 rounded-full bg-white border-2 border-blue-500 z-10"></div>
+                  <div className="absolute left-[-39px] md:left-[-25px] top-1 w-4 h-4 rounded-full bg-white border-2 border-indigo-500 z-10"></div>
 
                   <div className="md:hidden mb-2">
                     <span className="text-sm font-bold text-slate-900 mr-2">
@@ -117,7 +117,7 @@ export default function VersionsPage() {
                     <span className="text-sm text-slate-500">{v.date}</span>
                   </div>
 
-                  <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-200">
+                  <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 border border-slate-200">
                     <div className="flex items-center gap-3 mb-4">
                       {getIcon(v.type)}
                       <h3 className="text-xl font-bold text-slate-900">

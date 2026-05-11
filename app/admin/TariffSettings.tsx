@@ -167,8 +167,8 @@ export default function TariffSettings({
 
   if (loading)
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-        <Spinner size={32} className="text-blue-500 mb-4" />
+      <div className="flex flex-col items-center justify-center py-30 text-slate-500">
+        <Spinner size={32} className="text-indigo-500 mb-4" />
         <p>Cargando tarifas...</p>
       </div>
     );
@@ -185,27 +185,27 @@ export default function TariffSettings({
             mejor tarifa automáticamente.
           </p>
         </div>
-        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl hidden md:block">
+        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-3xl hidden md:block">
           <DollarSign size={28} />
         </div>
       </div>
 
       {errorMsg && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3 animate-in fade-in slide-in-from-top-3">
           <X size={20} className="flex-shrink-0" />
-          <p className="text-sm font-medium">{errorMsg}</p>
+          <p className="text-sm font-bold">{errorMsg}</p>
         </div>
       )}
 
       {success && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-3xl flex items-center gap-3 animate-in fade-in slide-in-from-top-3">
           <CheckCircle2 size={20} className="flex-shrink-0" />
-          <p className="text-sm font-medium">{success}</p>
+          <p className="text-sm font-bold">{success}</p>
         </div>
       )}
 
       {allowedVehicles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-3xl shadow-md border border-slate-100 text-center">
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-3xl shadow-xl border border-slate-100 text-center">
           <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-4">
             <Car size={32} />
           </div>
@@ -221,21 +221,21 @@ export default function TariffSettings({
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Add Form */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md sticky top-24">
-              <h3 className="text-base font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <Plus size={20} className="text-blue-500" />
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl border border-slate-100 sticky top-34">
+              <h3 className="text-base font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <Plus size={20} className="text-indigo-500" />
                 Crear Tarifa
               </h3>
 
               <form onSubmit={handleAdd} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                     Vehículo
                   </label>
                   <select
                     value={vehicleType}
                     onChange={(e) => setVehicleType(e.target.value)}
-                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none uppercase font-medium transition-all"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-bold transition-all"
                     required
                   >
                     {allowedVehicles.map((v) => (
@@ -247,13 +247,13 @@ export default function TariffSettings({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                     Tipo de Tarifa
                   </label>
                   <select
                     value={rateType}
                     onChange={(e) => setRateType(e.target.value)}
-                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                     required
                   >
                     <option value="dia">Día (Turno o Tope)</option>
@@ -277,7 +277,7 @@ export default function TariffSettings({
                           type="time"
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
                           required
                         />
                       </div>
@@ -289,7 +289,7 @@ export default function TariffSettings({
                           type="time"
                           value={endTime}
                           onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
                           required
                         />
                       </div>
@@ -298,11 +298,11 @@ export default function TariffSettings({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                     Valor ($)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
                       $
                     </span>
                     <input
@@ -310,7 +310,7 @@ export default function TariffSettings({
                       min="0"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-2xl pl-8 pr-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-8 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
                       placeholder="5000"
                       required
                     />
@@ -320,7 +320,7 @@ export default function TariffSettings({
                 <button
                   type="submit"
                   disabled={isAdding}
-                  className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-4 py-3.5 font-bold transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-70"
+                  className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl px-5 py-3.5 font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-70"
                 >
                   {isAdding ? (
                     <Spinner size={18} className="text-white" />
@@ -344,10 +344,10 @@ export default function TariffSettings({
               return (
                 <div
                   key={vehicle}
-                  className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md"
+                  className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl border border-slate-100"
                 >
                   <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-50">
-                    <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold uppercase shrink-0">
+                    <div className="w-10 h-10 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold uppercase shrink-0">
                       {vehicle.charAt(0)}
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">
@@ -362,14 +362,14 @@ export default function TariffSettings({
                     {vehicleTariffs.map((t) => (
                       <div
                         key={t.id}
-                        className="group flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-md hover:border-slate-200 transition-all"
+                        className="group flex items-center justify-between p-4 rounded-3xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-xl border border-slate-100 hover:border-slate-200 transition-all"
                       >
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-3 mb-1">
                             {["hora", "minuto", "segundo"].includes(
                               t.rate_type,
                             ) ? (
-                              <Clock size={14} className="text-blue-400" />
+                              <Clock size={14} className="text-indigo-400" />
                             ) : (
                               <Calendar
                                 size={14}
@@ -394,7 +394,7 @@ export default function TariffSettings({
                         <button
                           onClick={() => handleDelete(t.id)}
                           disabled={deletingId === t.id}
-                          className="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-red-500 transition-all shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50"
+                          className="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-red-500 transition-all shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95 disabled:opacity-50"
                           title="Eliminar tarifa"
                         >
                           {deletingId === t.id ? (
@@ -413,7 +413,7 @@ export default function TariffSettings({
             {tariffs.length === 0 && (
               <div className="flex flex-col items-center justify-center p-12 bg-white rounded-3xl border border-dashed border-slate-200 text-center h-full min-h-[300px]">
                 <LayoutGrid size={32} className="text-slate-300 mb-4" />
-                <p className="text-slate-500 font-medium">
+                <p className="text-slate-500 font-bold">
                   Aún no hay tarifas configuradas.
                 </p>
                 <p className="text-sm text-slate-400 mt-1">
