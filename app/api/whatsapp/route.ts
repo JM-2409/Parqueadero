@@ -100,8 +100,23 @@ export async function POST(req: Request) {
 
     if (mediaUrl) {
       try {
+        // Validar y sanear mediaUrl para prevenir SSRF
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(mediaUrl, "http://localhost");
+        } catch (e) {
+          throw new Error("URL malformada");
+        }
+
+        if (parsedUrl.pathname !== "/api/receipt-image") {
+          throw new Error("Ruta de imagen no permitida");
+        }
+
+        const safeUrl = new URL("http://localhost/api/receipt-image");
+        safeUrl.search = parsedUrl.search;
+
         const { GET: generateImage } = await import("../receipt-image/route");
-        const mockRequest = new Request(mediaUrl);
+        const mockRequest = new Request(safeUrl.toString());
         const response = await generateImage(mockRequest);
 
         if (!response.ok)
