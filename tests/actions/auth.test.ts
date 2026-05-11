@@ -1,4 +1,4 @@
-import { expect, test, describe, mock, beforeEach } from "bun:test";
+import { expect, test, describe, mock, beforeEach, afterEach } from "bun:test";
 
 const mockFetch = mock();
 globalThis.fetch = mockFetch;
@@ -83,7 +83,7 @@ describe("createUser Error Paths via fetch mock", () => {
     });
   });
 
-  test("happy path: debería crear usuario y perfil exitosamente", async () => {
+  test("happy path: debería crear usuario y perfil exitosamente con customRoleId", async () => {
     // 1. Auth createUser success
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
       id: "123e4567-e89b-12d3-a456-426614174000", email: "test5@example.com"
@@ -94,11 +94,52 @@ describe("createUser Error Paths via fetch mock", () => {
       { id: "profile-123" }
     ]), { status: 200, headers: { 'content-type': 'application/json' } }));
 
-    const result = await createUser("test5@example.com", "pwd", "admin", "lot-id");
+    const result = await createUser("test5@example.com", "pwd", "admin", "lot-id", "custom-role-id");
 
     expect(mockFetch).toHaveBeenCalled();
 
     expect(result.success).toBe(true);
     expect(result.user).toBeDefined();
+  });
+});
+
+describe("createUser Missing Env Vars", () => {
+  let originalUrl: string | undefined;
+  let originalKey: string | undefined;
+
+  beforeEach(() => {
+    // Guardar variables de entorno originales
+    originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    originalKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  });
+
+  afterEach(() => {
+    // Restaurar variables de entorno originales
+    if (originalUrl !== undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
+    if (originalKey !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = originalKey;
+  });
+
+  test("debería retornar error si faltan las variables de entorno de Supabase", async () => {
+    // Limpiar variables de entorno
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "";
+
+    // Importación dinámica para evitar la caché y forzar re-evaluación del módulo auth.ts
+    const { createUser: createUserWithoutEnv } = await import(
+      `../../app/actions/auth.ts?bust=${Date.now()}`
+    );
+
+    const result = await createUserWithoutEnv(
+      "test-env@example.com",
+      "password",
+      "admin",
+      "lot-id"
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error:
+        "Faltan las variables de entorno de Supabase (URL o Service Role Key) en el servidor.",
+    });
   });
 });
