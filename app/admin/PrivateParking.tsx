@@ -388,7 +388,7 @@ export default function PrivateParking({
             </label>
             <button
               onClick={() => setIsCreating(true)}
-              className="flex-1 md:flex-none justify-center px-5 py-3.5 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors flex items-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200"
+              className="flex-1 md:flex-none justify-center px-5 py-3.5 bg-slate-900 text-white rounded-3xl font-bold hover:bg-slate-800 transition-colors flex items-center gap-3 shadow-xl border border-slate-100 shadow-slate-200"
             >
               <Plus size={18} />
               Crear Nuevo
@@ -423,7 +423,7 @@ export default function PrivateParking({
                   onChange={(e) =>
                     setSpaceData({ ...spaceData, space_number: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                   placeholder="ej. P-101"
                   required
                 />
@@ -445,7 +445,7 @@ export default function PrivateParking({
                           [field.name]: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                       placeholder={`ej. ${field.name}`}
                       required={field.required}
                     />
@@ -463,7 +463,7 @@ export default function PrivateParking({
               </button>
               <button
                 type="submit"
-                className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200"
+                className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 shadow-xl border border-slate-100 shadow-slate-200"
               >
                 <Save size={20} />
                 {editingSpaceId ? "Actualizar Espacio" : "Guardar Espacio"}
@@ -485,7 +485,7 @@ export default function PrivateParking({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar espacios..."
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
               />
               <Search
                 size={18}
@@ -554,7 +554,7 @@ export default function PrivateParking({
                         <div className="flex justify-end gap-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleEditClick(space)}
-                            className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-3xl transition-colors border border-transparent hover:border-indigo-100"
+                            className="p-3 text-slate-400 hover:text-slate-900 hover:bg-indigo-50 rounded-3xl transition-colors border border-transparent hover:border-indigo-100"
                             title="Editar"
                           >
                             <Edit2 size={16} />

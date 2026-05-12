@@ -321,7 +321,7 @@ export default function ManualEntry({
   return (
     <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 max-w-3xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center">
+        <div className="w-14 h-14 bg-indigo-50 text-slate-900 rounded-3xl flex items-center justify-center">
           <Clock size={28} />
         </div>
         <div>
@@ -359,7 +359,7 @@ export default function ManualEntry({
                 type="text"
                 value={plate}
                 onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold uppercase transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all"
                 placeholder="ABC-123"
                 required
               />
@@ -372,7 +372,7 @@ export default function ManualEntry({
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold capitalize transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold capitalize transition-all"
               >
                 {allowedVehicles.map((v) => (
                   <option key={v} value={v}>
@@ -394,7 +394,7 @@ export default function ManualEntry({
                     setExtraData({ ...extraData, [field.name]: e.target.value })
                   }
                   required={field.required}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                 />
               </div>
             ))}
@@ -415,7 +415,7 @@ export default function ManualEntry({
                   type="date"
                   value={entryDate}
                   onChange={(e) => setEntryDate(e.target.value)}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                   required
                 />
               </div>
@@ -433,7 +433,7 @@ export default function ManualEntry({
                   onChange={(e) =>
                     setEntryTime(formatTimeInput(e.target.value))
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                   required
                 />
               </div>
@@ -445,7 +445,7 @@ export default function ManualEntry({
                 id="isCompleted"
                 checked={isCompleted}
                 onChange={(e) => setIsCompleted(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
+                className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-500 transition-colors"
               />
               <label
                 htmlFor="isCompleted"
@@ -466,7 +466,7 @@ export default function ManualEntry({
                       type="date"
                       value={exitDate}
                       onChange={(e) => setExitDate(e.target.value)}
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                       required={isCompleted}
                     />
                   </div>
@@ -484,7 +484,7 @@ export default function ManualEntry({
                       onChange={(e) =>
                         setExitTime(formatTimeInput(e.target.value))
                       }
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                       required={isCompleted}
                     />
                   </div>
@@ -497,7 +497,7 @@ export default function ManualEntry({
                       id="isSpecialFee"
                       checked={isSpecialFee}
                       onChange={(e) => setIsSpecialFee(e.target.checked)}
-                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
+                      className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-500 transition-colors"
                     />
                     <label
                       htmlFor="isSpecialFee"
@@ -519,7 +519,7 @@ export default function ManualEntry({
                       value={totalFee}
                       onChange={(e) => setTotalFee(e.target.value)}
                       disabled={!isSpecialFee}
-                      className={`w-full text-base rounded-3xl px-5 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-indigo-500 shadow-xl border border-slate-100 shadow-indigo-100/50"}`}
+                      className={`w-full text-base rounded-3xl px-5 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-slate-500 shadow-xl border border-slate-100 shadow-indigo-100/50"}`}
                       placeholder="0.00"
                       min="0"
                       step="0.01"
@@ -546,7 +546,7 @@ export default function ManualEntry({
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 text-lg mx-auto"
+            className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-slate-200 flex items-center justify-center gap-3 text-lg mx-auto"
           >
             {loading ? (
               <Spinner size={24} className="text-white" />

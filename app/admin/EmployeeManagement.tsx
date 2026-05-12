@@ -148,7 +148,7 @@ export default function EmployeeManagement({
 
       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center">
+          <div className="w-14 h-14 bg-indigo-50 text-slate-900 rounded-3xl flex items-center justify-center">
             <UserPlus size={28} />
           </div>
           <div>
@@ -175,7 +175,7 @@ export default function EmployeeManagement({
                   username: e.target.value.toLowerCase().replace(/\s/g, ""),
                 })
               }
-              className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+              className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
               placeholder="ej. empleado_1"
               required
             />
@@ -196,7 +196,7 @@ export default function EmployeeManagement({
                   onChange={(e) =>
                     setNewEmployee({ ...newEmployee, password: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 pr-12 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                   placeholder="Mínimo 8 caracteres"
                   required
                 />
@@ -251,7 +251,7 @@ export default function EmployeeManagement({
                       ? newEmployee.password === newEmployee.confirmPassword
                         ? "border-emerald-100 bg-emerald-50/30 focus:border-emerald-400 text-emerald-900"
                         : "border-red-100 bg-red-50/30 focus:border-red-400 text-red-900"
-                      : "bg-slate-50 border-transparent focus:border-indigo-500"
+                      : "bg-slate-50 border-transparent focus:border-slate-500"
                   }`}
                   placeholder="Repita la contraseña"
                   required
@@ -270,7 +270,7 @@ export default function EmployeeManagement({
           <button
             type="submit"
             disabled={isCreatingEmployee}
-            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 mt-4"
+            className="w-full py-4 bg-slate-900 hover:bg-slate-800 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-slate-200 flex items-center justify-center gap-3 mt-4"
           >
             {isCreatingEmployee ? (
               <Spinner size={20} className="text-white" />
@@ -301,7 +301,7 @@ export default function EmployeeManagement({
                 className="flex items-center justify-between p-4 border border-slate-100 rounded-3xl hover:border-indigo-100 hover:shadow-xl border border-slate-100 transition-all bg-white group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center font-black text-lg group-hover:bg-indigo-100 transition-colors">
+                  <div className="w-12 h-12 bg-indigo-50 text-slate-900 rounded-3xl flex items-center justify-center font-black text-lg group-hover:bg-indigo-100 transition-colors">
                     {(emp.email || emp.full_name || "U")
                       .replace("@parkingapp.local", "")
                       .charAt(0)

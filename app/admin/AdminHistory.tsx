@@ -480,7 +480,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mt-8 relative group hover:border-indigo-100 transition-all">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+            <div className="w-14 h-14 bg-indigo-50 text-slate-900 rounded-3xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
               <History size={28} />
             </div>
             <div>
@@ -508,19 +508,19 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
         <div className="flex gap-3 border-b border-slate-100 mb-6 overflow-x-auto hide-scrollbar pb-1">
           <button
             onClick={() => setFilterStatus("active")}
-            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "active" ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "active" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
           >
             En Sistema
           </button>
           <button
             onClick={() => setFilterStatus("completed")}
-            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "completed" ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "completed" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
           >
             Salieron (Completados)
           </button>
           <button
             onClick={() => setFilterStatus("all")}
-            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "all" ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "all" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
           >
             Todos
           </button>
@@ -538,7 +538,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               placeholder="Placa..."
               value={localSearchTerm}
               onChange={(e) => setLocalSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full font-bold uppercase transition-all shadow-xl border border-slate-100"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full font-bold uppercase transition-all shadow-xl border border-slate-100"
             />
           </div>
           <div className="relative">
@@ -551,7 +551,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               placeholder="Operario..."
               value={localEmployeeSearchTerm}
               onChange={(e) => setLocalEmployeeSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full transition-all shadow-xl border border-slate-100"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full transition-all shadow-xl border border-slate-100"
             />
           </div>
           <div className="relative">
@@ -562,7 +562,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full appearance-none transition-all shadow-xl border border-slate-100"
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full appearance-none transition-all shadow-xl border border-slate-100"
             >
               <option value="all">Todos los vehículos</option>
               <option value="motos">Motos</option>
@@ -580,14 +580,14 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
+            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
             title="Fecha Inicio"
           />
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
+            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
             title="Fecha Fin"
           />
         </div>
@@ -708,7 +708,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                       href={v as string}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 px-1.5 py-1 rounded-3xl flex items-center gap-1 hover:bg-indigo-100 transition-colors w-max"
+                                      className="text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-slate-900 px-1.5 py-1 rounded-3xl flex items-center gap-1 hover:bg-indigo-100 transition-colors w-max"
                                     >
                                       Ver Foto
                                     </a>
@@ -749,7 +749,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                   e.stopPropagation();
                                   setViewingReceipt(session);
                                 }}
-                                className="text-indigo-600 hover:text-indigo-800 p-1"
+                                className="text-slate-900 hover:text-indigo-800 p-1"
                                 title="Ver Recibo"
                               >
                                 <FileText size={16} />
@@ -767,7 +767,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                 handleExit(session);
                               }}
                               disabled={isSubmittingExit === session.id}
-                              className="px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-3xl text-xs font-bold transition-all shadow-xl border border-slate-100 hover:shadow-indigo-200 disabled:opacity-50 flex items-center justify-center min-w-[100px] w-full"
+                              className="px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-slate-900 hover:text-white rounded-3xl text-xs font-bold transition-all shadow-xl border border-slate-100 hover:shadow-slate-200 disabled:opacity-50 flex items-center justify-center min-w-[100px] w-full"
                             >
                               {isSubmittingExit === session.id ? (
                                 <Spinner className="w-4 h-4" />
@@ -878,7 +878,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                                     setSessionToEdit(session);
                                     setNewPlate(session.vehicles.plate);
                                   }}
-                                  className="px-5 py-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-3xl text-xs font-bold transition-colors flex items-center gap-3 mb-2 w-full justify-center md:justify-end"
+                                  className="px-5 py-3 bg-indigo-50 text-slate-900 hover:bg-slate-900 hover:text-white rounded-3xl text-xs font-bold transition-colors flex items-center gap-3 mb-2 w-full justify-center md:justify-end"
                                 >
                                   <Edit2 size={16} />
                                   Editar Placa
@@ -972,7 +972,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                       customDate: e.target.value,
                     })
                   }
-                  className="w-full p-3.5 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 w-full outline-none"
+                  className="w-full p-3.5 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-slate-500 w-full outline-none"
                 />
               </div>
               <div>
@@ -988,7 +988,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                       customTime: e.target.value,
                     })
                   }
-                  className="w-full p-3.5 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 w-full outline-none"
+                  className="w-full p-3.5 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-slate-500 w-full outline-none"
                 />
               </div>
             </div>
@@ -1001,7 +1001,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               </button>
               <button
                 onClick={confirmForceExit}
-                className="px-5 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-3xl transition-colors flex items-center justify-center min-w-[120px]"
+                className="px-5 py-3 font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-3xl transition-colors flex items-center justify-center min-w-[120px]"
               >
                 Confirmar Salida
               </button>
@@ -1064,7 +1064,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                 type="text"
                 value={newPlate}
                 onChange={(e) => setNewPlate(e.target.value.toUpperCase())}
-                className="w-full p-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono text-lg font-bold"
+                className="w-full p-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none uppercase font-mono text-lg font-bold"
                 placeholder="ABC-123"
                 autoFocus
               />
@@ -1083,7 +1083,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
               </button>
               <button
                 onClick={handleSaveEditReceipt}
-                className="px-5 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-3xl transition-colors flex items-center gap-3"
+                className="px-5 py-3 font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-3xl transition-colors flex items-center gap-3"
                 disabled={isEditingPlate || !newPlate.trim()}
               >
                 {isEditingPlate ? (

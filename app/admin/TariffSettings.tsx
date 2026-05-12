@@ -185,7 +185,7 @@ export default function TariffSettings({
             mejor tarifa automáticamente.
           </p>
         </div>
-        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-3xl hidden md:block">
+        <div className="p-3 bg-indigo-50 text-slate-900 rounded-3xl hidden md:block">
           <DollarSign size={28} />
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function TariffSettings({
                   <select
                     value={vehicleType}
                     onChange={(e) => setVehicleType(e.target.value)}
-                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-bold transition-all"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none uppercase font-bold transition-all"
                     required
                   >
                     {allowedVehicles.map((v) => (
@@ -253,7 +253,7 @@ export default function TariffSettings({
                   <select
                     value={rateType}
                     onChange={(e) => setRateType(e.target.value)}
-                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                     required
                   >
                     <option value="dia">Día (Turno o Tope)</option>
@@ -277,7 +277,7 @@ export default function TariffSettings({
                           type="time"
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
+                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none font-mono"
                           required
                         />
                       </div>
@@ -289,7 +289,7 @@ export default function TariffSettings({
                           type="time"
                           value={endTime}
                           onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
+                          className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none font-mono"
                           required
                         />
                       </div>
@@ -310,7 +310,7 @@ export default function TariffSettings({
                       min="0"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-8 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-8 pr-4 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                       placeholder="5000"
                       required
                     />
@@ -320,7 +320,7 @@ export default function TariffSettings({
                 <button
                   type="submit"
                   disabled={isAdding}
-                  className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl px-5 py-3.5 font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-70"
+                  className="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl px-5 py-3.5 font-bold transition-all shadow-xl border border-slate-100 shadow-slate-200 flex items-center justify-center gap-3 disabled:opacity-70"
                 >
                   {isAdding ? (
                     <Spinner size={18} className="text-white" />
