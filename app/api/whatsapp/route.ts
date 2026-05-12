@@ -99,6 +99,7 @@ export async function POST(req: Request) {
     };
 
     if (mediaUrl) {
+      let safeRelativeUrl = "/api/receipt-image";
       try {
         // Validar y sanear mediaUrl para prevenir SSRF
         let parsedUrl: URL;
@@ -108,12 +109,13 @@ export async function POST(req: Request) {
           throw new Error("URL malformada");
         }
 
-        if (parsedUrl.pathname !== "/api/receipt-image") {
-          throw new Error("Ruta de imagen no permitida");
+        if (parsedUrl.origin !== "http://localhost" || parsedUrl.pathname !== "/api/receipt-image") {
+          throw new Error("Ruta de imagen no permitida o dominio inválido");
         }
 
         const safeUrl = new URL("http://localhost/api/receipt-image");
         safeUrl.search = parsedUrl.search;
+        safeRelativeUrl = `${safeUrl.pathname}${safeUrl.search}`;
 
         const { GET: generateImage } = await import("../receipt-image/route");
         const mockRequest = new Request(safeUrl.toString());
@@ -147,7 +149,7 @@ export async function POST(req: Request) {
 
           if (uploadError) {
             console.error("Error uploading image to Supabase");
-            messagePayload.body += `\n\nEnlace del recibo: ${mediaUrl}`;
+            messagePayload.body += `\n\nEnlace del recibo: ${safeRelativeUrl}`;
           } else {
             const { data: publicUrlData } = supabaseAdmin.storage
               .from("receipts")
@@ -160,11 +162,13 @@ export async function POST(req: Request) {
             );
           }
         } else {
-          messagePayload.body += `\n\nEnlace del recibo: ${mediaUrl}`;
+          messagePayload.body += `\n\nEnlace del recibo: ${safeRelativeUrl}`;
         }
       } catch (uploadObjError) {
         console.error("Error in image generation or upload");
-        messagePayload.body += `\n\nEnlace del recibo: ${mediaUrl}`;
+        // Use safeRelativeUrl if it has been defined, otherwise fallback to empty to avoid raw input
+        const fallbackUrl = typeof safeRelativeUrl !== 'undefined' ? safeRelativeUrl : "/api/receipt-image";
+        messagePayload.body += `\n\nEnlace del recibo: ${fallbackUrl}`;
       }
     }
 
