@@ -649,7 +649,7 @@ export default function AdminPage() {
           >
             <Users size={20} />
             <span className="font-bold whitespace-nowrap text-left">
-              Usuarios u Operarios
+              Operarios
             </span>
           </button>
           <button
@@ -685,7 +685,7 @@ export default function AdminPage() {
           >
             <Users size={20} />
             <span className="font-bold whitespace-nowrap text-left">
-              Abonados mensuales
+              Abonados
             </span>
           </button>
           <button

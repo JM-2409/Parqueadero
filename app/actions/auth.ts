@@ -54,21 +54,31 @@ export async function createUser(
       .limit(1);
 
     if (saError) {
-      return { success: false, error: "Error de base de datos verificando permisos." };
+      return {
+        success: false,
+        error: "Error de base de datos verificando permisos.",
+      };
     }
 
     const hasSuperadmin = superadmins && superadmins.length > 0;
 
     if (!hasSuperadmin) {
       if (role !== "superadmin") {
-        return { success: false, error: "Creación no autorizada. Solo se puede inicializar un perfil de superadministrador." };
+        return {
+          success: false,
+          error:
+            "Creación no autorizada. Solo se puede inicializar un perfil de superadministrador.",
+        };
       }
     } else {
       if (!token) {
         return { success: false, error: "No autorizado." };
       }
 
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+      const {
+        data: { user },
+        error: authError,
+      } = await supabaseAdmin.auth.getUser(token);
 
       if (authError || !user) {
         return { success: false, error: "Token inválido o expirado." };
@@ -85,15 +95,26 @@ export async function createUser(
       }
 
       if (profile.role !== "superadmin" && profile.role !== "admin") {
-        return { success: false, error: "No tienes permisos para crear usuarios." };
+        return {
+          success: false,
+          error: "No tienes permisos para crear usuarios.",
+        };
       }
 
       if (profile.role === "admin") {
         if (profile.parking_lot_id !== parkingLotId) {
-          return { success: false, error: "No tienes permisos para crear usuarios en este parqueadero." };
+          return {
+            success: false,
+            error:
+              "No tienes permisos para crear usuarios en este parqueadero.",
+          };
         }
         if (role === "superadmin" || role === "admin") {
-          return { success: false, error: "Los administradores no pueden crear usuarios con roles administrativos." };
+          return {
+            success: false,
+            error:
+              "Los administradores no pueden crear usuarios con roles administrativos.",
+          };
         }
       }
     }
@@ -140,6 +161,176 @@ export async function createUser(
     }
 
     return { success: true, user: authData.user };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteEmployee(userId: string, token: string) {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return {
+      success: false,
+      error: "Faltan variables de entorno en el servidor.",
+    };
+  }
+
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user)
+      return { success: false, error: "Token inválido o expirado." };
+
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("role, parking_lot_id")
+      .eq("id", user.id)
+      .single();
+
+    if (
+      profileError ||
+      !profile ||
+      (profile.role !== "superadmin" && profile.role !== "admin")
+    ) {
+      return {
+        success: false,
+        error: "No tienes permisos para eliminar usuarios.",
+      };
+    }
+
+    const { data: targetProfile, error: targetProfileError } =
+      await supabaseAdmin
+        .from("profiles")
+        .select("role, parking_lot_id")
+        .eq("id", userId)
+        .single();
+
+    if (targetProfileError || !targetProfile) {
+      return { success: false, error: "El usuario objetivo no existe." };
+    }
+
+    // Authorization logic
+    if (profile.role === "admin") {
+      if (profile.parking_lot_id !== targetProfile.parking_lot_id) {
+        return {
+          success: false,
+          error: "No tienes permisos sobre este usuario.",
+        };
+      }
+      if (
+        targetProfile.role === "admin" ||
+        targetProfile.role === "superadmin"
+      ) {
+        return {
+          success: false,
+          error: "No puedes eliminar a un usuario con rol igual o superior.",
+        };
+      }
+    } else if (profile.role === "superadmin") {
+      if (targetProfile.role === "superadmin") {
+        return {
+          success: false,
+          error: "No puedes eliminar a un superadministrador.",
+        };
+      }
+    }
+
+    const { error: deleteError } =
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (deleteError) throw deleteError;
+
+    // The user deletion in auth should cascade delete the profile via Supabase constraints
+    // If not we can explicitly delete it here, but typically it cascades.
+    await supabaseAdmin.from("profiles").delete().eq("id", userId);
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateEmployeePassword(
+  userId: string,
+  newPassword: string,
+  token: string,
+) {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return {
+      success: false,
+      error: "Faltan variables de entorno en el servidor.",
+    };
+  }
+
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user)
+      return { success: false, error: "Token inválido o expirado." };
+
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("role, parking_lot_id")
+      .eq("id", user.id)
+      .single();
+
+    if (
+      profileError ||
+      !profile ||
+      (profile.role !== "superadmin" && profile.role !== "admin")
+    ) {
+      return {
+        success: false,
+        error: "No tienes permisos para editar usuarios.",
+      };
+    }
+
+    const { data: targetProfile, error: targetProfileError } =
+      await supabaseAdmin
+        .from("profiles")
+        .select("role, parking_lot_id")
+        .eq("id", userId)
+        .single();
+
+    if (targetProfileError || !targetProfile) {
+      return { success: false, error: "El usuario objetivo no existe." };
+    }
+
+    // Authorization logic
+    if (profile.role === "admin") {
+      if (profile.parking_lot_id !== targetProfile.parking_lot_id) {
+        return {
+          success: false,
+          error: "No tienes permisos sobre este usuario.",
+        };
+      }
+      if (
+        targetProfile.role === "admin" ||
+        targetProfile.role === "superadmin"
+      ) {
+        return {
+          success: false,
+          error: "No puedes editar a un usuario con rol igual o superior.",
+        };
+      }
+    } else if (profile.role === "superadmin") {
+      if (targetProfile.role === "superadmin") {
+        return {
+          success: false,
+          error: "No puedes editar a un superadministrador.",
+        };
+      }
+    }
+
+    const { error: updateError } =
+      await supabaseAdmin.auth.admin.updateUserById(userId, {
+        password: newPassword,
+      });
+    if (updateError) throw updateError;
+
+    return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
