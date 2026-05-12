@@ -1,6 +1,13 @@
-# Sistema de Gestión de Parqueaderos Avanzado 🚗
+# Sistema de Gestión de Parqueaderos 🚗
 
-Plataforma integral SaaS para la administración corporativa y operativa de múltiples parqueaderos (sucursales) en tiempo real. 
+## Resumen del Proyecto 📝
+Este es un sistema avanzado de **gestión y facturación de parqueaderos multi-tenant** (ideal para una o múltiples sucursales) desarrollado con **Next.js 15, Tailwind CSS v4 y Supabase**.
+
+Su propósito principal es simplificar y digitalizar todas las operaciones de un estacionamiento moderno, permitiendo a los administradores crear tarifas dinámicas, llevar el control de abonados mensuales (y listas negras), generar reportes detallados y enviar recibos directamente por WhatsApp a los clientes.
+
+El sistema está dividido por roles (Dueño/Superadmin, Administrador de sucursal, y Operario), manteniendo entornos limpios, seguros y optimizados con métricas en tiempo real a través de websockets.
+
+---
 
 ## Características Principales 🌟
 - **Roles Estrictos e Independientes:**
