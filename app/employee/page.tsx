@@ -33,6 +33,36 @@ import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
+// Validación segura de preferencias en localStorage
+const ALLOWED_PREF_KEYS = [
+  "pref_autoPrint",
+  "pref_sound",
+  "pref_confirmEntry",
+  "pref_showNotes",
+];
+
+const getSecurePref = (key: string, defaultValue: boolean): boolean => {
+  if (typeof window === "undefined" || !ALLOWED_PREF_KEYS.includes(key)) return defaultValue;
+  try {
+    const value = localStorage.getItem(key);
+    if (value === "true") return true;
+    if (value === "false") return false;
+    return defaultValue;
+  } catch (e) {
+    return defaultValue;
+  }
+};
+
+const setSecurePref = (key: string, value: boolean): void => {
+  if (typeof window === "undefined" || !ALLOWED_PREF_KEYS.includes(key)) return;
+  try {
+    // Garantizamos que solo se guarden "true" o "false"
+    localStorage.setItem(key, value ? "true" : "false");
+  } catch (e) {
+    console.error("Error setting preference", e);
+  }
+};
+
 export default function EmployeePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("operation"); // operation, history
@@ -325,10 +355,7 @@ export default function EmployeePage() {
   ]);
 
   const playBeep = useCallback((type: "success" | "error") => {
-    if (
-      !localStorage.getItem("pref_sound") ||
-      localStorage.getItem("pref_sound") === "true"
-    ) {
+    if (getSecurePref("pref_sound", true)) {
       try {
         const audioCtx = new (
           window.AudioContext || (window as any).webkitAudioContext
@@ -380,11 +407,11 @@ export default function EmployeePage() {
       setIsShiftSet(true);
     }
 
-    // Load Prefs
-    setPrefAutoPrint(localStorage.getItem("pref_autoPrint") === "true");
-    setPrefSound(localStorage.getItem("pref_sound") !== "false");
-    setPrefConfirmEntry(localStorage.getItem("pref_confirmEntry") !== "false");
-    setPrefShowNotes(localStorage.getItem("pref_showNotes") === "true");
+    // Load Prefs with safe getters
+    setPrefAutoPrint(getSecurePref("pref_autoPrint", false));
+    setPrefSound(getSecurePref("pref_sound", true));
+    setPrefConfirmEntry(getSecurePref("pref_confirmEntry", true));
+    setPrefShowNotes(getSecurePref("pref_showNotes", false));
 
     checkUser();
   }, [checkUser, isShiftSet]);
@@ -816,7 +843,7 @@ export default function EmployeePage() {
   };
 
   const savePref = (key: string, value: boolean) => {
-    localStorage.setItem(key, value.toString());
+    setSecurePref(key, value);
     if (key === "pref_autoPrint") setPrefAutoPrint(value);
     if (key === "pref_sound") setPrefSound(value);
     if (key === "pref_confirmEntry") setPrefConfirmEntry(value);
