@@ -272,7 +272,7 @@ export default function CustomRoles({
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="px-5 py-3 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors shadow-xl border border-slate-100 shadow-indigo-200 flex items-center gap-3"
+            className="px-5 py-3 bg-slate-900 text-white rounded-3xl font-bold hover:bg-slate-800 transition-colors shadow-xl border border-slate-100 shadow-slate-200 flex items-center gap-3"
           >
             <Plus size={20} />
             Nuevo Rol
@@ -303,7 +303,7 @@ export default function CustomRoles({
                 type="text"
                 value={newRoleName}
                 onChange={(e) => setNewRoleName(e.target.value)}
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                 placeholder="ej. Supervisor, Cajero, Auditor"
                 required
               />
@@ -327,7 +327,7 @@ export default function CustomRoles({
                     {newRolePermissions.includes(perm.id) ? (
                       <CheckSquare
                         size={20}
-                        className="text-indigo-600 flex-shrink-0"
+                        className="text-slate-900 flex-shrink-0"
                       />
                     ) : (
                       <Square
@@ -353,7 +353,7 @@ export default function CustomRoles({
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200 w-full sm:w-auto"
+                className="px-6 py-3 bg-slate-900 text-white rounded-3xl font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-3 shadow-xl border border-slate-100 shadow-slate-200 w-full sm:w-auto"
               >
                 <Save size={20} />
                 {editingRoleId ? "Actualizar Rol" : "Guardar Rol"}
@@ -371,7 +371,7 @@ export default function CustomRoles({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar roles..."
-            className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-xl border border-slate-100"
+            className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3.5 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none transition-all shadow-xl border border-slate-100"
           />
           <Search
             size={18}
@@ -388,7 +388,7 @@ export default function CustomRoles({
           >
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-3xl flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-3xl flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-slate-900 transition-colors">
                   <Shield size={24} />
                 </div>
                 <h3 className="font-black text-slate-900 text-xl tracking-tight">
@@ -398,7 +398,7 @@ export default function CustomRoles({
               <div className="flex gap-1 bg-slate-50 p-1 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => handleEditClick(role)}
-                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-white rounded-3xl transition-all"
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white rounded-3xl transition-all"
                   title="Editar rol"
                 >
                   <Edit2 size={16} />
@@ -462,7 +462,7 @@ export default function CustomRoles({
             </p>
             <button
               onClick={() => setIsCreating(true)}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-colors inline-flex items-center gap-3 shadow-xl border border-slate-100 shadow-indigo-200"
+              className="px-6 py-3 bg-slate-900 text-white rounded-3xl font-bold hover:bg-slate-800 transition-colors inline-flex items-center gap-3 shadow-xl border border-slate-100 shadow-slate-200"
             >
               <Plus size={20} />
               Crear el primer rol

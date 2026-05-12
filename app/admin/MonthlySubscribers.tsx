@@ -186,7 +186,7 @@ export default function MonthlySubscribers({
             Gestiona los clientes con mensualidad y su periodo de validez.
           </p>
         </div>
-        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-3xl hidden md:block">
+        <div className="p-3 bg-indigo-50 text-slate-900 rounded-3xl hidden md:block">
           <Users size={28} />
         </div>
       </div>
@@ -219,7 +219,7 @@ export default function MonthlySubscribers({
                 onChange={(e) =>
                   setNewSub({ ...newSub, plate: e.target.value.toUpperCase() })
                 }
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold uppercase transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all"
                 placeholder="ABC123"
                 maxLength={6}
                 required
@@ -236,7 +236,7 @@ export default function MonthlySubscribers({
                 onChange={(e) =>
                   setNewSub({ ...newSub, owner_name: e.target.value })
                 }
-                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                 placeholder="Juan Pérez"
                 required
               />
@@ -252,7 +252,7 @@ export default function MonthlySubscribers({
                 onChange={(e) =>
                   setNewSub({ ...newSub, owner_document: e.target.value })
                 }
-                className="w-full px-3 py-3 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full px-3 py-3 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-slate-500 text-sm"
                 placeholder="1000000000"
               />
             </div>
@@ -268,7 +268,7 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, owner_document: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none transition-all"
                   placeholder="CC / NIT"
                 />
               </div>
@@ -282,7 +282,7 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, phone: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none transition-all"
                   placeholder="300..."
                 />
               </div>
@@ -299,7 +299,7 @@ export default function MonthlySubscribers({
                     onChange={(e) =>
                       setNewSub({ ...newSub, vehicle_type: e.target.value })
                     }
-                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 appearance-none outline-none font-bold transition-all"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 appearance-none outline-none font-bold transition-all"
                   >
                     <option value="carros">Carro</option>
                     <option value="motos">Moto</option>
@@ -324,7 +324,7 @@ export default function MonthlySubscribers({
                       amount_paid: Number(e.target.value),
                     })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none font-bold transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                   min="0"
                 />
               </div>
@@ -341,7 +341,7 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, start_date: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none transition-all"
                 />
               </div>
               <div>
@@ -354,7 +354,7 @@ export default function MonthlySubscribers({
                   onChange={(e) =>
                     setNewSub({ ...newSub, end_date: e.target.value })
                   }
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-3 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none transition-all"
                 />
               </div>
             </div>
@@ -362,7 +362,7 @@ export default function MonthlySubscribers({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl px-5 py-3.5 font-bold transition-all shadow-xl border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-70"
+              className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl px-5 py-3.5 font-bold transition-all shadow-xl border border-slate-100 shadow-slate-200 flex items-center justify-center gap-3 disabled:opacity-70"
             >
               {isSubmitting ? (
                 <Spinner size={18} className="text-white" />
@@ -390,7 +390,7 @@ export default function MonthlySubscribers({
                   placeholder="Buscar placa o nombre..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3.5 focus:ring-2 focus:ring-slate-500 outline-none transition-all"
                 />
               </div>
             </div>

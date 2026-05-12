@@ -1,4 +1,5 @@
 "use client";
+import styles from "./admin.module.css";
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
@@ -539,10 +540,10 @@ export default function AdminPage() {
     );
 
   return (
-    <div className="min-h-screen bg-slate-50  flex flex-col md:flex-row">
+    <div className={styles.container}>
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-white border-r border-slate-200 text-slate-900 p-4 flex justify-between items-center sticky top-0 z-30">
-        <div className="flex items-center gap-3 font-bold text-lg">
+      <div className={styles.mobileHeader}>
+        <div className={styles.mobileHeaderTitle}>
           <Settings size={24} className="text-slate-800" />
           <span className="truncate">Panel Admin</span>
         </div>
@@ -559,17 +560,17 @@ export default function AdminPage() {
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
+          className={styles.overlay}
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 transition-transform duration-300 w-64 bg-white border-r border-slate-200 text-slate-500 flex-shrink-0 flex flex-col h-screen`}
+        className={`${styles.sidebar} ${isMobileMenuOpen ? styles.sidebarOpen : styles.sidebarClosed}`}
       >
-        <div className="p-6 flex items-center justify-between gap-3 border-b border-indigo-900">
-          <div className="flex items-center gap-3 font-bold text-xl text-slate-900">
+        <div className={styles.sidebarHeader}>
+          <div className={styles.sidebarHeaderTitle}>
             <Settings size={28} className="text-slate-800" />
             <span>Admin</span>
           </div>
@@ -582,21 +583,21 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
-        <div className="p-4 border-b border-indigo-900">
-          <p className="text-xs text-slate-500 uppercase tracking-wider font-extrabold mb-1">
+        <div className={styles.sidebarLotInfo}>
+          <p className={styles.sidebarLotLabel}>
             Parqueadero
           </p>
-          <p className="text-slate-900 font-bold truncate">
+          <p className={styles.sidebarLotName}>
             {parkingLot?.name}
           </p>
         </div>
-        <nav className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
+        <nav className={styles.nav}>
           <button
             onClick={() => {
               setActiveTab("dashboard");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "dashboard" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "dashboard" ? styles.navItemActive : ""}`}
           >
             <LayoutDashboard size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -608,7 +609,7 @@ export default function AdminPage() {
               setActiveTab("cash_closures");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "cash_closures" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "cash_closures" ? styles.navItemActive : ""}`}
           >
             <DollarSign size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -620,7 +621,7 @@ export default function AdminPage() {
               setActiveTab("manual_entry");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "manual_entry" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "manual_entry" ? styles.navItemActive : ""}`}
           >
             <FileEdit size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -632,7 +633,7 @@ export default function AdminPage() {
               setActiveTab("tariffs");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "tariffs" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "tariffs" ? styles.navItemActive : ""}`}
           >
             <DollarSign size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -644,7 +645,7 @@ export default function AdminPage() {
               setActiveTab("employees");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "employees" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "employees" ? styles.navItemActive : ""}`}
           >
             <Users size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -656,7 +657,7 @@ export default function AdminPage() {
               setActiveTab("employee_logs");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "employee_logs" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "employee_logs" ? styles.navItemActive : ""}`}
           >
             <Activity size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -668,7 +669,7 @@ export default function AdminPage() {
               setActiveTab("private_parking");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "private_parking" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "private_parking" ? styles.navItemActive : ""}`}
           >
             <Home size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -680,7 +681,7 @@ export default function AdminPage() {
               setActiveTab("subscribers");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "subscribers" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "subscribers" ? styles.navItemActive : ""}`}
           >
             <Users size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -692,7 +693,7 @@ export default function AdminPage() {
               setActiveTab("blacklist");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "blacklist" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "blacklist" ? styles.navItemActive : ""}`}
           >
             <Shield size={20} className="text-red-400" />
             <span className="font-bold whitespace-nowrap text-left">
@@ -704,7 +705,7 @@ export default function AdminPage() {
               setActiveTab("settings");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "settings" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`${styles.navItem} ${activeTab === "settings" ? styles.navItemActive : ""}`}
           >
             <Settings size={20} />
             <span className="font-bold whitespace-nowrap text-left">
@@ -712,11 +713,11 @@ export default function AdminPage() {
             </span>
           </button>
         </nav>
-        <div className="p-4 mt-auto border-t border-indigo-900">
+        <div className={styles.logoutContainer}>
           <Link
             href="/"
             onClick={() => supabase.auth.signOut()}
-            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
+            className={styles.logoutButton}
           >
             <LogOut size={20} />
             <span className="font-bold">Cerrar Sesión</span>
@@ -725,8 +726,8 @@ export default function AdminPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
-        <div className="max-w-5xl mx-auto">
+      <div className={styles.mainContent}>
+        <div className={styles.contentWrapper}>
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
               <X size={20} className="flex-shrink-0" />
@@ -740,30 +741,30 @@ export default function AdminPage() {
           {activeTab === "dashboard" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center gap-4">
-                  <div className="p-4 bg-slate-100 text-slate-800 rounded-3xl">
+                <div className={`${styles.card} flex items-center gap-4`}>
+                  <div className={`${styles.statIconContainer} ${styles.statIconPrimary}`}>
                     <Car size={32} />
                   </div>
                   <div>
-                    <h3 className="text-slate-500 text-sm font-bold">
+                    <h3 className={styles.cardTitle}>
                       Vehículos Hoy
                     </h3>
-                    <p className="text-3xl font-bold text-slate-800 ">
+                    <p className={styles.cardValue}>
                       {todayStats.vehicles}
                     </p>
                   </div>
                 </div>
-                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex flex-col justify-center">
+                <div className={`${styles.card} flex flex-col justify-center`}>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="p-4 bg-emerald-50 text-emerald-600 rounded-3xl shrink-0">
+                      <div className={`${styles.statIconContainer} ${styles.statIconSuccess}`}>
                         <DollarSign size={32} />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-slate-500 text-sm font-bold truncate">
+                        <h3 className={`${styles.cardTitle} truncate`}>
                           Recaudo Actual (En Caja)
                         </h3>
-                        <p className="text-2xl sm:text-3xl font-bold text-slate-800  truncate">
+                        <p className={`${styles.cardValue} truncate`}>
                           {new Intl.NumberFormat("es-CO", {
                             style: "currency",
                             currency: "COP",
@@ -775,7 +776,7 @@ export default function AdminPage() {
                     <button
                       onClick={handleCloseRegister}
                       disabled={isClosingRegister || todayStats.revenue === 0}
-                      className="w-full sm:w-auto px-5 py-3 bg-white border-r border-slate-200 hover:bg-indigo-900 disabled:opacity-50 text-slate-900 rounded-3xl text-sm font-bold transition-colors truncate"
+                      className={`${styles.btnSecondary} truncate w-full sm:w-auto`}
                     >
                       {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
                     </button>
@@ -784,7 +785,7 @@ export default function AdminPage() {
               </div>
 
               {weeklyStats.length > 0 && (
-                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100 ">
+                <div className={styles.card}>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
                     <h3 className="text-slate-700  font-extrabold break-words">
                       Ingresos Acumulados (
@@ -947,16 +948,16 @@ export default function AdminPage() {
           {/* TAB: CONFIGURACIÓN */}
           {activeTab === "settings" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100 ">
+              <div className={styles.card}>
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-slate-100 text-slate-600  rounded-3xl">
                     <Settings size={24} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-extrabold text-slate-900 ">
+                    <h2 className={styles.sectionTitle}>
                       Configuración del Parqueadero
                     </h2>
-                    <p className="text-sm text-slate-500">
+                    <p className={styles.sectionSubtitle}>
                       Ajustes generales y campos personalizados
                     </p>
                   </div>
@@ -965,46 +966,46 @@ export default function AdminPage() {
                 <form onSubmit={handleUpdateSettings} className="space-y-8">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-1">
+                      <label className={styles.inputLabel}>
                         NIT del Parqueadero
                       </label>
                       <input
                         type="text"
                         value={parkingLot?.nit || ""}
-                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50  text-slate-500 cursor-not-allowed"
+                        className={`${styles.inputField} ${styles.inputFieldDisabled}`}
                         placeholder="Ej. 900.123.456-7"
                         disabled
                         readOnly
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-1">
+                      <label className={styles.inputLabel}>
                         Dirección Comercial
                       </label>
                       <input
                         type="text"
                         value={parkingLot?.address || ""}
-                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none bg-slate-50  text-slate-500 cursor-not-allowed"
+                        className={`${styles.inputField} ${styles.inputFieldDisabled}`}
                         placeholder="Ej. Calle 123 #45-67"
                         disabled
                         readOnly
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-1">
+                      <label className={styles.inputLabel}>
                         Capacidad Total
                       </label>
                       <input
                         type="number"
                         value={capacity || ""}
                         onChange={(e) => setCapacity(e.target.value)}
-                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className={styles.inputField}
                         placeholder="Ej. 100"
                         min="1"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-1">
+                      <label className={styles.inputLabel}>
                         Minutos de Cortesía (Entrada Gratis) *
                       </label>
                       <input
@@ -1017,7 +1018,7 @@ export default function AdminPage() {
                               parseInt(e.target.value) || 0,
                           })
                         }
-                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className={styles.inputField}
                         placeholder="Ej. 0"
                         min="0"
                       />
@@ -1027,7 +1028,7 @@ export default function AdminPage() {
                       </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-1">
+                      <label className={styles.inputLabel}>
                         Minutos de Gabela de Turno *
                       </label>
                       <input
@@ -1040,7 +1041,7 @@ export default function AdminPage() {
                               parseInt(e.target.value) || 0,
                           })
                         }
-                        className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none"
+                        className={styles.inputField}
                         placeholder="Ej. 15"
                         min="0"
                       />
@@ -1051,17 +1052,17 @@ export default function AdminPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-3">
+                      <label className={`${styles.inputLabel} mb-3`}>
                         Opciones de Visibilidad
                       </label>
-                      <label className="flex items-center gap-3 p-3 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className={`${styles.checkboxContainer} flex-row !justify-start gap-3 p-3`}>
                         <input
                           type="checkbox"
                           checked={showRevenue}
                           onChange={(e) => setShowRevenue(e.target.checked)}
-                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                          className={styles.checkbox}
                         />
-                        <span className="text-slate-700  font-bold">
+                        <span className={styles.checkboxLabel}>
                           Mostrar recaudo a usuarios (operarios)
                         </span>
                       </label>
@@ -1069,16 +1070,16 @@ export default function AdminPage() {
                   </div>
 
                   <div className="border-t border-slate-200  pt-6">
-                    <label className="block text-base font-extrabold text-slate-900  mb-4">
+                    <label className={`${styles.sectionTitle} mb-4 block`}>
                       Preferencias Globales para Empleados
                     </label>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className={styles.checkboxContainer}>
                         <div>
-                          <span className="text-slate-900  font-bold block">
+                          <span className={styles.checkboxLabel}>
                             Impresión Automática
                           </span>
-                          <span className="text-slate-500 text-xs mt-0.5 block">
+                          <span className={styles.checkboxDesc}>
                             Abre el recibo sin preguntar al ingresar un
                             vehículo.
                           </span>
@@ -1092,16 +1093,16 @@ export default function AdminPage() {
                               autoPrint: e.target.checked,
                             })
                           }
-                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                          className={styles.checkbox}
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className={styles.checkboxContainer}>
                         <div>
-                          <span className="text-slate-900  font-bold block">
+                          <span className={styles.checkboxLabel}>
                             Confirmación de Ingreso
                           </span>
-                          <span className="text-slate-500 text-xs mt-0.5 block">
+                          <span className={styles.checkboxDesc}>
                             Muestra un aviso intermedio para evitar
                             equivocaciones.
                           </span>
@@ -1115,16 +1116,16 @@ export default function AdminPage() {
                               confirmEntry: e.target.checked,
                             })
                           }
-                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                          className={styles.checkbox}
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <label className={styles.checkboxContainer}>
                         <div>
-                          <span className="text-slate-900  font-bold block">
+                          <span className={styles.checkboxLabel}>
                             Mostar Observaciones Adicionales
                           </span>
-                          <span className="text-slate-500 text-xs mt-0.5 block">
+                          <span className={styles.checkboxDesc}>
                             Campo libre para nota de golpes o rayones.
                           </span>
                         </div>
@@ -1137,17 +1138,17 @@ export default function AdminPage() {
                               showNotes: e.target.checked,
                             })
                           }
-                          className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                          className={styles.checkbox}
                         />
                       </label>
 
                       {parkingSettings?.showNotes && (
-                        <label className="flex items-center justify-between p-4 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors animate-in fade-in slide-in-from-top-3">
+                        <label className={`${styles.checkboxContainer} animate-in fade-in slide-in-from-top-3`}>
                           <div>
-                            <span className="text-slate-900  font-bold block">
+                            <span className={styles.checkboxLabel}>
                               Exigir Foto de Observación
                             </span>
-                            <span className="text-slate-500 text-xs mt-0.5 block">
+                            <span className={styles.checkboxDesc}>
                               Obliga a tomar una foto con la cámara si hay
                               observaciones.
                             </span>
@@ -1161,7 +1162,7 @@ export default function AdminPage() {
                                 requirePhoto: e.target.checked,
                               })
                             }
-                            className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                            className={styles.checkbox}
                           />
                         </label>
                       )}
@@ -1169,7 +1170,7 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700  mb-3">
+                    <label className={`${styles.inputLabel} mb-3`}>
                       Tipos de Vehículos Permitidos
                     </label>
                     <div className="flex flex-wrap gap-3">
@@ -1178,11 +1179,7 @@ export default function AdminPage() {
                           key={type}
                           type="button"
                           onClick={() => toggleVehicleType(type)}
-                          className={`px-5 py-3 rounded-3xl font-bold text-sm transition-colors border ${
-                            allowedVehicles.includes(type)
-                              ? "bg-slate-800 text-slate-900 border-indigo-600"
-                              : "bg-white  text-slate-600  border-slate-200  hover:border-indigo-300"
-                          }`}
+                          className={`${styles.btnOutline} ${allowedVehicles.includes(type) ? styles.btnOutlineActive : styles.btnOutlineInactive}`}
                         >
                           <span className="capitalize">{type}</span>
                         </button>
@@ -1193,10 +1190,10 @@ export default function AdminPage() {
                   <div className="border-t border-slate-200  pt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-extrabold text-slate-900 ">
+                        <h3 className={styles.sectionTitle}>
                           Estado del Software y Plan
                         </h3>
-                        <p className="text-sm text-slate-500">
+                        <p className={styles.sectionSubtitle}>
                           Información sobre su plan actual y capacidades
                         </p>
                       </div>
@@ -1204,7 +1201,7 @@ export default function AdminPage() {
                     <div className="grid md:grid-cols-2 gap-6 bg-slate-50  p-4 rounded-3xl border border-slate-200 ">
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-bold text-slate-700  mb-1">
+                          <label className={styles.inputLabel}>
                             Fecha de Expiración
                           </label>
                           <div className="w-full p-3.5 border border-slate-200  rounded-3xl bg-white  text-slate-600  font-mono text-sm cursor-not-allowed">
@@ -1276,10 +1273,10 @@ export default function AdminPage() {
                   <div className="border-t border-slate-200  pt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-extrabold text-slate-900 ">
+                        <h3 className={styles.sectionTitle}>
                           Campos Personalizados (Visitantes)
                         </h3>
-                        <p className="text-sm text-slate-500">
+                        <p className={styles.sectionSubtitle}>
                           Datos extra a pedir al ingresar un vehículo (Ej.
                           Casco, Teléfono)
                         </p>
@@ -1304,7 +1301,7 @@ export default function AdminPage() {
                           {customFields.map((field, idx) => (
                             <div
                               key={idx}
-                              className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50  border border-slate-200  rounded-3xl"
+                              className={styles.customFieldRow}
                             >
                               <input
                                 type="text"
@@ -1313,7 +1310,7 @@ export default function AdminPage() {
                                   updateCustomField(idx, "name", e.target.value)
                                 }
                                 placeholder="Nombre del campo (Ej. Casco)"
-                                className="flex-1 w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                className={`${styles.inputField} flex-1 text-sm`}
                                 required
                               />
                               <div className="flex items-center justify-between w-full sm:w-auto gap-4">
@@ -1351,10 +1348,10 @@ export default function AdminPage() {
                   <div className="border-t border-slate-200  pt-8 mt-8">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg font-extrabold text-slate-900 ">
+                        <h3 className={styles.sectionTitle}>
                           Campos Parqueadero Privado
                         </h3>
-                        <p className="text-sm text-slate-500">
+                        <p className={styles.sectionSubtitle}>
                           Datos extra a pedir o mostrar para los registros de
                           parqueo privado (Ej. Placa, Teléfono)
                         </p>
@@ -1380,7 +1377,7 @@ export default function AdminPage() {
                           {privateCustomFields.map((field, idx) => (
                             <div
                               key={idx}
-                              className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50  border border-slate-200  rounded-3xl"
+                              className={styles.customFieldRow}
                             >
                               <input
                                 type="text"
@@ -1393,7 +1390,7 @@ export default function AdminPage() {
                                   )
                                 }
                                 placeholder="Nombre del campo (Ej. Placa)"
-                                className="flex-1 w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                                className={`${styles.inputField} flex-1 text-sm focus:ring-emerald-500 focus:border-emerald-500`}
                                 required
                               />
                               <div className="flex items-center justify-between w-full sm:w-auto gap-4">
@@ -1474,7 +1471,7 @@ export default function AdminPage() {
                     <button
                       type="submit"
                       disabled={isUpdatingSettings}
-                      className="w-full md:w-auto py-3 px-8 bg-white border-r border-slate-200 hover:bg-indigo-900 disabled:bg-slate-600 text-slate-900 rounded-3xl font-bold transition-colors flex items-center justify-center gap-3"
+                      className={`${styles.btnPrimary} w-full md:w-auto`}
                     >
                       {isUpdatingSettings ? (
                         <Spinner size={20} className="text-slate-900" />
