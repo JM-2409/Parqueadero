@@ -59,7 +59,11 @@ export async function createUser(
 
     const hasSuperadmin = superadmins && superadmins.length > 0;
 
-    if (hasSuperadmin) {
+    if (!hasSuperadmin) {
+      if (role !== "superadmin") {
+        return { success: false, error: "Creación no autorizada. Solo se puede inicializar un perfil de superadministrador." };
+      }
+    } else {
       if (!token) {
         return { success: false, error: "No autorizado." };
       }

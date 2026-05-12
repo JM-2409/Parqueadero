@@ -10,6 +10,19 @@ describe("createUser Error Paths via fetch mock", () => {
     mockFetch.mockReset();
   });
 
+  test("debería rechazar la creación de usuarios que no sean superadmin si no existe ninguno en el sistema", async () => {
+    // 0. check superadmins
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } }));
+
+    const result = await createUser("test@example.com", "password", "admin", "lot-id");
+
+    expect(mockFetch).toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      error: "Creación no autorizada. Solo se puede inicializar un perfil de superadministrador.",
+    });
+  });
+
   test("debería retornar error amigable si el usuario ya está registrado ('already registered')", async () => {
     // 0. check superadmins
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } }));
@@ -19,7 +32,7 @@ describe("createUser Error Paths via fetch mock", () => {
       message: "User already registered"
     }), { status: 400, headers: { 'content-type': 'application/json' } }));
 
-    const result = await createUser("test@example.com", "password", "admin", "lot-id");
+    const result = await createUser("test@example.com", "password", "superadmin", null);
 
     expect(mockFetch).toHaveBeenCalled();
     expect(result).toEqual({
@@ -37,7 +50,7 @@ describe("createUser Error Paths via fetch mock", () => {
       message: "User already exists"
     }), { status: 400, headers: { 'content-type': 'application/json' } }));
 
-    const result = await createUser("test2@example.com", "password", "employee", "lot-id2");
+    const result = await createUser("test2@example.com", "password", "superadmin", null);
 
     expect(mockFetch).toHaveBeenCalled();
     expect(result).toEqual({
@@ -56,7 +69,7 @@ describe("createUser Error Paths via fetch mock", () => {
       message: originalErrorMessage
     }), { status: 400, headers: { 'content-type': 'application/json' } }));
 
-    const result = await createUser("test3@example.com", "123", "admin", null);
+    const result = await createUser("test3@example.com", "123", "superadmin", null);
 
     expect(mockFetch).toHaveBeenCalled();
     expect(result).toEqual({
@@ -75,7 +88,7 @@ describe("createUser Error Paths via fetch mock", () => {
     }), { status: 200, headers: { 'content-type': 'application/json' } }));
 
     // 2. Profile creation fails
-    const profileErrorMessage = "Foreign key violation: parking_lot_id";
+    const profileErrorMessage = "Database error";
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
       error: { message: profileErrorMessage },
       message: profileErrorMessage
@@ -84,7 +97,7 @@ describe("createUser Error Paths via fetch mock", () => {
     // 3. Rollback (delete user)
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 200 }));
 
-    const result = await createUser("test4@example.com", "pwd", "admin", "invalid-lot");
+    const result = await createUser("test4@example.com", "pwd", "superadmin", null);
 
     expect(mockFetch).toHaveBeenCalled();
     expect(mockFetch.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -109,7 +122,7 @@ describe("createUser Error Paths via fetch mock", () => {
       { id: "profile-123" }
     ]), { status: 200, headers: { 'content-type': 'application/json' } }));
 
-    const result = await createUser("test5@example.com", "pwd", "admin", "lot-id", "custom-role-id");
+    const result = await createUser("test5@example.com", "pwd", "superadmin", null, "custom-role-id");
 
     expect(mockFetch).toHaveBeenCalled();
 
