@@ -453,12 +453,16 @@ export default function AdminPage() {
     const sanitizedUsername = sanitizeInput(
       newEmployee.username.toLowerCase().trim(),
     );
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     const result = await createUser(
       `${sanitizedUsername}@parkingapp.local`,
       newEmployee.password,
       "employee",
       parkingLot.id,
       newEmployee.customRoleId || undefined,
+      token,
     );
 
     if (!result.success) {
