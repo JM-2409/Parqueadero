@@ -1,4 +1,5 @@
 "use client";
+import styles from "./superadmin.module.css";
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
@@ -473,10 +474,10 @@ export default function SuperAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50  flex flex-col md:flex-row">
+    <div className={styles.container}>
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-white border-r border-slate-200 text-slate-900 p-4 flex justify-between items-center sticky top-0 z-30">
-        <div className="flex items-center gap-3 font-bold text-lg">
+      <div className={styles.mobileHeader}>
+        <div className={styles.mobileHeaderTitle}>
           <ShieldCheck size={24} className="text-slate-800" />
           <span>Dueño</span>
         </div>
@@ -492,77 +493,92 @@ export default function SuperAdminPage() {
 
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
+        <div className={styles.overlay}
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 transition-transform duration-300 w-64 bg-white border-r border-slate-200 text-slate-500 flex-shrink-0 flex flex-col h-screen`}
+        className={`${styles.sidebar} ${isMobileMenuOpen ? styles.sidebarOpen : styles.sidebarClosed}`}
       >
-        <div className="p-6 flex items-center justify-between gap-3 border-b border-indigo-900">
-          <div className="flex items-center gap-3 font-bold text-xl text-slate-900">
+        <div className={styles.sidebarHeader}>
+          <div className={styles.sidebarHeaderTitle}>
             <ShieldCheck size={28} className="text-slate-800" />
             <span>Panel Dueño</span>
           </div>
           <div className="flex items-center gap-3">
             <button
-              className="md:hidden text-slate-400 hover:text-slate-900"
+              className="md:hidden text-slate-600 hover:text-slate-900"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <X size={24} />
             </button>
           </div>
         </div>
-        <nav className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
+        <nav className={styles.nav}>
           <button
-            onClick={() => {
-              setActiveTab("lots");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "lots" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+              onClick={() => {
+                setActiveTab("lots");
+                setIsMobileMenuOpen(false);
+              }}
+              className={
+                activeTab === "lots"
+                  ? `${styles.navItem} ${styles.navItemActive}`
+                  : styles.navItem
+              }
           >
             <Building2 size={20} />
             <span className="font-bold">Parqueaderos</span>
           </button>
           <button
-            onClick={() => {
-              setActiveTab("admins");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "admins" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+              onClick={() => {
+                setActiveTab("admins");
+                setIsMobileMenuOpen(false);
+              }}
+              className={
+                activeTab === "admins"
+                  ? `${styles.navItem} ${styles.navItemActive}`
+                  : styles.navItem
+              }
           >
             <UserPlus size={20} />
             <span className="font-bold">Administradores</span>
           </button>
           <button
-            onClick={() => {
-              setActiveTab("metrics");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "metrics" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+              onClick={() => {
+                setActiveTab("metrics");
+                setIsMobileMenuOpen(false);
+              }}
+              className={
+                activeTab === "metrics"
+                  ? `${styles.navItem} ${styles.navItemActive}`
+                  : styles.navItem
+              }
           >
             <BarChart3 size={20} />
             <span className="font-bold">Métricas</span>
           </button>
           <button
-            onClick={() => {
-              setActiveTab("settings");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "settings" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+              onClick={() => {
+                setActiveTab("settings");
+                setIsMobileMenuOpen(false);
+              }}
+              className={
+                activeTab === "settings"
+                  ? `${styles.navItem} ${styles.navItemActive}`
+                  : styles.navItem
+              }
           >
             <Settings size={20} />
             <span className="font-bold">Configuración</span>
           </button>
         </nav>
-        <div className="p-4 mt-auto border-t border-indigo-900">
+        <div className={styles.logoutContainer}>
           <Link
             href="/"
             onClick={() => supabase.auth.signOut()}
-            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
+            className={styles.logoutButton}
           >
             <LogOut size={20} />
             <span className="font-bold">Cerrar Sesión</span>
@@ -571,8 +587,8 @@ export default function SuperAdminPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
-        <div className="max-w-5xl mx-auto">
+      <div className={styles.mainContent}>
+        <div className={styles.contentWrapper}>
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
               <X size={20} className="flex-shrink-0" />
@@ -685,7 +701,7 @@ export default function SuperAdminPage() {
                   </div>
                 </div>
                 {parkingLots.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8 bg-slate-50  rounded-3xl border border-dashed border-slate-200 ">
+                  <p className="text-slate-600 text-center py-8 bg-slate-50  rounded-3xl border border-dashed border-slate-200 ">
                     No hay parqueaderos registrados aún.
                   </p>
                 ) : (
@@ -736,7 +752,7 @@ export default function SuperAdminPage() {
                             </button>
                             <button
                               onClick={() => openDeleteModal(lot.id, lot.name)}
-                              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-md border border-slate-100 hover:shadow-md border border-slate-100 active:scale-95 focus:opacity-100"
+                              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-red-500 hover:text-white bg-red-50 hover:bg-red-500 rounded-full transition-all shadow-sm border border-red-100 hover:shadow-md active:scale-95"
                               title="Eliminar parqueadero permanentemente"
                             >
                               <Trash2 size={16} />
@@ -744,7 +760,7 @@ export default function SuperAdminPage() {
 
                             <div className="flex items-start justify-between mb-3 pr-8">
                               <div>
-                                <h3 className="font-bold text-lg text-slate-800  leading-tight flex flex-wrap items-center gap-3">
+                                <h3 className="font-bold text-lg text-slate-900 leading-tight flex flex-wrap items-center gap-3">
                                   {lot.name}
                                   {lot.is_active === undefined ||
                                   lot.is_active ? (
@@ -770,7 +786,7 @@ export default function SuperAdminPage() {
                                 />
                               </div>
                             </div>
-                            <p className="text-sm text-slate-500 mb-2 font-mono bg-white  inline-block px-2 py-1 rounded border border-slate-100  w-max">
+                            <p className="text-sm text-slate-600 mb-2 font-mono bg-white  inline-block px-2 py-1 rounded border border-slate-100  w-max">
                               NIT: {lot.nit}
                             </p>
                             <p className="text-sm text-slate-600  mb-2 line-clamp-3 h-10">
@@ -804,7 +820,7 @@ export default function SuperAdminPage() {
 
                             <div className="mt-auto space-y-3">
                               <div className="pt-4 border-t border-slate-200 ">
-                                <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+                                <h4 className="text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2">
                                   Administradores ({lotAdmins.length})
                                 </h4>
                                 {lotAdmins.length > 0 ? (
@@ -830,7 +846,7 @@ export default function SuperAdminPage() {
                                               admin.email,
                                             )
                                           }
-                                          className="text-slate-400 opacity-0 group-hover/admin:opacity-100 hover:text-slate-900 hover:bg-red-500 rounded-full transition-all p-1 w-6 h-6 flex items-center justify-center shadow-md border border-slate-100 hover:shadow-md border border-slate-100 active:scale-95"
+                                          className="text-red-400 hover:text-white hover:bg-red-500 rounded-full transition-all p-1 w-6 h-6 flex items-center justify-center shadow-sm border border-red-50 active:scale-95"
                                           title="Eliminar administrador"
                                         >
                                           <Trash2 size={14} />
@@ -839,7 +855,7 @@ export default function SuperAdminPage() {
                                     ))}
                                   </ul>
                                 ) : (
-                                  <p className="text-xs text-slate-400 italic">
+                                  <p className="text-xs text-slate-600 italic">
                                     Sin administradores
                                   </p>
                                 )}
@@ -847,7 +863,7 @@ export default function SuperAdminPage() {
 
                               <div className="pt-3 border-t border-slate-100 ">
                                 <div className="flex justify-between items-center mb-2">
-                                  <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+                                  <h4 className="text-xs font-extrabold text-slate-600 uppercase tracking-wider">
                                     Empleados ({lotEmployees.length})
                                   </h4>
                                 </div>
@@ -868,26 +884,26 @@ export default function SuperAdminPage() {
                                       </li>
                                     ))}
                                     {lotEmployees.length > 3 && (
-                                      <li className="text-xs text-slate-500 font-bold pl-3 pt-1">
+                                      <li className="text-xs text-slate-600 font-bold pl-3 pt-1">
                                         +{lotEmployees.length - 3} empleados
                                         más...
                                       </li>
                                     )}
                                   </ul>
                                 ) : (
-                                  <p className="text-xs text-slate-400 italic">
+                                  <p className="text-xs text-slate-600 italic">
                                     Sin empleados
                                   </p>
                                 )}
                               </div>
 
                               <div className="pt-4 border-t border-slate-200  mt-4">
-                                <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-3">
+                                <h4 className="text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-3">
                                   Acceso y Suspensión
                                 </h4>
                                 <div className="space-y-3">
                                   <div>
-                                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
                                       Fecha de Expiración
                                     </label>
                                     <input
@@ -935,7 +951,7 @@ export default function SuperAdminPage() {
                                 </div>
                               </div>
 
-                              <div className="pt-4 border-t border-slate-200  flex justify-between text-[11px] text-slate-400 font-bold mt-3">
+                              <div className="pt-4 border-t border-slate-200  flex justify-between text-[11px] text-slate-600 font-bold mt-3">
                                 <span>Capacidad: {lot.capacity}</span>
                                 <span>
                                   Creado:{" "}
@@ -1021,7 +1037,7 @@ export default function SuperAdminPage() {
                       <button
                         type="button"
                         onClick={() => setShowAdminPassword(!showAdminPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600  transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-600  transition-colors"
                       >
                         {showAdminPassword ? (
                           <EyeOff size={18} />
@@ -1051,7 +1067,7 @@ export default function SuperAdminPage() {
                   Administradores Registrados
                 </h2>
                 {admins.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8 bg-slate-50  rounded-3xl border border-dashed border-slate-200 ">
+                  <p className="text-slate-600 text-center py-8 bg-slate-50  rounded-3xl border border-dashed border-slate-200 ">
                     No hay administradores registrados aún.
                   </p>
                 ) : (
@@ -1069,7 +1085,7 @@ export default function SuperAdminPage() {
                             <p className="font-extrabold text-slate-900 ">
                               {admin.email.split("@")[0]}
                             </p>
-                            <p className="text-sm text-slate-500 flex items-center gap-1">
+                            <p className="text-sm text-slate-600 flex items-center gap-1">
                               <Building2 size={14} />
                               {admin.parking_lots?.name ||
                                 "Sin parqueadero asignado"}
@@ -1080,7 +1096,7 @@ export default function SuperAdminPage() {
                           onClick={() =>
                             handleDeleteAdmin(admin.id, admin.email)
                           }
-                          className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shadow-md border border-slate-100 hover:shadow-md border border-slate-100 active:scale-95"
+                          className="w-10 h-10 flex items-center justify-center text-red-500 hover:text-white bg-red-50 hover:bg-red-500 rounded-full transition-all shadow-sm border border-red-100 hover:shadow-md active:scale-95"
                           title="Eliminar administrador"
                         >
                           <Trash2 size={18} />
@@ -1105,7 +1121,7 @@ export default function SuperAdminPage() {
                     <h2 className="text-xl font-extrabold text-slate-900 ">
                       Métricas y Rentabilidad
                     </h2>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-600">
                       Consulta los ingresos registrados por arqueos de caja en
                       los últimos 30 días
                     </p>
@@ -1117,7 +1133,7 @@ export default function SuperAdminPage() {
                     <Spinner size={32} className="text-slate-800" />
                   </div>
                 ) : metrics.length === 0 ? (
-                  <p className="text-center text-slate-500 italic p-8 bg-slate-50  rounded-3xl">
+                  <p className="text-center text-slate-600 italic p-8 bg-slate-50  rounded-3xl">
                     No hay registros de cierres de caja en los últimos 30 días.
                   </p>
                 ) : (
@@ -1169,7 +1185,7 @@ export default function SuperAdminPage() {
                                 currency: "COP",
                               }).format(m.expected_amount || m.total_amount)}
                             </td>
-                            <td className="py-3 px-5 text-sm text-slate-500">
+                            <td className="py-3 px-5 text-sm text-slate-600">
                               {new Intl.NumberFormat("es-CO", {
                                 style: "currency",
                                 currency: "COP",
@@ -1184,7 +1200,7 @@ export default function SuperAdminPage() {
                                   (m.base_amount || 0),
                               )}
                             </td>
-                            <td className="py-3 px-5 text-sm text-slate-500">
+                            <td className="py-3 px-5 text-sm text-slate-600">
                               {m.closed_by || "Sistema"}
                             </td>
                           </tr>
@@ -1209,7 +1225,7 @@ export default function SuperAdminPage() {
                     <h2 className="text-xl font-extrabold text-slate-900 ">
                       Configuración Global
                     </h2>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-600">
                       Estos datos aparecerán en los recibos
                     </p>
                   </div>
@@ -1248,7 +1264,7 @@ export default function SuperAdminPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <Car size={40} className="text-slate-500" />
+                          <Car size={40} className="text-slate-600" />
                         )}
                       </div>
 
@@ -1263,7 +1279,7 @@ export default function SuperAdminPage() {
                             className="hidden"
                           />
                         </label>
-                        <p className="text-xs text-slate-500 mt-2 text-center sm:text-left">
+                        <p className="text-xs text-slate-600 mt-2 text-center sm:text-left">
                           Recomendado: Imagen cuadrada (PNG/JPG). Máx 2MB.
                         </p>
                       </div>
@@ -1304,7 +1320,7 @@ export default function SuperAdminPage() {
               </div>
               <button
                 onClick={() => setEditingLot(null)}
-                className="text-slate-400 hover:text-slate-600  transition-colors"
+                className="text-slate-600 hover:text-slate-600  transition-colors"
               >
                 <X size={24} />
               </button>
@@ -1387,7 +1403,7 @@ export default function SuperAdminPage() {
                         <div className="font-bold text-slate-900  text-sm">
                           Recibos por WhatsApp
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-600">
                           Envío automático al cliente
                         </div>
                       </div>
@@ -1414,7 +1430,7 @@ export default function SuperAdminPage() {
                         <div className="font-bold text-slate-900  text-sm">
                           Abonados (Mensualidades)
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-600">
                           Gestión de vehículos mensuales
                         </div>
                       </div>
@@ -1441,7 +1457,7 @@ export default function SuperAdminPage() {
                         <div className="font-bold text-slate-900  text-sm">
                           Múltiples Empleados
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-600">
                           Permite roles y cuentas extra
                         </div>
                       </div>
@@ -1466,7 +1482,7 @@ export default function SuperAdminPage() {
                         <div className="font-bold text-slate-900  text-sm">
                           Reportes Avanzados
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-600">
                           Cierres de caja y analíticas
                         </div>
                       </div>
