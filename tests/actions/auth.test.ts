@@ -11,6 +11,9 @@ describe("createUser Error Paths via fetch mock", () => {
   });
 
   test("debería retornar error amigable si el usuario ya está registrado ('already registered')", async () => {
+    // 0. check superadmins
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } }));
+
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
       error: { message: "User already registered" },
       message: "User already registered"
@@ -26,6 +29,9 @@ describe("createUser Error Paths via fetch mock", () => {
   });
 
   test("debería retornar error amigable si el usuario ya existe ('already exists')", async () => {
+    // 0. check superadmins
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } }));
+
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
       error: { message: "User already exists" },
       message: "User already exists"
@@ -41,6 +47,9 @@ describe("createUser Error Paths via fetch mock", () => {
   });
 
   test("debería retornar el mensaje original para cualquier otro error de autenticación", async () => {
+    // 0. check superadmins
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } }));
+
     const originalErrorMessage = "Password is too weak";
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
       error: { message: originalErrorMessage },
@@ -57,6 +66,9 @@ describe("createUser Error Paths via fetch mock", () => {
   });
 
   test("debería eliminar el usuario de auth y retornar error si falla la creación del perfil", async () => {
+    // 0. check superadmins
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } }));
+
     // 1. Auth createUser success
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
       id: "123e4567-e89b-12d3-a456-426614174000", email: "test4@example.com"
@@ -84,6 +96,9 @@ describe("createUser Error Paths via fetch mock", () => {
   });
 
   test("happy path: debería crear usuario y perfil exitosamente con customRoleId", async () => {
+    // 0. check superadmins
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } }));
+
     // 1. Auth createUser success
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
       id: "123e4567-e89b-12d3-a456-426614174000", email: "test5@example.com"

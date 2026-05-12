@@ -96,12 +96,16 @@ export default function EmployeeManagement({
     }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const email = `${newEmployee.username.trim()}@parkingapp.local`;
       const result = await createUser(
         email,
         newEmployee.password,
         "employee",
         parkingLotId,
+        undefined,
+        token,
       );
 
       if (!result.success) throw new Error(result.error);

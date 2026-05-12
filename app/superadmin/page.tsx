@@ -417,11 +417,16 @@ export default function SuperAdminPage() {
       return;
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     const result = await createUser(
       `${sanitizeInput(newAdmin.username).toLowerCase().trim()}@parkingapp.local`,
       newAdmin.password,
       "admin",
       newAdmin.parkingLotId,
+      undefined,
+      token,
     );
 
     if (!result.success) {
