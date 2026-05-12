@@ -185,6 +185,7 @@ CREATE POLICY "Public Cash Closures" ON cash_closures FOR ALL USING (true) WITH 
 - **Seguridad en Integraciones de Terceros:** Las credenciales y números de teléfono de WhatsApp (Twilio) pasaron de estar quemadas en el código a requerir estrictamente las variables de entorno (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`). El servidor arroja error 500 para evitar fugas si no están configuradas correctamente.
 
 ## Correcciones e Interacciones Recientes 🔄
+- **Fix de Seguridad en Preferencias Locales**: Se implementó validación estricta y limitación por lista de permitidos (whitelist) para acceder a los ajustes de usuario en `localStorage` (XSS Mitigation), previniendo la inyección de código o la manipulación de estados sensibles por parte del cliente.
 - **Fix de Seguridad en Creación de Usuarios**: Se implementó una validación de autorización en la Server Action `createUser` exigiendo el `token` del usuario en sesión y validando que posea el rol de `superadmin` o `admin` para prevenir la creación de usuarios no autorizados mediante peticiones a la API directamente.
 - **Envío de Recibos por WhatsApp (Twilio)**: Se integró la API de Twilio para enviar automáticamente una imagen del recibo de parqueo vía WhatsApp de forma segura. Adicionalmente, el ArrayBuffer de imágenes a Supabase Storage ahora se manda nativamente solucionando la corrupción de archivos.
 - **Generación de Imagen de Recibo**: Nuevo endpoint (`/api/receipt-image`) que genera un recibo en formato imagen `.png` on-the-fly con los detalles de la sesión.
