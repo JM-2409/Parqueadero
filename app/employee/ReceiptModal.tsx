@@ -230,7 +230,7 @@ export default function ReceiptModal({
           </div>
         </div>
 
-        <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 md:rounded-b-2xl flex flex-col gap-3 print:hidden">
+        <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 md:rounded-b-2xl flex flex-col gap-3 shrink-0 print:hidden">
           <div className="flex flex-col gap-3">
             <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
               Enviar SMS / WhatsApp
