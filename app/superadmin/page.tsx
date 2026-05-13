@@ -1404,7 +1404,7 @@ export default function SuperAdminPage() {
                           Recibos por WhatsApp
                         </div>
                         <div className="text-xs text-slate-600">
-                          Envío automático al cliente
+                          Permitir el envío de recibos por WhatsApp
                         </div>
                       </div>
                     </label>

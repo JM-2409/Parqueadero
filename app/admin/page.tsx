@@ -74,11 +74,13 @@ export default function AdminPage() {
     confirmEntry: boolean;
     showNotes: boolean;
     requirePhoto?: boolean;
+    auto_send_whatsapp?: boolean;
   }>({
     autoPrint: false,
     confirmEntry: true,
     showNotes: false,
     requirePhoto: false,
+    auto_send_whatsapp: false,
   });
   const [showSqlAlert, setShowSqlAlert] = useState(false);
 
@@ -1160,6 +1162,31 @@ export default function AdminPage() {
                               setParkingSettings({
                                 ...parkingSettings,
                                 requirePhoto: e.target.checked,
+                              })
+                            }
+                            className={styles.checkbox}
+                          />
+                        </label>
+                      )}
+
+                      {parkingLot?.features?.whatsapp_receipts && (
+                        <label className={styles.checkboxContainer}>
+                          <div>
+                            <span className={styles.checkboxLabel}>
+                              Envío Automático de WhatsApp
+                            </span>
+                            <span className={styles.checkboxDesc}>
+                              Si el parqueadero tiene WhatsApp activado, enviar
+                              el recibo de forma automática al registrar salida.
+                            </span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={parkingSettings?.auto_send_whatsapp || false}
+                            onChange={(e) =>
+                              setParkingSettings({
+                                ...parkingSettings,
+                                auto_send_whatsapp: e.target.checked,
                               })
                             }
                             className={styles.checkbox}
