@@ -1,5 +1,6 @@
 "use client";
 
+import styles from "./employee.module.css";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -938,7 +939,7 @@ export default function EmployeePage() {
             />
             <button
               type="submit"
-              className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-900 rounded-3xl font-bold text-lg transition-colors shadow-md border border-slate-100 shadow-indigo-200"
+              className={`${styles.btnPrimary} py-4 text-lg w-full`}
             >
               Comenzar Turno
             </button>
@@ -985,7 +986,7 @@ export default function EmployeePage() {
               setBlacklistAlert(null);
               setPlate("");
             }}
-            className="w-full py-5 bg-red-600 hover:bg-red-700 text-slate-900 rounded-3xl font-bold text-lg uppercase tracking-wider transition-colors shadow-md border border-slate-100 shadow-red-200 focus:outline-none focus:ring-4 focus:ring-red-500/50"
+            className="w-full py-5 bg-red-600 hover:bg-red-700 text-white rounded-3xl font-bold text-lg uppercase tracking-wider transition-colors shadow-md border border-slate-100 shadow-red-200 focus:outline-none focus:ring-4 focus:ring-red-500/50"
           >
             Entendido, Rechazar Ingreso
           </button>
@@ -997,17 +998,17 @@ export default function EmployeePage() {
   return (
     <div className="h-screen bg-slate-50  flex flex-col md:flex-row w-full overflow-hidden font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-slate-800 text-white p-4 flex justify-between items-center shadow-md border border-slate-100 z-30 shrink-0">
+      <div className="md:hidden bg-slate-800 text-white p-4 flex justify-between items-center shadow-md border-b border-slate-700 z-30 shrink-0">
         <div className="flex items-center gap-3 font-bold text-lg">
-          <Car size={24} className="text-slate-900 opacity-90" />
-          <span className="truncate max-w-[200px] drop-shadow-md border border-slate-100">
+          <Car size={24} className="text-white" />
+          <span className="truncate max-w-[200px] font-extrabold text-white">
             {parkingLot?.name}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-3 bg-indigo-700/50 hover:bg-slate-700 rounded-3xl transition-colors active:scale-95"
+            className="p-3 bg-slate-700 hover:bg-slate-600 rounded-3xl transition-colors active:scale-95"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -1026,7 +1027,7 @@ export default function EmployeePage() {
       <div
         className={`${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} md:translate-x-0 fixed md:relative top-0 left-0 z-50 transition-transform duration-300 w-72 bg-white border-r border-slate-200 text-slate-500 flex-shrink-0 flex flex-col h-full`}
       >
-        <div className="p-6 flex items-center justify-between gap-3 border-b border-indigo-900">
+        <div className="p-6 flex items-center justify-between gap-3 border-b border-slate-200">
           <div className="flex items-center gap-3 font-bold text-xl text-slate-900">
             <Car size={28} className="text-slate-800" />
             <span>Operación</span>
@@ -1041,7 +1042,7 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        <div className="p-4 border-b border-indigo-900">
+        <div className="p-4 border-b border-slate-200">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs text-slate-500 uppercase tracking-wider font-extrabold">
               Turno Actual
@@ -1053,14 +1054,14 @@ export default function EmployeePage() {
                 setIsShiftSet(false);
                 setShiftName("");
               }}
-              className="text-[10px] bg-indigo-900 hover:bg-slate-700 text-slate-500 px-2 py-0.5 rounded transition-colors"
+              className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded transition-colors"
             >
               Cambiar
             </button>
           </div>
-          <div className="flex items-center gap-3 text-slate-900 bg-indigo-900 p-3 rounded-3xl">
-            <User size={16} className="text-slate-800 shrink-0" />
-            <span className="font-bold truncate">{shiftName}</span>
+          <div className="flex items-center gap-3 text-slate-900 bg-slate-100 border border-slate-200 p-3 rounded-3xl shadow-sm">
+            <User size={16} className="text-slate-600 shrink-0" />
+            <span className="font-bold truncate text-slate-800">{shiftName}</span>
           </div>
         </div>
 
@@ -1070,7 +1071,7 @@ export default function EmployeePage() {
               setActiveTab("operation");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "operation" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "operation" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
           >
             <LogIn size={20} />
             <span className="font-bold whitespace-nowrap">
@@ -1082,7 +1083,7 @@ export default function EmployeePage() {
               setActiveTab("history");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "history" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "history" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
           >
             <History size={20} />
             <span className="font-bold whitespace-nowrap">Historial</span>
@@ -1092,19 +1093,19 @@ export default function EmployeePage() {
               setActiveTab("private");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "private" ? "bg-slate-800 text-slate-900" : "hover:bg-indigo-900 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "private" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
           >
             <Home size={20} className="flex-shrink-0" />
             <span className="font-bold whitespace-nowrap">Parq. Privados</span>
           </button>
         </nav>
 
-        <div className="p-4 mt-auto border-t border-indigo-900">
+        <div className="p-4 mt-auto border-t border-slate-200">
           <div className="mb-4 px-2">
             <p className="text-xs text-slate-500 mb-1">Ocupación</p>
-            <div className="w-full bg-indigo-900 rounded-full h-2.5">
+            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-slate-1000 h-2.5 rounded-full"
+                className="bg-indigo-600 h-2.5 rounded-full"
                 style={{
                   width: `${(activeSessions.length / (parkingLot?.capacity || 1)) * 100}%`,
                 }}
@@ -1129,7 +1130,7 @@ export default function EmployeePage() {
                 <button
                   onClick={handleCloseRegister}
                   disabled={isClosingRegister || accumulatedRevenue === 0}
-                  className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-slate-900 rounded-3xl text-xs font-bold transition-colors truncate"
+                  className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-3xl text-xs font-bold transition-colors truncate shadow-sm"
                 >
                   {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
                 </button>
@@ -1139,7 +1140,7 @@ export default function EmployeePage() {
 
           <button
             onClick={() => setShowPreferences(true)}
-            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-slate-500 hover:bg-indigo-900 transition-colors w-full mb-2"
+            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-slate-500 hover:bg-slate-100 transition-colors w-full mb-2"
           >
             <Menu size={20} />
             <span className="font-bold">Preferencias</span>
@@ -1397,10 +1398,10 @@ export default function EmployeePage() {
                     <button
                       type="submit"
                       disabled={isSubmittingEntry}
-                      className="w-full py-4 md:py-5 bg-slate-800 hover:bg-slate-700 disabled:bg-indigo-400 text-slate-900 rounded-3xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-6 shadow-md border border-slate-100 shadow-indigo-200/50 text-lg"
+                      className={`${styles.btnPrimary} mt-6 py-4 md:py-5 text-lg w-full active:scale-[0.98]`}
                     >
                       {isSubmittingEntry ? (
-                        <Spinner size={24} className="text-slate-900" />
+                        <Spinner size={24} className="text-white" />
                       ) : (
                         <LogIn size={24} />
                       )}
@@ -1543,13 +1544,13 @@ export default function EmployeePage() {
                                   handleExit(session.id);
                                 }}
                                 disabled={isSubmittingExit === session.id}
-                                className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 disabled:bg-indigo-400 text-slate-900 rounded-3xl text-sm font-bold transition-all shadow-md border border-slate-100 shadow-indigo-200 flex items-center justify-center gap-3 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98]"
+                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-400`}
                               >
                                 {isSubmittingExit === session.id ? (
                                   <>
                                     <Spinner
                                       size={16}
-                                      className="text-slate-900"
+                                      className="text-white"
                                     />
                                     <span className="inline">Saliendo...</span>
                                   </>
@@ -1829,18 +1830,18 @@ export default function EmployeePage() {
                 <div className="p-5 bg-slate-50  border-t border-slate-100  flex gap-3 justify-center">
                   <button
                     onClick={() => setShowConfirmEntry(false)}
-                    className="px-5 py-3 font-bold text-slate-600  hover:bg-slate-200 bg-slate-100 rounded-3xl transition-colors w-full"
+                    className={`${styles.btnSecondary} w-full`}
                     disabled={isSubmittingEntry}
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={processEntry}
-                    className="px-5 py-3 font-bold text-white bg-slate-800 hover:bg-slate-700 rounded-3xl transition-all w-full flex items-center justify-center gap-3 active:scale-95"
+                    className={`${styles.btnPrimary} w-full flex items-center justify-center gap-3 active:scale-95`}
                     disabled={isSubmittingEntry}
                   >
                     {isSubmittingEntry ? (
-                      <Spinner size={20} className="text-slate-900" />
+                      <Spinner size={20} className="text-white" />
                     ) : (
                       <CheckCircle2 size={18} />
                     )}
@@ -1891,7 +1892,7 @@ export default function EmployeePage() {
                 <div className="p-4 bg-slate-50  border-t border-slate-100 ">
                   <button
                     onClick={() => setShowPreferences(false)}
-                    className="w-full py-3 bg-slate-800 text-white rounded-3xl font-bold"
+                    className={`${styles.btnPrimary} w-full`}
                   >
                     Cerrar y Guardar
                   </button>
