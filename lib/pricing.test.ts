@@ -12,14 +12,12 @@ describe("calculateFee", () => {
   });
 
   test("should return 0 when rules is null", () => {
-    // @ts-ignore
-    const result = calculateFee(entryTime, exitTime, null);
+    const result = calculateFee(entryTime, exitTime, null as any);
     expect(result).toBe(0);
   });
 
   test("should return 0 when rules is undefined", () => {
-    // @ts-ignore
-    const result = calculateFee(entryTime, exitTime, undefined);
+    const result = calculateFee(entryTime, exitTime, undefined as any);
     expect(result).toBe(0);
   });
 
