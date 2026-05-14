@@ -44,6 +44,13 @@ function LoginContent() {
       return;
     }
 
+    // Ensure device ID exists
+    let deviceId = localStorage.getItem("device_id");
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      localStorage.setItem("device_id", deviceId);
+    }
+
     try {
       const loginEmail = username.includes("@")
         ? username.trim().toLowerCase()
@@ -126,12 +133,65 @@ function LoginContent() {
         return;
       }
 
-      if (profileData && profileData.role === "admin") router.push("/admin");
-      else if (profileData && profileData.role === "employee")
-        router.push("/employee");
-      else if (profileData && profileData.role === "superadmin")
+      if (profileData && (profileData.role === "admin" || profileData.role === "employee")) {
+        // Device approval flow for non-superadmins
+        const { data: deviceApproval, error: deviceError } = await supabase
+          .from("device_approvals")
+          .select("*")
+          .eq("user_id", data.user.id)
+          .eq("device_id", deviceId)
+          .single();
+
+        const userAgent = navigator.userAgent;
+
+        // Try fetching IP (client side fetch is best effort)
+        let ipAddress = "Desconocida";
+        try {
+          const res = await fetch("https://api.ipify.org?format=json");
+          const ipData = await res.json();
+          ipAddress = ipData.ip;
+        } catch (e) {
+           console.error("Could not fetch IP", e);
+        }
+
+        if (deviceError && deviceError.code === "PGRST116") {
+           // Not found, create pending request
+           await supabase.from("device_approvals").insert([{
+             user_id: data.user.id,
+             parking_lot_id: profileData.parking_lot_id,
+             device_id: deviceId,
+             ip_address: ipAddress,
+             user_agent: userAgent,
+             status: "pending"
+           }]);
+           router.push("/pending-approval");
+           return;
+        } else if (deviceApproval) {
+           if (deviceApproval.status === "rejected") {
+             router.push("/pending-approval");
+             return;
+           } else if (deviceApproval.status === "pending") {
+             router.push("/pending-approval");
+             return;
+           } else if (deviceApproval.status === "approved") {
+             // Check expiration
+             if (deviceApproval.expires_at && new Date(deviceApproval.expires_at) < new Date()) {
+                // Expired, set to pending or just delete and recreate. Let's set back to pending.
+                await supabase.from("device_approvals").update({ status: "pending" }).eq("id", deviceApproval.id);
+                router.push("/pending-approval");
+                return;
+             }
+             // Approved and valid
+             if (profileData.role === "admin") router.push("/admin");
+             else if (profileData.role === "employee") router.push("/employee");
+             return;
+           }
+        }
+      }
+
+      if (profileData && profileData.role === "superadmin")
         router.push("/superadmin");
-      else router.push("/");
+      else if (profileData && profileData.role !== "admin" && profileData.role !== "employee") router.push("/");
     } catch (err: any) {
       setError(err.message || "Ocurrió un error inesperado.");
       setLoading(false);

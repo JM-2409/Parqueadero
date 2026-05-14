@@ -118,3 +118,18 @@ ALTER TABLE private_parking_spaces DISABLE ROW LEVEL SECURITY;
 ALTER TABLE cash_closures DISABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_subscribers DISABLE ROW LEVEL SECURITY;
 ALTER TABLE blacklisted_vehicles DISABLE ROW LEVEL SECURITY;
+CREATE TABLE IF NOT EXISTS device_approvals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  parking_lot_id UUID REFERENCES parking_lots(id) ON DELETE CASCADE,
+  device_id TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, device_id)
+);
+
+ALTER TABLE device_approvals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Device Approvals" ON device_approvals FOR ALL USING (true) WITH CHECK (true);
