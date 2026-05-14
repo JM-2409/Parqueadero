@@ -2,15 +2,24 @@ import { NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { createClient } from '@supabase/supabase-js';
 
-const twilioSid = process.env.TWILIO_SID || 'ACba63e1a278525d3f8fccd0278b3664a4';
-const twilioToken = process.env.TWILIO_TOKEN || '2f6550af52ee8519bdd321aec34bb177';
-const twilioPhone = 'whatsapp:+14155238886';
+const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
 
 let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").trim();
 let supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "").trim();
 
 export async function POST(req: Request) {
   try {
+    // Validación estricta de credenciales de Twilio para evitar errores si no están configuradas
+    if (!twilioSid || !twilioToken || !twilioPhone) {
+      console.error('Error: Credenciales de Twilio no configuradas en las variables de entorno.');
+      return NextResponse.json(
+        { success: false, error: 'Configuración de servidor incompleta para el envío de WhatsApp.' },
+        { status: 500 }
+      );
+    }
+
     const { to, mediaUrl, text } = await req.json();
 
     if (!to) {
