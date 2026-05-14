@@ -1,4 +1,8 @@
 "use client";
+import AdminDeviceManagement from "./DeviceManagement";
+import { Bell } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+
 import styles from "./admin.module.css";
 
 import { useState, useEffect, useCallback } from "react";
@@ -52,6 +56,7 @@ export default function AdminPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
+  const [pendingDevicesCount, setPendingDevicesCount] = useState(0);
   const [parkingLot, setParkingLot] = useState<any>(null);
   const [todayStats, setTodayStats] = useState({ vehicles: 0, revenue: 0 });
   const [employees, setEmployees] = useState<any[]>([]);

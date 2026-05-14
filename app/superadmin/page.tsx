@@ -1,4 +1,8 @@
 "use client";
+import DeviceManagement from "./DeviceManagement";
+import { Bell } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+
 import styles from "./superadmin.module.css";
 
 import { useState, useEffect, useCallback } from "react";
@@ -37,6 +41,7 @@ export default function SuperAdminPage() {
   const [admins, setAdmins] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDevicesCount, setPendingDevicesCount] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [appSettings, setAppSettings] = useState({
@@ -598,6 +603,16 @@ export default function SuperAdminPage() {
 
           {success && <SuccessMessage message={success} />}
 
+          {activeTab === "devices" && (
+            <motion.div
+              key="devices"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <DeviceManagement />
+            </motion.div>
+          )}
           {/* TAB: PARQUEADEROS */}
           {activeTab === "lots" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
