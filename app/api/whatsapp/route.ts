@@ -99,12 +99,18 @@ export async function POST(req: Request) {
     };
 
     if (mediaUrl) {
-      let safeRelativeUrl = "/api/receipt-image";
       try {
         // Validar y sanear mediaUrl para prevenir SSRF
         let parsedUrl: URL;
         try {
-          parsedUrl = new URL(mediaUrl, "http://localhost");
+          // Aceptar URLs absolutas propias o URLs relativas asumiendo localhost para validación interna
+          if (mediaUrl.startsWith("http")) {
+             parsedUrl = new URL(mediaUrl);
+             // Si envían una URL absoluta, la forzamos a localhost internamente para la ruta de la API
+             parsedUrl = new URL(parsedUrl.pathname + parsedUrl.search, "http://localhost");
+          } else {
+             parsedUrl = new URL(mediaUrl, "http://localhost");
+          }
         } catch (e) {
           throw new Error("URL malformada");
         }
@@ -115,7 +121,6 @@ export async function POST(req: Request) {
 
         const safeUrl = new URL("http://localhost/api/receipt-image");
         safeUrl.search = parsedUrl.search;
-        safeRelativeUrl = `${safeUrl.pathname}${safeUrl.search}`;
 
         const { GET: generateImage } = await import("../receipt-image/route");
         const mockRequest = new Request(safeUrl.toString());
@@ -149,7 +154,7 @@ export async function POST(req: Request) {
 
           if (uploadError) {
             console.error("Error uploading image to Supabase");
-            messagePayload.body += `\n\nEnlace del recibo: ${safeRelativeUrl}`;
+            // No agregamos fallback aquí, ya está embebido en el `text` inicial por parte del cliente
           } else {
             const { data: publicUrlData } = supabaseAdmin.storage
               .from("receipts")
@@ -161,14 +166,11 @@ export async function POST(req: Request) {
               publicUrlData.publicUrl,
             );
           }
-        } else {
-          messagePayload.body += `\n\nEnlace del recibo: ${safeRelativeUrl}`;
         }
       } catch (uploadObjError) {
-        console.error("Error in image generation or upload");
-        // Use safeRelativeUrl if it has been defined, otherwise fallback to empty to avoid raw input
-        const fallbackUrl = typeof safeRelativeUrl !== 'undefined' ? safeRelativeUrl : "/api/receipt-image";
-        messagePayload.body += `\n\nEnlace del recibo: ${fallbackUrl}`;
+        console.error("Error in image generation or upload", uploadObjError);
+        // Fallback: Si algo falla, ignoramos silenciosamente la imagen y enviamos solo el texto.
+        // El texto original enviado por el cliente ya contiene la URL directa (directReceiptLink).
       }
     }
 

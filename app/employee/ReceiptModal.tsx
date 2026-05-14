@@ -38,8 +38,7 @@ export default function ReceiptModal({
     setErrorMessage("");
 
     try {
-      // Create local URL for the receipt-image generator API
-      const baseUrl = window.location.origin;
+      // Create relative URL for the receipt-image generator API to pass SSRF check on backend
       const params = new URLSearchParams({
         receiptNumber: session.receipt_number || "-",
         plate: session.vehicles?.plate || "-",
@@ -52,9 +51,12 @@ export default function ReceiptModal({
         address: parkingLot?.address || "",
         duration: `${hours}h ${minutes}m`,
       });
-      const mediaUrl = `${baseUrl}/api/receipt-image?${params.toString()}`;
+      const mediaUrl = `/api/receipt-image?${params.toString()}`;
 
-      const text = `*Recibo de Parqueadero*\n\nParqueadero: ${appSettings?.app_name || parkingLot?.name || "Parqueadero"}\nNIT: ${parkingLot?.nit || "-"}\n\nRecibo No.: ${session.receipt_number || "-"}\nPlaca: ${session.vehicles?.plate || "-"}\nTipo: ${session.vehicles?.type || "-"}\nIngreso: ${entryTime.toLocaleString()}\nSalida: ${exitTime.toLocaleString()}\nTotal a Pagar: $${session.total_charged?.toLocaleString() || session.fee?.toLocaleString()}\n\n¡Gracias por su visita!`;
+      // Enlace directo de respaldo (se enviará por parte del servidor en el texto o lo usamos aquí como fallback visible)
+      const directReceiptLink = `${window.location.origin}/api/receipt-image?${params.toString()}`;
+
+      const text = `*Recibo de Parqueadero*\n\nParqueadero: ${appSettings?.app_name || parkingLot?.name || "Parqueadero"}\nNIT: ${parkingLot?.nit || "-"}\n\nRecibo No.: ${session.receipt_number || "-"}\nPlaca: ${session.vehicles?.plate || "-"}\nTipo: ${session.vehicles?.type || "-"}\nIngreso: ${entryTime.toLocaleString()}\nSalida: ${exitTime.toLocaleString()}\nTotal a Pagar: $${session.total_charged?.toLocaleString() || session.fee?.toLocaleString()}\n\nEnlace del recibo: ${directReceiptLink}\n\n¡Gracias por su visita!`;
 
       const response = await fetch("/api/whatsapp", {
         method: "POST",
@@ -88,6 +90,7 @@ export default function ReceiptModal({
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
       <div
+        id="printable-receipt"
         className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-[80mm] print:p-0 flex flex-col max-h-[90vh] md:max-h-none print:h-auto print:max-h-none print:block print:m-0"
         style={{ pageBreakInside: "avoid" }}
       >
@@ -235,18 +238,18 @@ export default function ReceiptModal({
             <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
               Enviar SMS / WhatsApp
             </label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="tel"
                 placeholder="Nº WhatsApp (ej. 3001234567)"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="flex-1 px-3 py-3 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
+                className="flex-1 w-full px-3 py-3 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
               />
               <button
                 onClick={handleSendWhatsAppAPI}
                 disabled={isSending}
-                className="px-5 py-3 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-[#25D366]/50 text-white rounded-3xl transition-colors flex items-center justify-center gap-3"
+                className="w-full sm:w-auto px-5 py-3 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-[#25D366]/50 text-white rounded-3xl transition-colors flex items-center justify-center gap-3 shrink-0"
                 title="Enviar por WhatsApp"
               >
                 {isSending ? (
