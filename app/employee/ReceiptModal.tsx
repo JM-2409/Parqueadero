@@ -102,7 +102,7 @@ export default function ReceiptModal({
         </button>
 
         <div className="p-6 md:p-8 overflow-y-auto print:overflow-visible">
-          <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-6 print:pb-4">
+          <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-6">
             {appSettings?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -218,7 +218,7 @@ export default function ReceiptModal({
             </div>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-3xl mt-6 mb-6 print:bg-transparent print:border-t print:border-dashed print:border-slate-300 print:rounded-none">
+          <div className="bg-slate-50 p-4 rounded-3xl mt-6 mb-6">
             <div className="flex justify-between items-center">
               <span className="font-bold text-slate-700">TOTAL A PAGAR</span>
               <span className="text-2xl font-bold text-emerald-600">
@@ -227,7 +227,7 @@ export default function ReceiptModal({
             </div>
           </div>
 
-          <div className="text-center text-xs text-slate-400 mb-8 print:mb-0">
+          <div className="text-center text-xs text-slate-400 mb-8">
             <p>¡Gracias por su visita!</p>
             <p>Conserve este recibo para cualquier reclamo.</p>
           </div>
