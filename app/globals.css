@@ -3,3 +3,26 @@
 @theme {
   --color-scheme: light;
 }
+
+@media print {
+  body:has(#printable-receipt) * {
+    visibility: hidden;
+  }
+  body:has(#printable-receipt) #printable-receipt,
+  body:has(#printable-receipt) #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-shadow: none !important;
+  }
+  #printable-receipt .print\:hidden,
+  #printable-receipt .print\:hidden * {
+    display: none !important;
+  }
+}
