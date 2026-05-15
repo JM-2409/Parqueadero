@@ -2,15 +2,24 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Clock, Calendar, Hash, DollarSign } from "lucide-react";
+import { Clock, Calendar, DollarSign, X } from "lucide-react";
+import styles from "./admin.module.css";
+import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function CashClosuresHistory({
   parkingLotId,
+  currentShiftRevenue,
+  onRegisterClosed,
 }: {
   parkingLotId: string;
+  currentShiftRevenue?: number;
+  onRegisterClosed?: () => void;
 }) {
   const [closures, setClosures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClosingRegister, setIsClosingRegister] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const fetchClosures = useCallback(async () => {
     const { data } = await supabase
@@ -29,6 +38,60 @@ export default function CashClosuresHistory({
     fetchClosures();
   }, [fetchClosures]);
 
+  const handleCloseRegister = async () => {
+    if (
+      !confirm(
+        "¿Está seguro que desea cerrar la caja? El recaudo volverá a $0.",
+      )
+    )
+      return;
+    setIsClosingRegister(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      // Fetch last closure to determine opened_at
+      const { data: lastClosure } = await supabase
+        .from("cash_closures")
+        .select("closed_at")
+        .eq("parking_lot_id", parkingLotId)
+        .order("closed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const opened_at = lastClosure
+        ? lastClosure.closed_at
+        : new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+
+      const { error: insertError } = await supabase.from("cash_closures").insert([
+        {
+          parking_lot_id: parkingLotId,
+          total_revenue: currentShiftRevenue || 0,
+          closed_by: session?.user?.id,
+          opened_at: opened_at,
+          notes: `Cierre de caja - Admin`,
+        },
+      ]);
+
+      if (insertError) throw insertError;
+
+      setSuccess("Caja cerrada exitosamente.");
+      setTimeout(() => setSuccess(""), 3000);
+
+      // Reload stats
+      if (onRegisterClosed) {
+        onRegisterClosed();
+      }
+      fetchClosures();
+    } catch (err: any) {
+      console.error("Error cerrado caja", err);
+      setError("No se pudo cerrar la caja: " + err.message);
+    } finally {
+      setIsClosingRegister(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -39,6 +102,46 @@ export default function CashClosuresHistory({
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
+          <X size={20} className="flex-shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      {success && <SuccessMessage message={success} />}
+
+      {currentShiftRevenue !== undefined && (
+        <div className={`${styles.card} flex flex-col justify-center`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className={`${styles.statIconContainer} ${styles.statIconSuccess}`}>
+                <DollarSign size={32} />
+              </div>
+              <div className="min-w-0">
+                <h3 className={`${styles.cardTitle} truncate`}>
+                  Recaudo Actual (En Caja)
+                </h3>
+                <p className={`${styles.cardValue} truncate`}>
+                  {new Intl.NumberFormat("es-CO", {
+                    style: "currency",
+                    currency: "COP",
+                    minimumFractionDigits: 0,
+                  }).format(currentShiftRevenue)}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleCloseRegister}
+              disabled={isClosingRegister || currentShiftRevenue === 0}
+              className={`${styles.btnSecondary} truncate w-full sm:w-auto`}
+            >
+              {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-800">Historial de Cajas</h2>
       </div>

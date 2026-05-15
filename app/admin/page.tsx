@@ -131,7 +131,6 @@ export default function AdminPage() {
   }, []);
 
   const [currentShiftRevenue, setCurrentShiftRevenue] = useState(0);
-  const [isClosingRegister, setIsClosingRegister] = useState(false);
   const [weeklyStats, setWeeklyStats] = useState<
     { date: string; amount: number }[]
   >([]);
@@ -235,57 +234,6 @@ export default function AdminPage() {
     },
     [fetchStats, statPeriod, fetchTodayStats],
   );
-
-  const handleCloseRegister = async () => {
-    if (
-      !confirm(
-        "¿Está seguro que desea cerrar la caja? El recaudo volverá a $0.",
-      )
-    )
-      return;
-    setIsClosingRegister(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      // Fetch last closure to determine opened_at
-      const { data: lastClosure } = await supabase
-        .from("cash_closures")
-        .select("closed_at")
-        .eq("parking_lot_id", parkingLot.id)
-        .order("closed_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const opened_at = lastClosure
-        ? lastClosure.closed_at
-        : new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
-
-      const { error } = await supabase.from("cash_closures").insert([
-        {
-          parking_lot_id: parkingLot.id,
-          total_revenue: currentShiftRevenue,
-          closed_by: session?.user?.id,
-          opened_at: opened_at,
-          notes: `Cierre de caja - Admin`,
-        },
-      ]);
-
-      if (error) throw error;
-
-      setSuccess("Caja cerrada exitosamente.");
-      setTimeout(() => setSuccess(""), 3000);
-
-      // Reload stats
-      fetchEmployees(parkingLot.id);
-    } catch (err: any) {
-      console.error("Error cerrado caja", err);
-      setError("No se pudo cerrar la caja: " + err.message);
-    } finally {
-      setIsClosingRegister(false);
-    }
-  };
 
   const fetchPendingDevicesCount = useCallback(async (parkingLotId: string) => {
     try {
@@ -664,7 +612,7 @@ export default function AdminPage() {
           >
             <DollarSign size={20} />
             <span className="font-bold whitespace-nowrap text-left">
-              Historial de Cajas
+              Caja
             </span>
           </button>
           <button
@@ -803,7 +751,7 @@ export default function AdminPage() {
           {/* TAB: DASHBOARD / HISTORIAL */}
           {activeTab === "dashboard" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className={`${styles.card} flex items-center gap-4`}>
                   <div className={`${styles.statIconContainer} ${styles.statIconPrimary}`}>
                     <Car size={32} />
@@ -815,34 +763,6 @@ export default function AdminPage() {
                     <p className={styles.cardValue}>
                       {todayStats.vehicles}
                     </p>
-                  </div>
-                </div>
-                <div className={`${styles.card} flex flex-col justify-center`}>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className={`${styles.statIconContainer} ${styles.statIconSuccess}`}>
-                        <DollarSign size={32} />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className={`${styles.cardTitle} truncate`}>
-                          Recaudo Actual (En Caja)
-                        </h3>
-                        <p className={`${styles.cardValue} truncate`}>
-                          {new Intl.NumberFormat("es-CO", {
-                            style: "currency",
-                            currency: "COP",
-                            minimumFractionDigits: 0,
-                          }).format(todayStats.revenue)}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleCloseRegister}
-                      disabled={isClosingRegister || todayStats.revenue === 0}
-                      className={`${styles.btnSecondary} truncate w-full sm:w-auto`}
-                    >
-                      {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
-                    </button>
                   </div>
                 </div>
               </div>
@@ -946,7 +866,11 @@ export default function AdminPage() {
           {/* TAB: INGRESO MANUAL */}
           {activeTab === "cash_closures" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <CashClosuresHistory parkingLotId={parkingLot.id} />
+              <CashClosuresHistory
+                parkingLotId={parkingLot.id}
+                currentShiftRevenue={currentShiftRevenue}
+                onRegisterClosed={() => fetchEmployees(parkingLot.id)}
+              />
             </div>
           )}
 
