@@ -595,7 +595,7 @@ export default function SuperAdminPage() {
                   : styles.navItem
               }
           >
-            <UserPlus size={20} />
+            <UserPlus size={20} className="text-white" />
             <span className="font-bold">Administradores</span>
           </button>
           <button
@@ -738,12 +738,12 @@ export default function SuperAdminPage() {
                     <button
                       type="submit"
                       disabled={isCreatingLot}
-                      className="py-3 px-6 bg-slate-800 hover:bg-slate-700 disabled:bg-indigo-400 text-slate-900 rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 w-full md:w-auto shadow-md border border-slate-100 shadow-indigo-200"
+                      className="py-3 px-6 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-400 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 w-full md:w-auto min-w-[220px] shadow-md border border-slate-700 shadow-slate-200"
                     >
                       {isCreatingLot ? (
-                        <Spinner size={20} className="text-slate-900" />
+                        <Spinner size={20} className="text-white" />
                       ) : (
-                        <PlusCircle size={20} />
+                        <PlusCircle size={20} className="text-white" />
                       )}
                       {isCreatingLot ? "Creando..." : "Crear Parqueadero"}
                     </button>
@@ -1127,12 +1127,12 @@ export default function SuperAdminPage() {
                   <button
                     type="submit"
                     disabled={isCreatingAdmin}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-slate-900 rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 mt-2"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 mt-2 min-w-[240px]"
                   >
                     {isCreatingAdmin ? (
-                      <Spinner size={20} className="text-slate-900" />
+                      <Spinner size={20} className="text-white" />
                     ) : (
-                      <UserPlus size={20} />
+                      <UserPlus size={20} className="text-white" />
                     )}
                     {isCreatingAdmin ? "Creando..." : "Crear Administrador"}
                   </button>
@@ -1366,10 +1366,10 @@ export default function SuperAdminPage() {
                   <button
                     type="submit"
                     disabled={savingSettings}
-                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-slate-900 rounded-3xl font-bold transition-colors flex items-center justify-center gap-3"
+                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 min-w-[240px]"
                   >
                     {savingSettings ? (
-                      <Spinner size={20} className="text-slate-900" />
+                      <Spinner size={20} className="text-white" />
                     ) : (
                       <Settings size={20} />
                     )}
@@ -1608,10 +1608,10 @@ export default function SuperAdminPage() {
                 type="submit"
                 form="edit-lot-form"
                 disabled={isEditingLot}
-                className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 disabled:bg-indigo-400 text-slate-900 font-bold rounded-3xl transition-colors flex items-center gap-3"
+                className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-400 text-white font-bold rounded-3xl transition-colors flex items-center justify-center gap-3 min-w-[200px]"
               >
                 {isEditingLot && (
-                  <Spinner size={16} className="text-slate-900" />
+                  <Spinner size={16} className="text-white" />
                 )}
                 {isEditingLot ? "Guardando..." : "Guardar Cambios"}
               </button>
