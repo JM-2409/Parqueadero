@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   Home,
   Car,
+  MonitorSmartphone,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -286,6 +287,21 @@ export default function AdminPage() {
     }
   };
 
+  const fetchPendingDevicesCount = useCallback(async (parkingLotId: string) => {
+    try {
+      const { count, error } = await supabase
+        .from("device_approvals")
+        .select("*", { count: "exact", head: true })
+        .eq("parking_lot_id", parkingLotId)
+        .eq("status", "pending");
+
+      if (error) throw error;
+      setPendingDevicesCount(count || 0);
+    } catch (err: any) {
+      console.error("Error fetching pending devices count:", err.message);
+    }
+  }, []);
+
   const checkUser = useCallback(async () => {
     try {
       const {
@@ -347,11 +363,12 @@ export default function AdminPage() {
 
       fetchParkingLot(profile.parking_lot_id);
       fetchEmployees(profile.parking_lot_id);
+      fetchPendingDevicesCount(profile.parking_lot_id);
     } catch (err) {
       console.error("Error checking user:", err);
       router.push("/login");
     }
-  }, [router, fetchParkingLot, fetchEmployees]);
+  }, [router, fetchParkingLot, fetchEmployees, fetchPendingDevicesCount]);
 
   useEffect(() => {
     checkUser();
@@ -556,6 +573,18 @@ export default function AdminPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setActiveTab("devices")}
+            className="p-3 relative text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            <Bell size={24} />
+            {pendingDevicesCount > 0 && (
+              <span className="absolute top-2 right-2 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="p-3"
           >
@@ -582,6 +611,21 @@ export default function AdminPage() {
             <span>Admin</span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setActiveTab("devices");
+                setIsMobileMenuOpen(false);
+              }}
+              className="p-2 hidden md:block relative text-slate-500 hover:text-indigo-600 transition-colors"
+            >
+              <Bell size={24} />
+              {pendingDevicesCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+              )}
+            </button>
             <button
               className="md:hidden text-slate-400 hover:text-slate-900"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -705,6 +749,18 @@ export default function AdminPage() {
             <Shield size={20} className="text-red-400" />
             <span className="font-bold whitespace-nowrap text-left">
               Lista Negra
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("devices");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "devices" ? styles.navItemActive : ""}`}
+          >
+            <MonitorSmartphone size={20} />
+            <span className="font-bold whitespace-nowrap text-left">
+              Equipos
             </span>
           </button>
           <button
@@ -949,6 +1005,13 @@ export default function AdminPage() {
           {activeTab === "private_parking" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <PrivateParking parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
+          {/* TAB: EQUIPOS */}
+          {activeTab === "devices" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <AdminDeviceManagement parkingLotId={parkingLot.id} />
             </div>
           )}
 
@@ -1198,6 +1261,23 @@ export default function AdminPage() {
                           />
                         </label>
                       )}
+                    </div>
+                  </div>
+
+                  <div className="bg-indigo-50 p-4 rounded-xl mb-6 flex justify-between items-center">
+                    <div>
+                      <span className="font-bold text-slate-800 block">
+                        Seguridad de Equipos
+                      </span>
+                      <span className="text-sm text-slate-600 block mt-1">
+                        Esta opción determina si los empleados deben aprobar sus equipos antes de ingresar.{" "}
+                        {parkingLot?.features?.require_device_approval ? (
+                          <span className="text-emerald-600 font-bold">Actualmente ACTIVADA</span>
+                        ) : (
+                          <span className="text-amber-600 font-bold">Actualmente DESACTIVADA</span>
+                        )}
+                        . Contacte al superadministrador para cambiarla.
+                      </span>
                     </div>
                   </div>
 

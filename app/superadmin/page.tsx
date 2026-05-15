@@ -24,6 +24,7 @@ import {
   BarChart3,
   Eye,
   EyeOff,
+  MonitorSmartphone,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -219,6 +220,24 @@ export default function SuperAdminPage() {
     }
   }, []);
 
+  const fetchPendingDevicesCount = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("device_approvals")
+        .select(`
+          id,
+          profiles!inner(role)
+        `)
+        .eq("status", "pending")
+        .eq("profiles.role", "admin");
+
+      if (error) throw error;
+      setPendingDevicesCount(data ? data.length : 0);
+    } catch (err: any) {
+      console.error("Error fetching pending devices count:", err.message);
+    }
+  }, []);
+
   const checkUser = useCallback(async () => {
     try {
       const {
@@ -243,6 +262,7 @@ export default function SuperAdminPage() {
         fetchAdmins();
         fetchEmployees();
         fetchMetrics();
+        fetchPendingDevicesCount();
       }
     } catch (err) {
       console.error("Error checking user:", err);
@@ -255,6 +275,7 @@ export default function SuperAdminPage() {
     fetchAdmins,
     fetchEmployees,
     fetchMetrics,
+    fetchPendingDevicesCount,
   ]);
 
   useEffect(() => {
@@ -488,6 +509,18 @@ export default function SuperAdminPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setActiveTab("devices")}
+            className="p-3 relative text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            <Bell size={24} />
+            {pendingDevicesCount > 0 && (
+              <span className="absolute top-2 right-2 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="p-3"
           >
@@ -513,6 +546,21 @@ export default function SuperAdminPage() {
             <span>Panel Dueño</span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setActiveTab("devices");
+                setIsMobileMenuOpen(false);
+              }}
+              className="p-2 hidden md:block relative text-slate-500 hover:text-indigo-600 transition-colors"
+            >
+              <Bell size={24} />
+              {pendingDevicesCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+              )}
+            </button>
             <button
               className="md:hidden text-slate-600 hover:text-slate-900"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -563,6 +611,20 @@ export default function SuperAdminPage() {
           >
             <BarChart3 size={20} />
             <span className="font-bold">Métricas</span>
+          </button>
+          <button
+              onClick={() => {
+                setActiveTab("devices");
+                setIsMobileMenuOpen(false);
+              }}
+              className={
+                activeTab === "devices"
+                  ? `${styles.navItem} ${styles.navItemActive}`
+                  : styles.navItem
+              }
+          >
+            <MonitorSmartphone size={20} />
+            <span className="font-bold">Equipos</span>
           </button>
           <button
               onClick={() => {
@@ -1397,6 +1459,33 @@ export default function SuperAdminPage() {
                     Funcionalidades (Módulos)
                   </h4>
                   <div className="grid sm:grid-cols-2 gap-4">
+                    <label className="flex items-center gap-3 p-3 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={
+                          editingLot.features?.require_device_approval || false
+                        }
+                        onChange={(e) =>
+                          setEditingLot({
+                            ...editingLot,
+                            features: {
+                              ...editingLot.features,
+                              require_device_approval: e.target.checked,
+                            },
+                          })
+                        }
+                        className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-bold text-slate-900  text-sm">
+                          Seguridad de Equipos
+                        </div>
+                        <div className="text-xs text-slate-600">
+                          Requiere aprobar dispositivos antes de ingresar
+                        </div>
+                      </div>
+                    </label>
+
                     <label className="flex items-center gap-3 p-3 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
                       <input
                         type="checkbox"
