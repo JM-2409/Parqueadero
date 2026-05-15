@@ -81,7 +81,7 @@ function LoginContent() {
       const { data: profileWithSuspended, error: errWithSuspended } =
         await supabase
           .from("profiles")
-          .select("role, parking_lot_id, parking_lots(is_suspended)")
+          .select("role, parking_lot_id, parking_lots(is_suspended, features)")
           .eq("id", data.user.id)
           .single();
 
@@ -92,7 +92,7 @@ function LoginContent() {
         // Fallback if column is missing
         const { data: profileFallback, error: errFallback } = await supabase
           .from("profiles")
-          .select("role, parking_lot_id, parking_lots(id)")
+          .select("role, parking_lot_id, parking_lots(id, features)")
           .eq("id", data.user.id)
           .single();
 
