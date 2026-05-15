@@ -40,8 +40,16 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
   }, [parkingLotId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchBlacklist();
+    let mounted = true;
+    const init = async () => {
+      if (mounted) {
+        await fetchBlacklist();
+      }
+    };
+    init();
+    return () => {
+      mounted = false;
+    };
   }, [fetchBlacklist]);
 
   const handleAdd = async (e: React.FormEvent) => {
