@@ -22,6 +22,7 @@ import {
   Truck,
   AlertTriangle,
   Image as ImageIcon,
+  Printer,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
@@ -1585,21 +1586,18 @@ export default function EmployeePage() {
                                 </div>
                                 <div className="flex justify-between items-center bg-white  p-3 rounded-3xl border border-slate-100 ">
                                   <span className="text-slate-500">
-                                    Tiquete Actual:
+                                    Tiquete de Ingreso:
                                   </span>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      // Quick hack to print modal: since they asked not to use modal, maybe just generate receipt PDF?
-                                      // Actually they said "sin tener que ir al modal" to see extra details. So they still need it for printing the finalized receipt? No wait, receipt is generated after exit. Right now it's an "active" session.
-                                      // I'll leave a small print functionality inside or just keep it simple.
-                                      alert(
-                                        "El recibo oficial se genera al darle salida.",
-                                      );
+                                      setViewingSession(session);
                                     }}
-                                    className="text-slate-800 font-bold hover:underline text-xs"
+                                    className="text-indigo-600 font-bold hover:underline text-sm flex items-center gap-1"
+                                    title="Imprimir Tiquete de Ingreso"
                                   >
-                                    Pendiente factura
+                                    <Printer size={14} />
+                                    <span>Ver / Imprimir</span>
                                   </button>
                                 </div>
                               </div>
@@ -1676,15 +1674,23 @@ export default function EmployeePage() {
 
           {/* Info Modal */}
           {viewingSession && (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-              <div className="bg-white  rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                <div className="bg-white border-r border-slate-200 border-b border-slate-200  p-4 flex justify-between items-center text-slate-900">
-                  <h3 className="text-lg font-bold font-mono">
-                    Tiquete Vehículo - {viewingSession.vehicles.plate}
-                  </h3>
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200 print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
+              <div
+                id="printable-receipt"
+                className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print:shadow-none print:max-w-none print:w-full print:p-0 flex flex-col print:h-auto print:block print:m-0"
+              >
+                <div className="bg-white border-r border-slate-200 border-b border-slate-200 p-4 flex justify-between items-center text-slate-900 print:border-none print:pb-2 print:mb-4 print:border-b print:border-dashed print:border-slate-300">
+                  <div className="flex flex-col">
+                    <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wider hidden print:block text-center mb-2">
+                      {appSettings?.app_name || parkingLot?.name || "Parqueadero"}
+                    </h2>
+                    <h3 className="text-lg font-bold font-mono">
+                      Tiquete Vehículo - {viewingSession.vehicles.plate}
+                    </h3>
+                  </div>
                   <button
                     onClick={() => setViewingSession(null)}
-                    className="p-1 hover:bg-indigo-900 rounded-3xl transition-colors"
+                    className="p-1 hover:bg-indigo-900 rounded-3xl transition-colors print:hidden"
                   >
                     <X size={20} />
                   </button>
@@ -1774,7 +1780,16 @@ export default function EmployeePage() {
                     )}
                 </div>
 
-                <div className="p-4 bg-slate-50  border-t border-slate-200 ">
+                <div className="p-4 bg-slate-50 border-t border-slate-200 print:hidden flex gap-3">
+                  <button
+                    onClick={() => {
+                      window.print();
+                    }}
+                    className="flex-1 py-3 bg-slate-900 text-white rounded-3xl font-bold transition-colors hover:bg-slate-800 flex justify-center items-center gap-3"
+                  >
+                    <Printer size={18} />
+                    Imprimir
+                  </button>
                   <button
                     onClick={() => {
                       const sessionId = viewingSession.id;
@@ -1796,11 +1811,8 @@ export default function EmployeePage() {
                         },
                       ).toString();
                       setFee(currentFee);
-
-                      // Focus the input if possible or handle exit directly?
-                      // The prompt said "ver el resumen sin tener que ir al modal de recibo", so they can read and then click close or proceed.
                     }}
-                    className="w-full py-3 bg-white  border border-slate-200  text-slate-900  rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-3"
+                    className="flex-1 py-3 bg-white border border-slate-200 text-slate-900 rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-3"
                   >
                     Cerrar Detalle
                   </button>

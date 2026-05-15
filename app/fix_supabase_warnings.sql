@@ -65,23 +65,23 @@ DROP POLICY IF EXISTS "Public Cash Closures" ON public.cash_closures;
 
 CREATE POLICY "Auth custom_roles" ON public.custom_roles 
 AS PERMISSIVE FOR ALL TO authenticated 
-USING (auth.role() = 'authenticated') 
-WITH CHECK (auth.role() = 'authenticated');
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
 
 CREATE POLICY "Auth vehicles" ON public.vehicles 
 AS PERMISSIVE FOR ALL TO authenticated 
-USING (auth.role() = 'authenticated') 
-WITH CHECK (auth.role() = 'authenticated');
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
 
 CREATE POLICY "Auth blacklisted_vehicles" ON public.blacklisted_vehicles 
 AS PERMISSIVE FOR ALL TO authenticated 
-USING (auth.role() = 'authenticated') 
-WITH CHECK (auth.role() = 'authenticated');
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
 
 CREATE POLICY "Auth cash_closures" ON public.cash_closures 
 AS PERMISSIVE FOR ALL TO authenticated 
-USING (auth.role() = 'authenticated') 
-WITH CHECK (auth.role() = 'authenticated');
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
 
 -- 5. Limpiar políticas duplicadas en tariffs_v2 para la advertencia:
 -- "Table public.tariffs_v2 has multiple permissive policies for role authenticated for action INSERT."
@@ -91,5 +91,5 @@ DROP POLICY IF EXISTS "Secure Tariffs V2" ON public.tariffs_v2;
 -- Recrear una única política segura y general para tariffs_v2
 CREATE POLICY "Auth Tariffs V2" ON public.tariffs_v2
 AS PERMISSIVE FOR ALL TO authenticated
-USING (auth.role() = 'authenticated')
-WITH CHECK (auth.role() = 'authenticated');
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
