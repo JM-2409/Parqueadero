@@ -172,7 +172,9 @@ function LoginContent() {
              return;
           } else if (deviceApproval) {
              if (deviceApproval.status === "rejected") {
-               router.push("/pending-approval");
+               await supabase.auth.signOut();
+               setError("Acceso denegado: Este dispositivo no tiene autorización para acceder.");
+               setLoading(false);
                return;
              } else if (deviceApproval.status === "pending") {
                router.push("/pending-approval");

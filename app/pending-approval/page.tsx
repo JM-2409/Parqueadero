@@ -1,21 +1,74 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, MonitorX, RefreshCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { supabase } from "@/lib/supabase";
+import { Spinner } from "@/components/ui/Spinner";
 
 function PendingApprovalContent() {
   const router = useRouter();
+  const [isChecking, setIsChecking] = useState(false);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/");
   };
 
-  const handleRefresh = () => {
-    window.location.reload();
+  const handleRefresh = async () => {
+    setIsChecking(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        router.push("/");
+        return;
+      }
+
+      const deviceId = localStorage.getItem("device_id");
+      if (!deviceId) {
+        await handleSignOut();
+        return;
+      }
+
+      const { data: deviceApproval, error } = await supabase
+        .from("device_approvals")
+        .select("*")
+        .eq("user_id", sessionData.session.user.id)
+        .eq("device_id", deviceId)
+        .single();
+
+      if (error || !deviceApproval) {
+        // Error or not found, stay here or error out
+        setIsChecking(false);
+        return;
+      }
+
+      if (deviceApproval.status === "rejected") {
+        await handleSignOut();
+      } else if (deviceApproval.status === "approved") {
+        // Valid approval, check role and redirect
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", sessionData.session.user.id)
+          .single();
+
+        if (profile?.role === "admin") {
+          router.push("/admin");
+        } else if (profile?.role === "employee") {
+          router.push("/employee");
+        } else {
+          router.push("/");
+        }
+      } else {
+        // Still pending
+        setIsChecking(false);
+      }
+    } catch (e) {
+      console.error(e);
+      setIsChecking(false);
+    }
   };
 
   return (
@@ -57,10 +110,11 @@ function PendingApprovalContent() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleRefresh}
-            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2"
+            disabled={isChecking}
+            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 disabled:hover:bg-indigo-600 text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2"
           >
-            <RefreshCcw size={20} />
-            Verificar Estado
+            {isChecking ? <Spinner size={20} className="text-white" /> : <RefreshCcw size={20} />}
+            {isChecking ? "Verificando..." : "Verificar Estado"}
           </motion.button>
 
           <motion.button
