@@ -117,6 +117,42 @@ export default function PrivateParking({
     fetchHistory();
   }, [fetchSpaces, fetchHistory]);
 
+  useEffect(() => {
+    if (!parkingLotId) return;
+
+    const channel = supabase
+      .channel("public:private_parking_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "private_parking_spaces",
+          filter: `parking_lot_id=eq.${parkingLotId}`,
+        },
+        () => {
+          fetchSpaces();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "private_parking_history",
+          filter: `parking_lot_id=eq.${parkingLotId}`,
+        },
+        () => {
+          fetchHistory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [parkingLotId, fetchSpaces, fetchHistory]);
+
   const moveSpaceToHistory = async (space: any) => {
       let plate = "";
       const cf = space.custom_fields_data || {};
