@@ -451,27 +451,87 @@ export default function EmployeePage() {
   useEffect(() => {
     const searchVehicle = async () => {
       if (debouncedPlate.length >= 5) {
-        const { data } = await supabase
+        let foundData = null;
+        let newExtraData: Record<string, string> = {};
+
+        // 1. Search in global vehicles
+        const { data: vehicleData } = await supabase
           .from("vehicles")
           .select("*")
           .eq("plate", debouncedPlate.toUpperCase())
           .maybeSingle();
 
-        if (data) {
-          setType(data.type);
+        if (vehicleData) {
+          foundData = vehicleData;
+          if (vehicleData.type) setType(vehicleData.type);
+          newExtraData = { ...(vehicleData.custom_fields_data || {}) };
 
-          const newExtraData = { ...(data.custom_fields_data || {}) };
-          if (data.brand && !newExtraData["Marca"] && !newExtraData["brand"])
-            newExtraData["Marca"] = data.brand;
-          if (data.color && !newExtraData["Color"] && !newExtraData["color"])
-            newExtraData["Color"] = data.color;
-          if (
-            data.owner_name &&
-            !newExtraData["Propietario"] &&
-            !newExtraData["owner_name"]
-          )
-            newExtraData["Propietario"] = data.owner_name;
+          if (vehicleData.brand && !newExtraData["Marca"] && !newExtraData["brand"])
+            newExtraData["Marca"] = vehicleData.brand;
+          if (vehicleData.color && !newExtraData["Color"] && !newExtraData["color"])
+            newExtraData["Color"] = vehicleData.color;
+          if (vehicleData.owner_name && !newExtraData["Propietario"] && !newExtraData["owner_name"])
+            newExtraData["Propietario"] = vehicleData.owner_name;
+        }
 
+        // 2. Search in active private parking spaces
+        if (parkingLot?.id) {
+          // Attempt to find by plate in custom_fields_data->>'Placa' or similar.
+          // We'll fetch all private spaces for this lot and filter in memory,
+          // since the exact key might vary (placa, Placa).
+          const { data: privateSpaces } = await supabase
+            .from("private_parking_spaces")
+            .select("custom_fields_data")
+            .eq("parking_lot_id", parkingLot.id);
+
+          if (privateSpaces) {
+            const matchedSpace = privateSpaces.find((space) => {
+              const cf = space.custom_fields_data || {};
+              // Case insensitive key match for 'placa'
+              const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
+              if (plateKey && cf[plateKey]?.toUpperCase() === debouncedPlate.toUpperCase()) {
+                return true;
+              }
+              return false;
+            });
+
+            if (matchedSpace) {
+              foundData = matchedSpace;
+              const cf = matchedSpace.custom_fields_data || {};
+
+              // Merge matching keys (like Celular -> Celular, etc)
+              // We just merge everything into extraData. The input form will map by exact name.
+              Object.keys(cf).forEach(key => {
+                 // Ignore Placa as it's already in the main field
+                 if (key.toLowerCase() !== 'placa' && !newExtraData[key]) {
+                     newExtraData[key] = cf[key];
+                 }
+              });
+            }
+          }
+
+          // 3. Search in private parking history
+          const { data: historySpaces } = await supabase
+            .from("private_parking_history")
+            .select("custom_fields_data, plate")
+            .eq("parking_lot_id", parkingLot.id)
+            .eq("plate", debouncedPlate.toUpperCase())
+            .order("released_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (historySpaces) {
+             foundData = historySpaces;
+             const cf = historySpaces.custom_fields_data || {};
+             Object.keys(cf).forEach(key => {
+                 if (key.toLowerCase() !== 'placa' && !newExtraData[key]) {
+                     newExtraData[key] = cf[key];
+                 }
+              });
+          }
+        }
+
+        if (foundData) {
           setExtraData(newExtraData);
           setIsNewVehicle(false);
         } else {
@@ -483,7 +543,7 @@ export default function EmployeePage() {
       }
     };
     searchVehicle();
-  }, [debouncedPlate]);
+  }, [debouncedPlate, parkingLot?.id]);
 
   const logShiftAction = async (action: "login" | "logout", name: string) => {
     if (!parkingLot) return;
@@ -529,7 +589,7 @@ export default function EmployeePage() {
     // Check capacity
     if (activeSessions.length >= parkingLot.capacity) {
       playBeep("error");
-      setError("El parqueadero está lleno");
+      setError("El parqueadero está lleno. Por favor, solicite a la administración realizar un ingreso de emergencia si es necesario.");
       return;
     }
 
@@ -1106,9 +1166,15 @@ export default function EmployeePage() {
             <p className="text-xs text-slate-500 mb-1">Ocupación</p>
             <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-indigo-600 h-2.5 rounded-full"
+                className={`h-2.5 rounded-full transition-all duration-500 ${
+                  activeSessions.length >= (parkingLot?.capacity || 1)
+                    ? "bg-red-500"
+                    : activeSessions.length >= (parkingLot?.capacity || 1) * 0.8
+                      ? "bg-amber-400"
+                      : "bg-emerald-500"
+                }`}
                 style={{
-                  width: `${(activeSessions.length / (parkingLot?.capacity || 1)) * 100}%`,
+                  width: `${Math.min((activeSessions.length / (parkingLot?.capacity || 1)) * 100, 100)}%`,
                 }}
               ></div>
             </div>

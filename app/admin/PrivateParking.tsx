@@ -12,6 +12,7 @@ import {
   Edit2,
   Upload,
   Download,
+  UserMinus,
 } from "lucide-react";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { Spinner } from "@/components/ui/Spinner";
@@ -211,6 +212,50 @@ export default function PrivateParking({
     }
   };
 
+  const handleReleaseSpace = async (space: any) => {
+    if (!confirm(`¿Estás seguro de que deseas liberar el parqueadero ${space.space_number} y pasarlo al historial?`)) return;
+
+    try {
+      // 1. Get the plate (case insensitive check for Placa key in custom_fields)
+      let plate = "";
+      const cf = space.custom_fields_data || {};
+      const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
+      if (plateKey) plate = cf[plateKey];
+
+      // 2. Insert into history
+      const { error: historyError } = await supabase
+        .from("private_parking_history")
+        .insert({
+          parking_lot_id: parkingLotId,
+          plate: plate,
+          owner_name: space.owner_name,
+          custom_fields_data: space.custom_fields_data
+        });
+
+      if (historyError) throw historyError;
+
+      // 3. Clear data from space, keeping only space_number
+      const { error: updateError } = await supabase
+        .from("private_parking_spaces")
+        .update({
+          owner_name: null,
+          block: null,
+          house_or_apartment: null,
+          custom_fields_data: {}
+        })
+        .eq("id", space.id);
+
+      if (updateError) throw updateError;
+
+      setSuccess(`Parqueadero ${space.space_number} liberado exitosamente.`);
+      fetchSpaces();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      console.error("Error releasing space:", err);
+      setError(err.message || "Error al liberar el espacio");
+    }
+  };
+
   const handleEditClick = (space: any) => {
     setEditingSpaceId(space.id);
     setSpaceData({
@@ -219,6 +264,34 @@ export default function PrivateParking({
     setCustomFieldsData(space.custom_fields_data || {});
     setIsCreating(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSpaceNumberChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSpaceData({ ...spaceData, space_number: value });
+  };
+
+  const handleSearchHistoryForPlate = async (plateValue: string) => {
+    if (plateValue.length >= 5) {
+        const { data: historyData } = await supabase
+        .from("private_parking_history")
+        .select("*")
+        .eq("parking_lot_id", parkingLotId)
+        .eq("plate", plateValue.toUpperCase())
+        .order("released_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+        if (historyData) {
+            const cf = historyData.custom_fields_data || {};
+            setCustomFieldsData(prev => ({
+                ...prev,
+                ...cf
+            }));
+            setSuccess(`Se autocompletaron datos del historial para la placa ${plateValue.toUpperCase()}`);
+            setTimeout(() => setSuccess(""), 3000);
+        }
+    }
   };
 
   const cancelEdit = () => {
@@ -420,9 +493,7 @@ export default function PrivateParking({
                 <input
                   type="text"
                   value={spaceData.space_number}
-                  onChange={(e) =>
-                    setSpaceData({ ...spaceData, space_number: e.target.value })
-                  }
+                  onChange={handleSpaceNumberChange}
                   className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                   placeholder="ej. P-101"
                   required
@@ -431,7 +502,9 @@ export default function PrivateParking({
 
               {/* Renderizar campos configurables */}
               {configFields &&
-                configFields.map((field) => (
+                configFields.map((field) => {
+                  const isPlate = field.name.toLowerCase() === 'placa';
+                  return (
                   <div key={field.name}>
                     <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                       {field.name} {field.required ? "*" : ""}
@@ -439,18 +512,22 @@ export default function PrivateParking({
                     <input
                       type="text"
                       value={customFieldsData[field.name] || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const val = e.target.value;
                         setCustomFieldsData({
                           ...customFieldsData,
-                          [field.name]: e.target.value,
-                        })
-                      }
+                          [field.name]: val,
+                        });
+                        if (isPlate && val.length >= 5) {
+                            handleSearchHistoryForPlate(val);
+                        }
+                      }}
                       className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                       placeholder={`ej. ${field.name}`}
                       required={field.required}
                     />
                   </div>
-                ))}
+                )})}
             </div>
 
             <div className="flex gap-3 pt-4 border-t border-slate-100">
@@ -558,6 +635,13 @@ export default function PrivateParking({
                             title="Editar"
                           >
                             <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleReleaseSpace(space)}
+                            className="p-3 text-slate-400 hover:text-slate-900 hover:bg-orange-50 rounded-3xl transition-colors border border-transparent hover:border-orange-100"
+                            title="Liberar Parqueadero (Pasar al historial)"
+                          >
+                            <UserMinus size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteSpace(space.id)}

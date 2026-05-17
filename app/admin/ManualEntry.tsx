@@ -25,7 +25,7 @@ export default function ManualEntry({
   const [entryTime, setEntryTime] = useState("");
   const [exitDate, setExitDate] = useState("");
   const [exitTime, setExitTime] = useState("");
-  const [isCompleted, setIsCompleted] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [isSpecialFee, setIsSpecialFee] = useState(false);
   const [totalFee, setTotalFee] = useState("");
   const [extraData, setExtraData] = useState<Record<string, string>>({});
@@ -326,10 +326,10 @@ export default function ManualEntry({
         </div>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Ingreso Manual (Histórico)
+            Ingreso de Emergencia (Forzado)
           </h2>
           <p className="text-sm font-bold text-slate-500 mt-1">
-            Añade registros de vehículos del pasado
+            Ingresa vehículos evadiendo el bloqueo por ocupación máxima, o añade registros al historial.
           </p>
         </div>
       </div>
