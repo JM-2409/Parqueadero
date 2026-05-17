@@ -78,7 +78,14 @@ export default function PrivateParking({
           throw error;
         }
       } else {
-        setSpaces(data || []);
+        // Ordenamiento natural (alfanumérico) en base al space_number en el cliente
+        const sortedData = (data || []).sort((a, b) => {
+          return String(a.space_number).localeCompare(String(b.space_number), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+          });
+        });
+        setSpaces(sortedData);
       }
     } catch (err: any) {
       console.error("Error fetching spaces:", err);
@@ -503,7 +510,7 @@ export default function PrivateParking({
               {/* Renderizar campos configurables */}
               {configFields &&
                 configFields.map((field) => {
-                  const isPlate = field.name.toLowerCase() === 'placa';
+                  const isPlate = field.name.toLowerCase().includes('placa');
                   return (
                   <div key={field.name}>
                     <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
@@ -513,7 +520,7 @@ export default function PrivateParking({
                       type="text"
                       value={customFieldsData[field.name] || ""}
                       onChange={(e) => {
-                        const val = e.target.value;
+                        const val = isPlate ? e.target.value.toUpperCase() : e.target.value;
                         setCustomFieldsData({
                           ...customFieldsData,
                           [field.name]: val,

@@ -390,9 +390,12 @@ export default function ManualEntry({
                 <input
                   type="text"
                   value={extraData[field.name] || ""}
-                  onChange={(e) =>
-                    setExtraData({ ...extraData, [field.name]: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const val = field.name.toLowerCase().includes("placa")
+                      ? e.target.value.toUpperCase()
+                      : e.target.value;
+                    setExtraData({ ...extraData, [field.name]: val })
+                  }}
                   required={field.required}
                   className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
                 />

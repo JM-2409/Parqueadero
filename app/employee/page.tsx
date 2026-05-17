@@ -1311,7 +1311,7 @@ export default function EmployeePage() {
                           <input
                             type="text"
                             value={plate || ""}
-                            onChange={(e) => handleSearchPlate(e.target.value)}
+                            onChange={(e) => handleSearchPlate(e.target.value.toUpperCase())}
                             className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-50  border border-slate-200  group-hover:border-slate-300  rounded-3xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white  outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-slate-900  transition-all shadow-inner placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal text-center"
                             placeholder="ABC-123"
                             maxLength={7}
@@ -1368,12 +1368,15 @@ export default function EmployeePage() {
                           <input
                             type="text"
                             value={extraData[field.name] || ""}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const val = field.name.toLowerCase().includes("placa")
+                                ? e.target.value.toUpperCase()
+                                : e.target.value;
                               setExtraData({
                                 ...extraData,
-                                [field.name]: e.target.value,
-                              })
-                            }
+                                [field.name]: val,
+                              });
+                            }}
                             className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none"
                             placeholder={`Ingresar ${field.name.toLowerCase()}`}
                             required={field.required}
