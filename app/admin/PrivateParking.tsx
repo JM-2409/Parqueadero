@@ -129,6 +129,15 @@ export default function PrivateParking({
           if (plateKey) plate = cf[plateKey];
       }
 
+      if (plate) {
+        // Borramos cualquier registro en historial previo de este vehículo
+        await supabase
+          .from("private_parking_history")
+          .delete()
+          .eq("parking_lot_id", parkingLotId)
+          .eq("plate", plate);
+      }
+
       const { error: historyError } = await supabase
         .from("private_parking_history")
         .insert({
@@ -152,6 +161,25 @@ export default function PrivateParking({
     }
 
     try {
+      // 1. Identificamos si hay una placa en los datos para buscarla en el historial y eliminarla.
+      let plateEntered = "";
+      const mainField = configFields.find(f => f.is_main)?.name;
+      if (mainField && customFieldsData[mainField]) {
+          plateEntered = customFieldsData[mainField];
+      } else {
+          const plateKey = Object.keys(customFieldsData).find(k => k.toLowerCase() === 'placa');
+          if (plateKey) plateEntered = customFieldsData[plateKey];
+      }
+
+      if (plateEntered) {
+        // Borramos del historial si vuelve a los activos
+        await supabase
+          .from("private_parking_history")
+          .delete()
+          .eq("parking_lot_id", parkingLotId)
+          .eq("plate", plateEntered);
+      }
+
       if (editingSpaceId) {
         // Enforce uniqueness / Check if moving to existing
         const { data: existingSpace } = await supabase
@@ -374,6 +402,15 @@ export default function PrivateParking({
       const cf = space.custom_fields_data || {};
       const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
       if (plateKey) plate = cf[plateKey];
+
+      if (plate) {
+        // Borramos cualquier registro en historial previo de este vehículo
+        await supabase
+          .from("private_parking_history")
+          .delete()
+          .eq("parking_lot_id", parkingLotId)
+          .eq("plate", plate);
+      }
 
       // 2. Insert into history
       const { error: historyError } = await supabase
@@ -896,7 +933,6 @@ export default function PrivateParking({
                   <table className="w-full text-sm text-left border-collapse">
                     <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                       <tr>
-                        <th className="px-5 py-4 font-bold">Fecha de Salida</th>
                         <th className="px-5 py-4 font-bold">Placa/Principal</th>
                         {configFields &&
                           configFields.map((cf) => (
@@ -912,9 +948,6 @@ export default function PrivateParking({
                           key={record.id}
                           className="hover:bg-slate-50/80 transition-colors"
                         >
-                          <td className="px-5 py-4 text-slate-600 font-bold">
-                            {new Date(record.released_at).toLocaleString()}
-                          </td>
                           <td className="px-5 py-4">
                             <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                               {record.plate || "N/A"}
