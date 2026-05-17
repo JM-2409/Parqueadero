@@ -624,7 +624,7 @@ export default function AdminPage() {
           >
             <FileEdit size={20} />
             <span className="font-bold whitespace-nowrap text-left">
-              Ingreso Manual
+              Ingreso Forzado
             </span>
           </button>
           <button
