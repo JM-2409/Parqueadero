@@ -25,11 +25,13 @@ export default function PrivateParking({
   parkingLotId: string;
 }) {
   const [spaces, setSpaces] = useState<any[]>([]);
+  const [historyRecords, setHistoryRecords] = useState<any[]>([]);
   const [configFields, setConfigFields] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"spaces" | "history">("spaces");
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
@@ -95,9 +97,49 @@ export default function PrivateParking({
     }
   }, [parkingLotId]);
 
+  const fetchHistory = useCallback(async () => {
+    try {
+        const { data, error } = await supabase
+            .from("private_parking_history")
+            .select("*")
+            .eq("parking_lot_id", parkingLotId)
+            .order("released_at", { ascending: false });
+
+        if (error) throw error;
+        setHistoryRecords(data || []);
+    } catch (err: any) {
+        console.error("Error fetching history:", err);
+    }
+  }, [parkingLotId]);
+
   useEffect(() => {
     fetchSpaces();
-  }, [fetchSpaces]);
+    fetchHistory();
+  }, [fetchSpaces, fetchHistory]);
+
+  const moveSpaceToHistory = async (space: any) => {
+      let plate = "";
+      const cf = space.custom_fields_data || {};
+
+      const mainField = configFields.find(f => f.is_main)?.name;
+      if (mainField && cf[mainField]) {
+          plate = cf[mainField];
+      } else {
+          const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
+          if (plateKey) plate = cf[plateKey];
+      }
+
+      const { error: historyError } = await supabase
+        .from("private_parking_history")
+        .insert({
+          parking_lot_id: parkingLotId,
+          plate: plate,
+          owner_name: space.owner_name,
+          custom_fields_data: space.custom_fields_data
+        });
+
+      if (historyError) throw historyError;
+  };
 
   const handleSaveSpace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,80 +153,184 @@ export default function PrivateParking({
 
     try {
       if (editingSpaceId) {
-        // Enforce uniqueness
+        // Enforce uniqueness / Check if moving to existing
         const { data: existingSpace } = await supabase
           .from("private_parking_spaces")
-          .select("id")
+          .select("*")
           .eq("parking_lot_id", parkingLotId)
           .eq("space_number", spaceData.space_number.trim())
           .neq("id", editingSpaceId)
           .maybeSingle();
 
         if (existingSpace) {
-          setError("El número de parqueadero ya existe en este contexto.");
-          return;
+            const hasData = existingSpace.custom_fields_data && Object.keys(existingSpace.custom_fields_data).length > 0;
+            if (hasData) {
+               const confirmSwap = confirm(`El espacio ${spaceData.space_number.trim()} ya está ocupado. ¿Deseas hacer el cambio? El vehículo que ocupaba este espacio pasará al historial.`);
+               if (!confirmSwap) return;
+
+               await moveSpaceToHistory(existingSpace);
+
+               // Delete old row we were editing, since we move to existingSpace
+               await supabase.from("private_parking_spaces").delete().eq("id", editingSpaceId);
+
+               const { error } = await supabase
+                  .from("private_parking_spaces")
+                  .update({
+                    owner_name:
+                      customFieldsData["Propietario"] ||
+                      customFieldsData["Propietario/Residente"] ||
+                      "",
+                    block:
+                      customFieldsData["Bloque"] ||
+                      customFieldsData["Bloque/Torre"] ||
+                      "",
+                    house_or_apartment:
+                      customFieldsData["Apto"] ||
+                      customFieldsData["Apto/Casa"] ||
+                      customFieldsData["Apartamento"] ||
+                      "",
+                    custom_fields_data: customFieldsData,
+                  })
+                  .eq("id", existingSpace.id);
+               if (error) throw error;
+               setSuccess("Espacio reasignado exitosamente.");
+            } else {
+               // Update empty existing space and delete old
+               await supabase.from("private_parking_spaces").delete().eq("id", editingSpaceId);
+               const { error } = await supabase
+                  .from("private_parking_spaces")
+                  .update({
+                    owner_name:
+                      customFieldsData["Propietario"] ||
+                      customFieldsData["Propietario/Residente"] ||
+                      "",
+                    block:
+                      customFieldsData["Bloque"] ||
+                      customFieldsData["Bloque/Torre"] ||
+                      "",
+                    house_or_apartment:
+                      customFieldsData["Apto"] ||
+                      customFieldsData["Apto/Casa"] ||
+                      customFieldsData["Apartamento"] ||
+                      "",
+                    custom_fields_data: customFieldsData,
+                  })
+                  .eq("id", existingSpace.id);
+               if (error) throw error;
+               setSuccess("Espacio guardado exitosamente.");
+            }
+        } else {
+            const { error } = await supabase
+              .from("private_parking_spaces")
+              .update({
+                owner_name:
+                  customFieldsData["Propietario"] ||
+                  customFieldsData["Propietario/Residente"] ||
+                  "",
+                block:
+                  customFieldsData["Bloque"] ||
+                  customFieldsData["Bloque/Torre"] ||
+                  "",
+                house_or_apartment:
+                  customFieldsData["Apto"] ||
+                  customFieldsData["Apto/Casa"] ||
+                  customFieldsData["Apartamento"] ||
+                  "",
+                space_number: spaceData.space_number.trim(),
+                custom_fields_data: customFieldsData,
+              })
+              .eq("id", editingSpaceId);
+
+            if (error) throw error;
+            setSuccess("Espacio actualizado exitosamente.");
         }
-
-        const { error } = await supabase
-          .from("private_parking_spaces")
-          .update({
-            owner_name:
-              customFieldsData["Propietario"] ||
-              customFieldsData["Propietario/Residente"] ||
-              "",
-            block:
-              customFieldsData["Bloque"] ||
-              customFieldsData["Bloque/Torre"] ||
-              "",
-            house_or_apartment:
-              customFieldsData["Apto"] ||
-              customFieldsData["Apto/Casa"] ||
-              customFieldsData["Apartamento"] ||
-              "",
-            space_number: spaceData.space_number.trim(),
-            custom_fields_data: customFieldsData,
-          })
-          .eq("id", editingSpaceId);
-
-        if (error) throw error;
-        setSuccess("Espacio actualizado exitosamente");
       } else {
-        // Enforce uniqueness
+        // Creating new space but it might already exist
         const { data: existingSpace } = await supabase
           .from("private_parking_spaces")
-          .select("id")
+          .select("*")
           .eq("parking_lot_id", parkingLotId)
           .eq("space_number", spaceData.space_number.trim())
           .maybeSingle();
 
         if (existingSpace) {
-          setError("El número de parqueadero ya existe en este contexto.");
-          return;
+            const hasData = existingSpace.custom_fields_data && Object.keys(existingSpace.custom_fields_data).length > 0;
+            if (hasData) {
+               const confirmSwap = confirm(`El espacio ${spaceData.space_number.trim()} ya existe y está ocupado. ¿Deseas reasignarlo? El vehículo que lo ocupaba pasará al historial.`);
+               if (!confirmSwap) return;
+
+               await moveSpaceToHistory(existingSpace);
+
+               const { error } = await supabase
+                  .from("private_parking_spaces")
+                  .update({
+                    owner_name:
+                      customFieldsData["Propietario"] ||
+                      customFieldsData["Propietario/Residente"] ||
+                      "",
+                    block:
+                      customFieldsData["Bloque"] ||
+                      customFieldsData["Bloque/Torre"] ||
+                      "",
+                    house_or_apartment:
+                      customFieldsData["Apto"] ||
+                      customFieldsData["Apto/Casa"] ||
+                      customFieldsData["Apartamento"] ||
+                      "",
+                    custom_fields_data: customFieldsData,
+                  })
+                  .eq("id", existingSpace.id);
+               if (error) throw error;
+               setSuccess("Espacio reasignado exitosamente.");
+            } else {
+               // Update empty existing space
+               const { error } = await supabase
+                  .from("private_parking_spaces")
+                  .update({
+                    owner_name:
+                      customFieldsData["Propietario"] ||
+                      customFieldsData["Propietario/Residente"] ||
+                      "",
+                    block:
+                      customFieldsData["Bloque"] ||
+                      customFieldsData["Bloque/Torre"] ||
+                      "",
+                    house_or_apartment:
+                      customFieldsData["Apto"] ||
+                      customFieldsData["Apto/Casa"] ||
+                      customFieldsData["Apartamento"] ||
+                      "",
+                    custom_fields_data: customFieldsData,
+                  })
+                  .eq("id", existingSpace.id);
+               if (error) throw error;
+               setSuccess("Espacio guardado exitosamente.");
+            }
+        } else {
+            const { error } = await supabase.from("private_parking_spaces").insert([
+              {
+                parking_lot_id: parkingLotId,
+                owner_name:
+                  customFieldsData["Propietario"] ||
+                  customFieldsData["Propietario/Residente"] ||
+                  "",
+                block:
+                  customFieldsData["Bloque"] ||
+                  customFieldsData["Bloque/Torre"] ||
+                  "",
+                house_or_apartment:
+                  customFieldsData["Apto"] ||
+                  customFieldsData["Apto/Casa"] ||
+                  customFieldsData["Apartamento"] ||
+                  "",
+                space_number: spaceData.space_number.trim(),
+                custom_fields_data: customFieldsData,
+              },
+            ]);
+
+            if (error) throw error;
+            setSuccess("Espacio creado exitosamente.");
         }
-
-        const { error } = await supabase.from("private_parking_spaces").insert([
-          {
-            parking_lot_id: parkingLotId,
-            owner_name:
-              customFieldsData["Propietario"] ||
-              customFieldsData["Propietario/Residente"] ||
-              "",
-            block:
-              customFieldsData["Bloque"] ||
-              customFieldsData["Bloque/Torre"] ||
-              "",
-            house_or_apartment:
-              customFieldsData["Apto"] ||
-              customFieldsData["Apto/Casa"] ||
-              customFieldsData["Apartamento"] ||
-              "",
-            space_number: spaceData.space_number.trim(),
-            custom_fields_data: customFieldsData,
-          },
-        ]);
-
-        if (error) throw error;
-        setSuccess("Espacio creado exitosamente");
       }
 
       setSpaceData({ space_number: "" });
@@ -278,25 +424,38 @@ export default function PrivateParking({
     setSpaceData({ ...spaceData, space_number: value });
   };
 
-  const handleSearchHistoryForPlate = async (plateValue: string) => {
-    if (plateValue.length >= 5) {
+  const handleSearchHistoryForPlate = async (fieldValue: string, fieldName: string) => {
+    if (fieldValue.length >= 3) {
+        // Since custom_fields_data is JSONB, we need to query if the value exists
+        // Also fallback to "plate" column if the field happens to be named "Placa" or similar
         const { data: historyData } = await supabase
         .from("private_parking_history")
         .select("*")
         .eq("parking_lot_id", parkingLotId)
-        .eq("plate", plateValue.toUpperCase())
+        .or(`plate.eq.${fieldValue.toUpperCase()},custom_fields_data->>${fieldName}.ilike.${fieldValue}`)
         .order("released_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
         if (historyData) {
             const cf = historyData.custom_fields_data || {};
-            setCustomFieldsData(prev => ({
-                ...prev,
-                ...cf
-            }));
-            setSuccess(`Se autocompletaron datos del historial para la placa ${plateValue.toUpperCase()}`);
-            setTimeout(() => setSuccess(""), 3000);
+            setCustomFieldsData(prev => {
+                // Solo autocompletar campos vacíos, no sobreescribir si ya tienen datos
+                const newData = { ...prev };
+                let merged = false;
+                Object.keys(cf).forEach(k => {
+                    if (!newData[k] && k !== fieldName) {
+                        newData[k] = cf[k];
+                        merged = true;
+                    }
+                });
+
+                if (merged && !success) {
+                   setSuccess(`Se autocompletaron datos del historial para ${fieldValue.toUpperCase()}`);
+                   setTimeout(() => setSuccess(""), 3000);
+                }
+                return newData;
+            });
         }
     }
   };
@@ -415,15 +574,36 @@ export default function PrivateParking({
 
   const filteredSpaces = spaces.filter((space) => {
     const searchLower = searchQuery.toLowerCase();
-    return (
-      (space.space_number &&
-        space.space_number.toLowerCase().includes(searchLower)) ||
-      (space.owner_name &&
-        space.owner_name.toLowerCase().includes(searchLower)) ||
+
+    // Check main fields
+    let matches = (space.space_number && space.space_number.toLowerCase().includes(searchLower)) ||
+      (space.owner_name && space.owner_name.toLowerCase().includes(searchLower)) ||
       (space.block && space.block.toLowerCase().includes(searchLower)) ||
-      (space.house_or_apartment &&
-        space.house_or_apartment.toLowerCase().includes(searchLower))
-    );
+      (space.house_or_apartment && space.house_or_apartment.toLowerCase().includes(searchLower));
+
+    // Check custom fields values
+    if (!matches && space.custom_fields_data) {
+        matches = Object.values(space.custom_fields_data).some((val: any) =>
+            String(val).toLowerCase().includes(searchLower)
+        );
+    }
+
+    return matches;
+  });
+
+  const filteredHistory = historyRecords.filter((record) => {
+    const searchLower = searchQuery.toLowerCase();
+
+    let matches = (record.plate && record.plate.toLowerCase().includes(searchLower)) ||
+      (record.owner_name && record.owner_name.toLowerCase().includes(searchLower));
+
+    if (!matches && record.custom_fields_data) {
+        matches = Object.values(record.custom_fields_data).some((val: any) =>
+            String(val).toLowerCase().includes(searchLower)
+        );
+    }
+
+    return matches;
   });
 
   if (loading) {
@@ -511,6 +691,7 @@ export default function PrivateParking({
               {configFields &&
                 configFields.map((field) => {
                   const isPlate = field.name.toLowerCase().includes('placa');
+                  const isMainField = field.is_main === true;
                   return (
                   <div key={field.name}>
                     <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
@@ -520,13 +701,15 @@ export default function PrivateParking({
                       type="text"
                       value={customFieldsData[field.name] || ""}
                       onChange={(e) => {
-                        const val = isPlate ? e.target.value.toUpperCase() : e.target.value;
+                        const val = isPlate || isMainField ? e.target.value.toUpperCase() : e.target.value;
                         setCustomFieldsData({
                           ...customFieldsData,
                           [field.name]: val,
                         });
-                        if (isPlate && val.length >= 5) {
-                            handleSearchHistoryForPlate(val);
+                        if (isMainField && val.length >= 3) {
+                            handleSearchHistoryForPlate(val, field.name);
+                        } else if (!configFields.some(f => f.is_main) && isPlate && val.length >= 5) {
+                            handleSearchHistoryForPlate(val, field.name);
                         }
                       }}
                       className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
@@ -560,15 +743,35 @@ export default function PrivateParking({
       {!isCreating && (
         <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              Listado de Espacios
-            </h3>
+            <div className="flex items-center bg-slate-100 p-1 rounded-3xl">
+                <button
+                  onClick={() => setActiveTab("spaces")}
+                  className={`px-4 py-2 rounded-3xl text-sm font-bold transition-colors ${
+                    activeTab === "spaces"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  Espacios Activos
+                </button>
+                <button
+                  onClick={() => setActiveTab("history")}
+                  className={`px-4 py-2 rounded-3xl text-sm font-bold transition-colors ${
+                    activeTab === "history"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  Historial
+                </button>
+            </div>
+
             <div className="relative w-full sm:w-72">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar espacios..."
+                placeholder={activeTab === "spaces" ? "Buscar espacios..." : "Buscar historial..."}
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
               />
               <Search
@@ -578,8 +781,10 @@ export default function PrivateParking({
             </div>
           </div>
 
-          {spaces.length === 0 ? (
-            <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
+          {activeTab === "spaces" ? (
+            <>
+              {spaces.length === 0 ? (
+                <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
               <div className="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-xl border border-slate-100">
                 <Home size={32} />
               </div>
@@ -664,6 +869,75 @@ export default function PrivateParking({
                 </tbody>
               </table>
             </div>
+          )}
+            </>
+          ) : (
+            <>
+              {historyRecords.length === 0 ? (
+                <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
+                  <div className="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-xl border border-slate-100">
+                    <Search size={32} />
+                  </div>
+                  <p className="text-slate-900 font-bold text-lg mb-1">
+                    Historial vacío
+                  </p>
+                  <p className="text-sm font-bold text-slate-500">
+                    Aún no hay registros de vehículos que hayan liberado su parqueadero.
+                  </p>
+                </div>
+              ) : filteredHistory.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 font-bold bg-slate-50 rounded-3xl border border-slate-100 border-dashed">
+                  No se encontraron registros en el historial que coincidan con &quot;
+                  <span className="text-slate-700 font-bold">{searchQuery}</span>
+                  &quot;.
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-3xl border border-slate-100">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                      <tr>
+                        <th className="px-5 py-4 font-bold">Fecha de Salida</th>
+                        <th className="px-5 py-4 font-bold">Placa/Principal</th>
+                        {configFields &&
+                          configFields.map((cf) => (
+                            <th key={`hist-${cf.name}`} className="px-5 py-4 font-bold">
+                              {cf.name}
+                            </th>
+                          ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {filteredHistory.map((record) => (
+                        <tr
+                          key={record.id}
+                          className="hover:bg-slate-50/80 transition-colors"
+                        >
+                          <td className="px-5 py-4 text-slate-600 font-bold">
+                            {new Date(record.released_at).toLocaleString()}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
+                              {record.plate || "N/A"}
+                            </span>
+                          </td>
+                          {configFields &&
+                            configFields.map((cf) => (
+                              <td
+                                key={`hist-data-${cf.name}`}
+                                className="px-5 py-4 text-slate-600 font-bold"
+                              >
+                                {record.custom_fields_data?.[cf.name] || (
+                                  <span className="text-slate-300">-</span>
+                                )}
+                              </td>
+                            ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
