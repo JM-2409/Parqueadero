@@ -56,7 +56,7 @@ import {
 
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -74,6 +74,18 @@ function SortableItem({ id, children }: { id: string; children: React.ReactNode 
 export default function AdminPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, settings, tariffs, employees
+
+  useEffect(() => {
+    const savedTab = sessionStorage.getItem('adminActiveTab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    sessionStorage.setItem('adminActiveTab', tab);
+  };
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -510,7 +522,8 @@ export default function AdminPage() {
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -598,7 +611,7 @@ export default function AdminPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveTab("devices")}
+            onClick={() => handleTabChange("devices")}
             className="p-3 relative text-slate-500 hover:text-indigo-600 transition-colors"
           >
             <Bell size={24} />
@@ -638,7 +651,7 @@ export default function AdminPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                setActiveTab("devices");
+                handleTabChange("devices");
                 setIsMobileMenuOpen(false);
               }}
               className="p-2 hidden md:block relative text-slate-500 hover:text-indigo-600 transition-colors"
@@ -670,7 +683,7 @@ export default function AdminPage() {
         <nav className={styles.nav}>
           <button
             onClick={() => {
-              setActiveTab("dashboard");
+              handleTabChange("dashboard");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "dashboard" ? styles.navItemActive : ""}`}
@@ -682,7 +695,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("cash_closures");
+              handleTabChange("cash_closures");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "cash_closures" ? styles.navItemActive : ""}`}
@@ -694,7 +707,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("manual_entry");
+              handleTabChange("manual_entry");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "manual_entry" ? styles.navItemActive : ""}`}
@@ -706,7 +719,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("tariffs");
+              handleTabChange("tariffs");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "tariffs" ? styles.navItemActive : ""}`}
@@ -718,7 +731,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("employees");
+              handleTabChange("employees");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "employees" ? styles.navItemActive : ""}`}
@@ -730,7 +743,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("employee_logs");
+              handleTabChange("employee_logs");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "employee_logs" ? styles.navItemActive : ""}`}
@@ -742,7 +755,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("private_parking");
+              handleTabChange("private_parking");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "private_parking" ? styles.navItemActive : ""}`}
@@ -754,7 +767,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("subscribers");
+              handleTabChange("subscribers");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "subscribers" ? styles.navItemActive : ""}`}
@@ -766,7 +779,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("blacklist");
+              handleTabChange("blacklist");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "blacklist" ? styles.navItemActive : ""}`}
@@ -778,7 +791,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("devices");
+              handleTabChange("devices");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "devices" ? styles.navItemActive : ""}`}
@@ -790,7 +803,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("settings");
+              handleTabChange("settings");
               setIsMobileMenuOpen(false);
             }}
             className={`${styles.navItem} ${activeTab === "settings" ? styles.navItemActive : ""}`}
