@@ -23,6 +23,8 @@ import {
   Home,
   Car,
   MonitorSmartphone,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -479,6 +481,16 @@ export default function AdminPage() {
     setCustomFields(customFields.filter((_, i) => i !== index));
   };
 
+  const moveCustomField = (index: number, direction: 'up' | 'down') => {
+    const newFields = [...customFields];
+    if (direction === 'up' && index > 0) {
+      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+    } else if (direction === 'down' && index < newFields.length - 1) {
+      [newFields[index + 1], newFields[index]] = [newFields[index], newFields[index + 1]];
+    }
+    setCustomFields(newFields);
+  };
+
   const addPrivateCustomField = () => {
     setPrivateCustomFields([
       ...privateCustomFields,
@@ -502,6 +514,16 @@ export default function AdminPage() {
 
   const removePrivateCustomField = (index: number) => {
     setPrivateCustomFields(privateCustomFields.filter((_, i) => i !== index));
+  };
+
+  const movePrivateCustomField = (index: number, direction: 'up' | 'down') => {
+    const newFields = [...privateCustomFields];
+    if (direction === 'up' && index > 0) {
+      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+    } else if (direction === 'down' && index < newFields.length - 1) {
+      [newFields[index + 1], newFields[index]] = [newFields[index], newFields[index + 1]];
+    }
+    setPrivateCustomFields(newFields);
   };
 
   if (loading)
@@ -1367,8 +1389,26 @@ export default function AdminPage() {
                                 </label>
                                 <button
                                   type="button"
+                                  onClick={() => moveCustomField(idx, 'up')}
+                                  disabled={idx === 0}
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
+                                  title="Subir"
+                                >
+                                  <ArrowUp size={18} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveCustomField(idx, 'down')}
+                                  disabled={idx === customFields.length - 1}
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
+                                  title="Bajar"
+                                >
+                                  <ArrowDown size={18} />
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => removeCustomField(idx)}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md border border-slate-100 active:scale-95"
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
                                   title="Eliminar campo"
                                 >
                                   <Trash2 size={18} />
@@ -1462,8 +1502,26 @@ export default function AdminPage() {
                                 </label>
                                 <button
                                   type="button"
+                                  onClick={() => movePrivateCustomField(idx, 'up')}
+                                  disabled={idx === 0}
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
+                                  title="Subir"
+                                >
+                                  <ArrowUp size={18} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => movePrivateCustomField(idx, 'down')}
+                                  disabled={idx === privateCustomFields.length - 1}
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
+                                  title="Bajar"
+                                >
+                                  <ArrowDown size={18} />
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => removePrivateCustomField(idx)}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md border border-slate-100 active:scale-95"
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
                                   title="Eliminar campo"
                                 >
                                   <Trash2 size={18} />
