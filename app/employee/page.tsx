@@ -476,6 +476,9 @@ export default function EmployeePage() {
 
         // 2. Search in active private parking spaces
         if (parkingLot?.id) {
+          // Determinamos el campo principal
+          const mainField = parkingLot.private_custom_fields?.find((f: any) => f.is_main)?.name;
+
           // Attempt to find by plate in custom_fields_data->>'Placa' or similar.
           // We'll fetch all private spaces for this lot and filter in memory,
           // since the exact key might vary (placa, Placa).
@@ -487,7 +490,10 @@ export default function EmployeePage() {
           if (privateSpaces) {
             const matchedSpace = privateSpaces.find((space) => {
               const cf = space.custom_fields_data || {};
-              // Case insensitive key match for 'placa'
+              if (mainField && cf[mainField] && cf[mainField].toUpperCase() === debouncedPlate.toUpperCase()) {
+                  return true;
+              }
+              // Fallback
               const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
               if (plateKey && cf[plateKey]?.toUpperCase() === debouncedPlate.toUpperCase()) {
                 return true;
@@ -502,8 +508,8 @@ export default function EmployeePage() {
               // Merge matching keys (like Celular -> Celular, etc)
               // We just merge everything into extraData. The input form will map by exact name.
               Object.keys(cf).forEach(key => {
-                 // Ignore Placa as it's already in the main field
-                 if (key.toLowerCase() !== 'placa' && !newExtraData[key]) {
+                 // Ignore Placa or Main field as it's already in the main input
+                 if (key.toLowerCase() !== 'placa' && key !== mainField && !newExtraData[key]) {
                      newExtraData[key] = cf[key];
                  }
               });
@@ -511,11 +517,18 @@ export default function EmployeePage() {
           }
 
           // 3. Search in private parking history
-          const { data: historySpaces } = await supabase
+          let historyQuery = supabase
             .from("private_parking_history")
             .select("custom_fields_data, plate")
-            .eq("parking_lot_id", parkingLot.id)
-            .eq("plate", debouncedPlate.toUpperCase())
+            .eq("parking_lot_id", parkingLot.id);
+
+          if (mainField) {
+             historyQuery = historyQuery.or(`plate.eq.${debouncedPlate.toUpperCase()},custom_fields_data->>${mainField}.ilike.${debouncedPlate}`);
+          } else {
+             historyQuery = historyQuery.eq("plate", debouncedPlate.toUpperCase());
+          }
+
+          const { data: historySpaces } = await historyQuery
             .order("released_at", { ascending: false })
             .limit(1)
             .maybeSingle();
@@ -524,7 +537,7 @@ export default function EmployeePage() {
              foundData = historySpaces;
              const cf = historySpaces.custom_fields_data || {};
              Object.keys(cf).forEach(key => {
-                 if (key.toLowerCase() !== 'placa' && !newExtraData[key]) {
+                 if (key.toLowerCase() !== 'placa' && key !== mainField && !newExtraData[key]) {
                      newExtraData[key] = cf[key];
                  }
               });

@@ -52,6 +52,16 @@ import {
 
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
+
+function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return <div ref={setNodeRef} style={style} {...attributes} {...listeners}>{children}</div>;
+}
 
 export default function AdminPage() {
   const router = useRouter();
@@ -75,7 +85,7 @@ export default function AdminPage() {
     { name: string; required: boolean }[]
   >([]);
   const [privateCustomFields, setPrivateCustomFields] = useState<
-    { name: string; required: boolean; visible: boolean }[]
+    { name: string; required: boolean; visible: boolean; is_main?: boolean }[]
   >([]);
   const [parkingSettings, setParkingSettings] = useState<{
     autoPrint: boolean;
@@ -481,20 +491,39 @@ export default function AdminPage() {
     setCustomFields(customFields.filter((_, i) => i !== index));
   };
 
-  const moveCustomField = (index: number, direction: 'up' | 'down') => {
-    const newFields = [...customFields];
-    if (direction === 'up' && index > 0) {
-      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
-    } else if (direction === 'down' && index < newFields.length - 1) {
-      [newFields[index + 1], newFields[index]] = [newFields[index], newFields[index + 1]];
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleCustomFieldsDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setCustomFields((items: any[]) => {
+        const oldIndex = items.findIndex((i, idx) => `cf-${idx}` === active.id);
+        const newIndex = items.findIndex((i, idx) => `cf-${idx}` === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
     }
-    setCustomFields(newFields);
+  };
+
+  const handlePrivateCustomFieldsDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setPrivateCustomFields((items: any[]) => {
+        const oldIndex = items.findIndex((i, idx) => `pcf-${idx}` === active.id);
+        const newIndex = items.findIndex((i, idx) => `pcf-${idx}` === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const addPrivateCustomField = () => {
     setPrivateCustomFields([
       ...privateCustomFields,
-      { name: "", required: false, visible: true },
+      { name: "", required: false, visible: true, is_main: false },
     ]);
   };
 
@@ -516,13 +545,11 @@ export default function AdminPage() {
     setPrivateCustomFields(privateCustomFields.filter((_, i) => i !== index));
   };
 
-  const movePrivateCustomField = (index: number, direction: 'up' | 'down') => {
-    const newFields = [...privateCustomFields];
-    if (direction === 'up' && index > 0) {
-      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
-    } else if (direction === 'down' && index < newFields.length - 1) {
-      [newFields[index + 1], newFields[index]] = [newFields[index], newFields[index + 1]];
-    }
+  const updatePrivateCustomFieldIsMain = (index: number) => {
+    const newFields = privateCustomFields.map((field, idx) => ({
+        ...field,
+        is_main: idx === index
+    }));
     setPrivateCustomFields(newFields);
   };
 
@@ -1356,66 +1383,54 @@ export default function AdminPage() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {customFields.map((field, idx) => (
-                            <div
-                              key={idx}
-                              className={styles.customFieldRow}
-                            >
-                              <input
-                                type="text"
-                                value={field.name || ""}
-                                onChange={(e) =>
-                                  updateCustomField(idx, "name", e.target.value)
-                                }
-                                placeholder="Nombre del campo (Ej. Casco)"
-                                className={`${styles.inputField} flex-1 text-sm`}
-                                required
-                              />
-                              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                                <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-700 ">
-                                  <input
-                                    type="checkbox"
-                                    checked={field.required || false}
-                                    onChange={(e) =>
-                                      updateCustomField(
-                                        idx,
-                                        "required",
-                                        e.target.checked,
-                                      )
-                                    }
-                                    className="w-4 h-4 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
-                                  />
-                                  Obligatorio
-                                </label>
-                                <button
-                                  type="button"
-                                  onClick={() => moveCustomField(idx, 'up')}
-                                  disabled={idx === 0}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
-                                  title="Subir"
-                                >
-                                  <ArrowUp size={18} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => moveCustomField(idx, 'down')}
-                                  disabled={idx === customFields.length - 1}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
-                                  title="Bajar"
-                                >
-                                  <ArrowDown size={18} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => removeCustomField(idx)}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
-                                  title="Eliminar campo"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCustomFieldsDragEnd}>
+                            <SortableContext items={customFields.map((_, idx) => `cf-${idx}`)} strategy={verticalListSortingStrategy}>
+                              {customFields.map((field, idx) => (
+                                <SortableItem key={`cf-${idx}`} id={`cf-${idx}`}>
+                                  <div className={styles.customFieldRow}>
+                                    <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 px-2 flex items-center justify-center">
+                                      <GripVertical size={20} />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={field.name || ""}
+                                      onChange={(e) =>
+                                        updateCustomField(idx, "name", e.target.value)
+                                      }
+                                      placeholder="Nombre del campo (Ej. Casco)"
+                                      className={`${styles.inputField} flex-1 text-sm`}
+                                      required
+                                    />
+                                    <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                                      <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-700 ">
+                                        <input
+                                          type="checkbox"
+                                          checked={field.required || false}
+                                          onChange={(e) =>
+                                            updateCustomField(
+                                              idx,
+                                              "required",
+                                              e.target.checked,
+                                            )
+                                          }
+                                          className="w-4 h-4 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                                        />
+                                        Obligatorio
+                                      </label>
+                                      <button
+                                        type="button"
+                                        onClick={() => removeCustomField(idx)}
+                                        className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
+                                        title="Eliminar campo"
+                                      >
+                                        <Trash2 size={18} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </SortableItem>
+                              ))}
+                            </SortableContext>
+                          </DndContext>
                         </div>
                       )}
                     </div>
@@ -1450,85 +1465,83 @@ export default function AdminPage() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {privateCustomFields.map((field, idx) => (
-                            <div
-                              key={idx}
-                              className={styles.customFieldRow}
-                            >
-                              <input
-                                type="text"
-                                value={field.name || ""}
-                                onChange={(e) =>
-                                  updatePrivateCustomField(
-                                    idx,
-                                    "name",
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="Nombre del campo (Ej. Placa)"
-                                className={`${styles.inputField} flex-1 text-sm focus:ring-emerald-500 focus:border-emerald-500`}
-                                required
-                              />
-                              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                                <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-700 ">
-                                  <input
-                                    type="checkbox"
-                                    checked={field.required || false}
-                                    onChange={(e) =>
-                                      updatePrivateCustomField(
-                                        idx,
-                                        "required",
-                                        e.target.checked,
-                                      )
-                                    }
-                                    className="w-4 h-4 text-emerald-600 rounded border-slate-300  focus:ring-emerald-500"
-                                  />
-                                  Obligatorio
-                                </label>
-                                <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-700 ">
-                                  <input
-                                    type="checkbox"
-                                    checked={field.visible || false}
-                                    onChange={(e) =>
-                                      updatePrivateCustomField(
-                                        idx,
-                                        "visible",
-                                        e.target.checked,
-                                      )
-                                    }
-                                    className="w-4 h-4 text-emerald-600 rounded border-slate-300  focus:ring-emerald-500"
-                                  />
-                                  Visible (Vigilante)
-                                </label>
-                                <button
-                                  type="button"
-                                  onClick={() => movePrivateCustomField(idx, 'up')}
-                                  disabled={idx === 0}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
-                                  title="Subir"
-                                >
-                                  <ArrowUp size={18} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => movePrivateCustomField(idx, 'down')}
-                                  disabled={idx === privateCustomFields.length - 1}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
-                                  title="Bajar"
-                                >
-                                  <ArrowDown size={18} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => removePrivateCustomField(idx)}
-                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
-                                  title="Eliminar campo"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePrivateCustomFieldsDragEnd}>
+                            <SortableContext items={privateCustomFields.map((_, idx) => `pcf-${idx}`)} strategy={verticalListSortingStrategy}>
+                              {privateCustomFields.map((field, idx) => (
+                                <SortableItem key={`pcf-${idx}`} id={`pcf-${idx}`}>
+                                  <div className={styles.customFieldRow}>
+                                    <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 px-2 flex items-center justify-center">
+                                      <GripVertical size={20} />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={field.name || ""}
+                                      onChange={(e) =>
+                                        updatePrivateCustomField(
+                                          idx,
+                                          "name",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="Nombre del campo (Ej. Placa, Apartamento)"
+                                      className={`${styles.inputField} flex-1 text-sm focus:ring-emerald-500 focus:border-emerald-500`}
+                                      required
+                                    />
+                                    <div className="flex flex-wrap items-center gap-4">
+                                      <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-700 font-bold">
+                                        <input
+                                          type="radio"
+                                          name="main_private_field"
+                                          checked={field.is_main || false}
+                                          onChange={() => updatePrivateCustomFieldIsMain(idx)}
+                                          className="w-4 h-4 text-emerald-600 border-slate-300 focus:ring-emerald-500"
+                                        />
+                                        Principal
+                                      </label>
+                                      <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-700 ">
+                                        <input
+                                          type="checkbox"
+                                          checked={field.required || false}
+                                          onChange={(e) =>
+                                            updatePrivateCustomField(
+                                              idx,
+                                              "required",
+                                              e.target.checked,
+                                            )
+                                          }
+                                          className="w-4 h-4 text-emerald-600 rounded border-slate-300  focus:ring-emerald-500"
+                                        />
+                                        Obligatorio
+                                      </label>
+                                      <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-700 ">
+                                        <input
+                                          type="checkbox"
+                                          checked={field.visible || false}
+                                          onChange={(e) =>
+                                            updatePrivateCustomField(
+                                              idx,
+                                              "visible",
+                                              e.target.checked,
+                                            )
+                                          }
+                                          className="w-4 h-4 text-emerald-600 rounded border-slate-300  focus:ring-emerald-500"
+                                        />
+                                        Visible (Vigilante)
+                                      </label>
+                                      <button
+                                        type="button"
+                                        onClick={() => removePrivateCustomField(idx)}
+                                        className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all shadow-md border border-slate-100 hover:shadow-md active:scale-95"
+                                        title="Eliminar campo"
+                                      >
+                                        <Trash2 size={18} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </SortableItem>
+                              ))}
+                            </SortableContext>
+                          </DndContext>
                         </div>
                       )}
                     </div>
