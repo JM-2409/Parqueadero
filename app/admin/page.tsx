@@ -1,6 +1,8 @@
 "use client";
 import AdminDeviceManagement from "./DeviceManagement";
-import { Bell } from "lucide-react";
+import {
+  Bell
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 import styles from "./admin.module.css";
@@ -22,9 +24,7 @@ import {
   CheckCircle2,
   Home,
   Car,
-  MonitorSmartphone,
-  ArrowUp,
-  ArrowDown,
+  MonitorSmartphone
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,7 +38,11 @@ import Blacklist from "./Blacklist";
 import MonthlySubscribers from "./MonthlySubscribers";
 import EmployeeManagement from "./EmployeeManagement";
 import EmployeeLogs from "./EmployeeLogs";
-import { FileEdit, Shield, Activity } from "lucide-react";
+import {
+  FileEdit,
+  Shield,
+  Activity
+} from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
 import {
   ResponsiveContainer,
@@ -55,7 +59,11 @@ import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import {
+  GripVertical,
+  ArrowUp,
+  ArrowDown
+} from "lucide-react";
 
 function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -1388,8 +1396,28 @@ export default function AdminPage() {
                               {customFields.map((field, idx) => (
                                 <SortableItem key={`cf-${idx}`} id={`cf-${idx}`}>
                                   <div className={styles.customFieldRow}>
-                                    <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 px-2 flex items-center justify-center">
-                                      <GripVertical size={20} />
+                                    <div className="flex items-center gap-1">
+                                      <div className="hidden sm:flex cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 px-2 items-center justify-center">
+                                        <GripVertical size={20} />
+                                      </div>
+                                      <div className="flex sm:hidden flex-col gap-1 px-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => moveCustomField(idx, 'up')}
+                                          disabled={idx === 0}
+                                          className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                          <ArrowUp size={16} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => moveCustomField(idx, 'down')}
+                                          disabled={idx === customFields.length - 1}
+                                          className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                          <ArrowDown size={16} />
+                                        </button>
+                                      </div>
                                     </div>
                                     <input
                                       type="text"
@@ -1470,8 +1498,28 @@ export default function AdminPage() {
                               {privateCustomFields.map((field, idx) => (
                                 <SortableItem key={`pcf-${idx}`} id={`pcf-${idx}`}>
                                   <div className={styles.customFieldRow}>
-                                    <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 px-2 flex items-center justify-center">
-                                      <GripVertical size={20} />
+                                    <div className="flex items-center gap-1">
+                                      <div className="hidden sm:flex cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 px-2 items-center justify-center">
+                                        <GripVertical size={20} />
+                                      </div>
+                                      <div className="flex sm:hidden flex-col gap-1 px-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => movePrivateCustomField(idx, 'up')}
+                                          disabled={idx === 0}
+                                          className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                          <ArrowUp size={16} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => movePrivateCustomField(idx, 'down')}
+                                          disabled={idx === privateCustomFields.length - 1}
+                                          className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                          <ArrowDown size={16} />
+                                        </button>
+                                      </div>
                                     </div>
                                     <input
                                       type="text"
