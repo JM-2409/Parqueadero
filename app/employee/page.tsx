@@ -108,6 +108,8 @@ export default function EmployeePage() {
   const [type, setType] = useState("carros");
   const [isNewVehicle, setIsNewVehicle] = useState(true);
   const [extraData, setExtraData] = useState<Record<string, string>>({});
+  const [previousObservation, setPreviousObservation] = useState<{ text?: string, photoUrl?: string } | null>(null);
+  const [usePreviousObservation, setUsePreviousObservation] = useState(false);
   const [blacklistAlert, setBlacklistAlert] = useState<{
     plate: string;
     reason: string;
@@ -544,6 +546,32 @@ export default function EmployeePage() {
           }
         }
 
+          // 4. Search in regular parking history for previous observations
+          const { data: previousSession } = await supabase
+            .from("parking_sessions")
+            .select("extra_data, vehicles!inner(plate)")
+            .eq("parking_lot_id", parkingLot.id)
+            .eq("vehicles.plate", debouncedPlate.toUpperCase())
+            .not("exit_time", "is", null)
+            .order("entry_time", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (previousSession && previousSession.extra_data) {
+            const obs = previousSession.extra_data["Observaciones"];
+            const photoUrl = previousSession.extra_data["observation_photo_url"];
+            if (obs || photoUrl) {
+              setPreviousObservation({ text: obs, photoUrl: photoUrl });
+              setUsePreviousObservation(false);
+            } else {
+              setPreviousObservation(null);
+              setUsePreviousObservation(false);
+            }
+          } else {
+            setPreviousObservation(null);
+            setUsePreviousObservation(false);
+          }
+
         if (foundData) {
           setExtraData(newExtraData);
           setIsNewVehicle(false);
@@ -553,6 +581,8 @@ export default function EmployeePage() {
       } else {
         setIsNewVehicle(true);
         setExtraData({});
+        setPreviousObservation(null);
+        setUsePreviousObservation(false);
       }
     };
     searchVehicle();
@@ -731,32 +761,37 @@ export default function EmployeePage() {
         }
       });
 
-      // Handle photo upload if exists
-      if (prefShowNotes && photoFile) {
-        const fileExt = photoFile.name.split(".").pop() || "jpeg";
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${parkingLot.id}/${fileName}`;
+      // Handle photo upload or reused photo
+      if (prefShowNotes) {
+        if (photoFile) {
+          const fileExt = photoFile.name.split(".").pop() || "jpeg";
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const filePath = `${parkingLot.id}/${fileName}`;
 
-        try {
-          const arrayBuffer = await photoFile.arrayBuffer();
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from("observations")
-              .upload(filePath, arrayBuffer, {
-                contentType: photoFile.type || "image/jpeg",
-              });
+          try {
+            const arrayBuffer = await photoFile.arrayBuffer();
+            const { data: uploadData, error: uploadError } =
+              await supabase.storage
+                .from("observations")
+                .upload(filePath, arrayBuffer, {
+                  contentType: photoFile.type || "image/jpeg",
+                });
 
-          if (!uploadError && uploadData) {
-            const { data: publicUrlData } = supabase.storage
-              .from("observations")
-              .getPublicUrl(filePath);
-            sanitizedExtraData["observation_photo_url"] =
-              publicUrlData.publicUrl;
-          } else {
-            console.error("Error uploading photo", uploadError);
+            if (!uploadError && uploadData) {
+              const { data: publicUrlData } = supabase.storage
+                .from("observations")
+                .getPublicUrl(filePath);
+              sanitizedExtraData["observation_photo_url"] =
+                publicUrlData.publicUrl;
+            } else {
+              console.error("Error uploading photo", uploadError);
+            }
+          } catch (err) {
+            console.error("Failed to process photo buffer", err);
           }
-        } catch (err) {
-          console.error("Failed to process photo buffer", err);
+        } else if (usePreviousObservation && previousObservation?.photoUrl) {
+          // Reusing the photo url
+          sanitizedExtraData["observation_photo_url"] = previousObservation.photoUrl;
         }
       }
 
@@ -1400,12 +1435,46 @@ export default function EmployeePage() {
 
                     {prefShowNotes && (
                       <div>
-                        <label className="block text-sm font-bold text-slate-700  mb-1">
-                          Observaciones{" "}
-                          {prefRequirePhoto
-                            ? "(Obligatorio con foto)"
-                            : "(Opcional)"}
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-sm font-bold text-slate-700">
+                            Observaciones{" "}
+                            {prefRequirePhoto
+                              ? "(Obligatorio con foto)"
+                              : "(Opcional)"}
+                          </label>
+                          {previousObservation && (
+                            <label className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer bg-indigo-50 px-2 py-1 rounded-xl">
+                              <input
+                                type="checkbox"
+                                checked={usePreviousObservation}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setUsePreviousObservation(checked);
+                                  if (checked) {
+                                    setExtraData({
+                                      ...extraData,
+                                      ["Observaciones"]: previousObservation.text || "",
+                                    });
+                                    if (previousObservation.photoUrl) {
+                                      setPhotoDataUrl(previousObservation.photoUrl);
+                                      setPhotoFile(null); // Clear any newly taken file
+                                    }
+                                  } else {
+                                    setExtraData({
+                                      ...extraData,
+                                      ["Observaciones"]: "",
+                                    });
+                                    if (photoDataUrl === previousObservation.photoUrl) {
+                                      setPhotoDataUrl(null);
+                                    }
+                                  }
+                                }}
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-indigo-300"
+                              />
+                              Usar novedad anterior
+                            </label>
+                          )}
+                        </div>
                         <textarea
                           value={extraData["Observaciones"] || ""}
                           onChange={(e) =>
@@ -1417,7 +1486,7 @@ export default function EmployeePage() {
                           className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-3"
                           placeholder="Daños, rayones o notas importantes..."
                           rows={2}
-                          required={prefRequirePhoto}
+                          required={prefRequirePhoto && !usePreviousObservation}
                         />
                         {prefRequirePhoto && (
                           <div className="flex flex-col gap-3">

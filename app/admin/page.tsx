@@ -499,6 +499,16 @@ export default function AdminPage() {
     setCustomFields(customFields.filter((_, i) => i !== index));
   };
 
+  const moveCustomField = (index: number, direction: 'up' | 'down') => {
+    const newFields = [...customFields];
+    if (direction === 'up' && index > 0) {
+      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+    } else if (direction === 'down' && index < newFields.length - 1) {
+      [newFields[index + 1], newFields[index]] = [newFields[index], newFields[index + 1]];
+    }
+    setCustomFields(newFields);
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -551,6 +561,16 @@ export default function AdminPage() {
 
   const removePrivateCustomField = (index: number) => {
     setPrivateCustomFields(privateCustomFields.filter((_, i) => i !== index));
+  };
+
+  const movePrivateCustomField = (index: number, direction: 'up' | 'down') => {
+    const newFields = [...privateCustomFields];
+    if (direction === 'up' && index > 0) {
+      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+    } else if (direction === 'down' && index < newFields.length - 1) {
+      [newFields[index + 1], newFields[index]] = [newFields[index], newFields[index + 1]];
+    }
+    setPrivateCustomFields(newFields);
   };
 
   const updatePrivateCustomFieldIsMain = (index: number) => {
