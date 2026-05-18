@@ -599,6 +599,14 @@ export default function PrivateParking({
 
   const handleExportCSV = () => {
     // Generate CSV data from spaces
+    const fields = [
+      "Número de Parqueadero",
+      "Propietario",
+      "Bloque",
+      "Apartamento",
+      ...configFields.map((f) => f.name),
+    ];
+
     const dataToExport = spaces.map((space) => {
       const baseData: any = {
         "Número de Parqueadero": space.space_number || "",
@@ -617,7 +625,7 @@ export default function PrivateParking({
       return baseData;
     });
 
-    const csvStr = Papa.unparse(dataToExport);
+    const csvStr = Papa.unparse({ fields, data: dataToExport });
     const blob = new Blob([csvStr], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -670,15 +678,33 @@ export default function PrivateParking({
             });
           }
 
+          // Retrieve existing spaces to avoid onConflict constraint error
+          const { data: existingSpaces } = await supabase
+            .from("private_parking_spaces")
+            .select("id, space_number")
+            .eq("parking_lot_id", parkingLotId);
+
+          const existingMap = new Map();
+          if (existingSpaces) {
+            existingSpaces.forEach(s => existingMap.set(String(s.space_number).trim(), s.id));
+          }
+
+          // Assign IDs to spaces that already exist, so upsert works on primary key instead of composite unique constraint
+          const recordsToUpsert = spacesToUpsert.map(s => {
+            const existingId = existingMap.get(String(s.space_number).trim());
+            if (existingId) {
+              return { ...s, id: existingId };
+            }
+            return s;
+          });
+
           // Bulk upsert in chunks to avoid payload size limits
           const chunkSize = 500;
-          for (let i = 0; i < spacesToUpsert.length; i += chunkSize) {
-            const chunk = spacesToUpsert.slice(i, i + chunkSize);
+          for (let i = 0; i < recordsToUpsert.length; i += chunkSize) {
+            const chunk = recordsToUpsert.slice(i, i + chunkSize);
             const { error: upsertError } = await supabase
               .from("private_parking_spaces")
-              .upsert(chunk, {
-                onConflict: "parking_lot_id,space_number",
-              });
+              .upsert(chunk);
 
             if (upsertError) throw upsertError;
           }
