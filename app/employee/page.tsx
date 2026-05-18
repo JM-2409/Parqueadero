@@ -1638,7 +1638,10 @@ export default function EmployeePage() {
                                   <span>
                                     {new Date(
                                       session.entry_time,
-                                    ).toLocaleTimeString([], {
+                                    ).toLocaleString("es-CO", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
                                       hour: "2-digit",
                                       minute: "2-digit",
                                     })}
@@ -1729,10 +1732,16 @@ export default function EmployeePage() {
                                   <span className="text-slate-500">
                                     Hora Entrada:
                                   </span>
-                                  <span className="font-bold text-slate-800 ">
+                                  <span className="font-bold text-slate-800 text-right">
                                     {new Date(
                                       session.entry_time,
-                                    ).toLocaleString()}
+                                    ).toLocaleString("es-CO", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
                                   </span>
                                 </div>
                                 <div className="flex justify-between items-center bg-white  p-3 rounded-3xl border border-slate-100 ">
@@ -1862,10 +1871,13 @@ export default function EmployeePage() {
                         Hora Ingreso
                       </p>
                       <p className="font-extrabold text-slate-900 ">
-                        {new Date(viewingSession.entry_time).toLocaleTimeString(
-                          [],
-                          { hour: "2-digit", minute: "2-digit" },
-                        )}
+                        {new Date(viewingSession.entry_time).toLocaleString("es-CO", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                     {viewingSession.entry_employee_name && (
