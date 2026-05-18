@@ -601,18 +601,12 @@ export default function PrivateParking({
     // Generate CSV data from spaces
     const fields = [
       "Número de Parqueadero",
-      "Propietario",
-      "Bloque",
-      "Apartamento",
       ...configFields.map((f) => f.name),
     ];
 
     const dataToExport = spaces.map((space) => {
       const baseData: any = {
         "Número de Parqueadero": space.space_number || "",
-        Propietario: space.owner_name || "",
-        Bloque: space.block || "",
-        Apartamento: space.house_or_apartment || "",
       };
 
       // Extract custom fields if available
@@ -667,13 +661,9 @@ export default function PrivateParking({
             spacesToUpsert.push({
               parking_lot_id: parkingLotId,
               space_number: String(spaceNum).trim(),
-              block: row["Bloque"] ? String(row["Bloque"]).trim() : "",
-              house_or_apartment: row["Apartamento"]
-                ? String(row["Apartamento"]).trim()
-                : "",
-              owner_name: row["Propietario"]
-                ? String(row["Propietario"]).trim()
-                : "",
+              block: "",
+              house_or_apartment: "",
+              owner_name: "",
               custom_fields_data: dynamicFields,
             });
           }
