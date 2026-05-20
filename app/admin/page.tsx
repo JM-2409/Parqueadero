@@ -163,6 +163,7 @@ export default function AdminPage() {
   }, []);
 
   const [currentShiftRevenue, setCurrentShiftRevenue] = useState(0);
+  const [shiftWithdrawals, setShiftWithdrawals] = useState(0);
   const [weeklyStats, setWeeklyStats] = useState<
     { date: string; amount: number }[]
   >([]);
@@ -222,6 +223,15 @@ export default function AdminPage() {
       query = query.gt("exit_time", lastClosureTime);
     }
 
+    let withdrawalsQuery = supabase
+      .from("cash_withdrawals")
+      .select("amount")
+      .eq("parking_lot_id", parkingLotId);
+
+    if (lastClosureTime) {
+      withdrawalsQuery = withdrawalsQuery.gt("withdrawn_at", lastClosureTime);
+    }
+
     // Fetch today stats for total vehicles (all day, irrespective of closure)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -233,13 +243,16 @@ export default function AdminPage() {
 
     // Fetch accumulated revenue for shift
     const { data: shiftData } = await query;
+    const { data: withdrawalsData } = await withdrawalsQuery;
 
     if (shiftData) {
       const revenue = shiftData.reduce(
         (sum, s) => sum + (Number(s.total_charged) || 0),
         0,
       );
+      const withdrawals = withdrawalsData?.reduce((sum, w) => sum + (Number(w.amount) || 0), 0) || 0;
       setCurrentShiftRevenue(revenue);
+      setShiftWithdrawals(withdrawals);
       setTodayStats((prev) => ({
         ...prev,
         vehicles: todayVehiclesData?.length || 0,
@@ -959,6 +972,7 @@ export default function AdminPage() {
               <CashClosuresHistory
                 parkingLotId={parkingLot.id}
                 currentShiftRevenue={currentShiftRevenue}
+                shiftWithdrawals={shiftWithdrawals}
                 onRegisterClosed={() => fetchEmployees(parkingLot.id)}
               />
             </div>
