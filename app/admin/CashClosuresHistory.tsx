@@ -49,13 +49,27 @@ export default function CashClosuresHistory({
 
   const currentRegisterCash = Math.max(0, (currentShiftRevenue || 0) - (shiftWithdrawals || 0));
 
+  const handleWithdrawAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, "");
+    if (!rawValue) {
+      setWithdrawAmount("");
+      return;
+    }
+
+    const numericValue = parseInt(rawValue, 10);
+    const formattedValue = new Intl.NumberFormat("es-CO").format(numericValue);
+    setWithdrawAmount(formattedValue);
+  };
+
   const handleWithdrawCash = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!withdrawAmount || !withdrawReason) {
+    const rawWithdrawAmount = withdrawAmount.replace(/\D/g, "");
+
+    if (!rawWithdrawAmount || !withdrawReason) {
       setError("Ingrese un monto y un motivo para el retiro.");
       return;
     }
-    const amount = Number(withdrawAmount);
+    const amount = parseInt(rawWithdrawAmount, 10);
     if (amount <= 0) {
       setError("El monto a retirar debe ser mayor a 0.");
       return;
@@ -284,13 +298,11 @@ export default function CashClosuresHistory({
                     <DollarSign size={18} className="text-slate-400" />
                   </div>
                   <input
-                    type="number"
+                    type="text"
                     value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    onChange={handleWithdrawAmountChange}
                     placeholder="0"
-                    min="1"
-                    max={currentRegisterCash}
-                    className={`${styles.input} pl-10`}
+                    className={`${styles.inputField} pl-10`}
                     required
                   />
                 </div>
@@ -307,7 +319,7 @@ export default function CashClosuresHistory({
                   value={withdrawReason}
                   onChange={(e) => setWithdrawReason(e.target.value)}
                   placeholder="Ej: Pago de insumos, adelanto..."
-                  className={`${styles.input} resize-none h-24`}
+                  className={`${styles.inputField} resize-none h-24`}
                   required
                 />
               </div>
