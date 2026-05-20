@@ -906,10 +906,11 @@ export default function AdminPage() {
                     </select>
                   </div>
                   <div className="h-64 mt-6">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
                       <BarChart
                         data={weeklyStats}
                         margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                        style={{ outline: 'none' }}
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
@@ -956,6 +957,7 @@ export default function AdminPage() {
                           fill="#6366f1"
                           radius={[4, 4, 0, 0]}
                           maxBarSize={40}
+                          activeBar={{ stroke: 'none' }}
                         />
                       </BarChart>
                     </ResponsiveContainer>

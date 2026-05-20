@@ -59,6 +59,7 @@ DROP POLICY IF EXISTS "vehicles_update_policy" ON public.vehicles;
 DROP POLICY IF EXISTS "Public Blacklist" ON public.blacklisted_vehicles;
 
 -- cash_closures
+ALTER TABLE public.cash_closures ADD COLUMN IF NOT EXISTS notes TEXT;
 DROP POLICY IF EXISTS "Public Cash Closures" ON public.cash_closures;
 
 -- 4. Recrear políticas de forma segura (Solo para usuarios autenticados) para evitar los avisos de USING(true)
