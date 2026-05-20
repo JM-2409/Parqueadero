@@ -2,22 +2,31 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Clock, Calendar, DollarSign, X } from "lucide-react";
+import { Clock, Calendar, DollarSign, X, HandCoins } from "lucide-react";
 import styles from "./admin.module.css";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 
 export default function CashClosuresHistory({
   parkingLotId,
   currentShiftRevenue,
+  shiftWithdrawals = 0,
   onRegisterClosed,
 }: {
   parkingLotId: string;
   currentShiftRevenue?: number;
+  shiftWithdrawals?: number;
   onRegisterClosed?: () => void;
 }) {
   const [closures, setClosures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClosingRegister, setIsClosingRegister] = useState(false);
+
+  // Withdrawal Modal state
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawReason, setWithdrawReason] = useState("");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -37,6 +46,62 @@ export default function CashClosuresHistory({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchClosures();
   }, [fetchClosures]);
+
+  const currentRegisterCash = Math.max(0, (currentShiftRevenue || 0) - (shiftWithdrawals || 0));
+
+  const handleWithdrawCash = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!withdrawAmount || !withdrawReason) {
+      setError("Ingrese un monto y un motivo para el retiro.");
+      return;
+    }
+    const amount = Number(withdrawAmount);
+    if (amount <= 0) {
+      setError("El monto a retirar debe ser mayor a 0.");
+      return;
+    }
+    if (amount > currentRegisterCash) {
+      setError("No hay suficiente dinero en caja para este retiro.");
+      return;
+    }
+
+    setIsWithdrawing(true);
+    setError("");
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const { error: insertError } = await supabase.from("cash_withdrawals").insert([
+        {
+          parking_lot_id: parkingLotId,
+          amount: amount,
+          reason: withdrawReason,
+          withdrawn_by: session?.user?.id,
+        },
+      ]);
+
+      if (insertError) throw insertError;
+
+      setSuccess("Dinero retirado exitosamente.");
+      setTimeout(() => setSuccess(""), 3000);
+
+      setShowWithdrawModal(false);
+      setWithdrawAmount("");
+      setWithdrawReason("");
+
+      // Reload stats
+      if (onRegisterClosed) {
+        onRegisterClosed();
+      }
+    } catch (err: any) {
+      console.error("Error al retirar dinero", err);
+      setError("No se pudo retirar el dinero: " + err.message);
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   const handleCloseRegister = async () => {
     if (
@@ -64,13 +129,17 @@ export default function CashClosuresHistory({
         ? lastClosure.closed_at
         : new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
+      const closureNotes = "Cierre de caja - Admin";
+
       const { error: insertError } = await supabase.from("cash_closures").insert([
         {
           parking_lot_id: parkingLotId,
-          total_revenue: currentShiftRevenue || 0,
+          total_revenue: currentRegisterCash,
+          expected_revenue: currentShiftRevenue || 0,
+          withdrawn_amount: shiftWithdrawals || 0,
           closed_by: session?.user?.id,
           opened_at: opened_at,
-          notes: `Cierre de caja - Admin`,
+          notes: closureNotes,
         },
       ]);
 
@@ -112,32 +181,154 @@ export default function CashClosuresHistory({
       {success && <SuccessMessage message={success} />}
 
       {currentShiftRevenue !== undefined && (
-        <div className={`${styles.card} flex flex-col justify-center`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className={`${styles.statIconContainer} ${styles.statIconSuccess}`}>
-                <DollarSign size={32} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`${styles.card} flex flex-col justify-center bg-indigo-50 border-indigo-100`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`${styles.statIconContainer} bg-indigo-200 text-indigo-700`}>
+                  <DollarSign size={32} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className={`${styles.cardTitle} truncate`}>
+                    Total Turno
+                  </h3>
+                  <p className={`${styles.cardValue} truncate text-indigo-700`}>
+                    {new Intl.NumberFormat("es-CO", {
+                      style: "currency",
+                      currency: "COP",
+                      minimumFractionDigits: 0,
+                    }).format(currentShiftRevenue)}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h3 className={`${styles.cardTitle} truncate`}>
-                  Recaudo Actual (En Caja)
-                </h3>
-                <p className={`${styles.cardValue} truncate`}>
-                  {new Intl.NumberFormat("es-CO", {
+            </div>
+
+            {shiftWithdrawals !== undefined && shiftWithdrawals > 0 && (
+              <div className="mt-4 pt-4 border-t border-indigo-200/50 flex justify-between items-center text-sm">
+                <span className="text-indigo-600/70 font-medium">Retiros realizados:</span>
+                <span className="text-red-500 font-bold">
+                  -{new Intl.NumberFormat("es-CO", {
                     style: "currency",
                     currency: "COP",
                     minimumFractionDigits: 0,
-                  }).format(currentShiftRevenue)}
-                </p>
+                  }).format(shiftWithdrawals)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className={`${styles.card} flex flex-col justify-center border-emerald-100 bg-emerald-50/30`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`${styles.statIconContainer} ${styles.statIconSuccess}`}>
+                  <DollarSign size={32} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className={`${styles.cardTitle} truncate`}>
+                    En Caja
+                  </h3>
+                  <p className={`${styles.cardValue} truncate text-emerald-700`}>
+                    {new Intl.NumberFormat("es-CO", {
+                      style: "currency",
+                      currency: "COP",
+                      minimumFractionDigits: 0,
+                    }).format(currentRegisterCash)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => setShowWithdrawModal(true)}
+                  disabled={currentRegisterCash <= 0 || isClosingRegister}
+                  className="w-full sm:w-auto px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                >
+                  <HandCoins size={16} />
+                  Retirar
+                </button>
+                <button
+                  onClick={handleCloseRegister}
+                  disabled={isClosingRegister || currentShiftRevenue === 0}
+                  className={`${styles.btnSecondary} truncate w-full sm:w-auto min-w-[140px]`}
+                >
+                  {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
+                </button>
               </div>
             </div>
-            <button
-              onClick={handleCloseRegister}
-              disabled={isClosingRegister || currentShiftRevenue === 0}
-              className={`${styles.btnSecondary} truncate w-full sm:w-auto`}
-            >
-              {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
-            </button>
+          </div>
+        </div>
+      )}
+
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <HandCoins className="text-indigo-600" />
+                Retirar Dinero
+              </h2>
+              <button
+                onClick={() => setShowWithdrawModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleWithdrawCash} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Monto a retirar
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <DollarSign size={18} className="text-slate-400" />
+                  </div>
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="0"
+                    min="1"
+                    max={currentRegisterCash}
+                    className={`${styles.input} pl-10`}
+                    required
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Máximo disponible: {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(currentRegisterCash)}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Motivo / Observaciones
+                </label>
+                <textarea
+                  value={withdrawReason}
+                  onChange={(e) => setWithdrawReason(e.target.value)}
+                  placeholder="Ej: Pago de insumos, adelanto..."
+                  className={`${styles.input} resize-none h-24`}
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowWithdrawModal(false)}
+                  className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isWithdrawing}
+                  className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  {isWithdrawing ? "Retirando..." : "Confirmar Retiro"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -161,7 +352,9 @@ export default function CashClosuresHistory({
                 <tr>
                   <th className="px-6 py-4">Apertura</th>
                   <th className="px-6 py-4">Cierre</th>
-                  <th className="px-6 py-4">Recaudo</th>
+                  <th className="px-6 py-4">Total Turno</th>
+                  <th className="px-6 py-4">Retiros</th>
+                  <th className="px-6 py-4">Total en Caja</th>
                   <th className="px-6 py-4">Realizado por</th>
                 </tr>
               </thead>
@@ -211,6 +404,25 @@ export default function CashClosuresHistory({
                           })}
                         </p>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-bold text-slate-700 text-base">
+                        {new Intl.NumberFormat("es-CO", {
+                          style: "currency",
+                          currency: "COP",
+                          minimumFractionDigits: 0,
+                        }).format(closure.expected_revenue || closure.total_revenue || 0)}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-bold text-red-500 text-base">
+                        {closure.withdrawn_amount && closure.withdrawn_amount > 0 ?
+                          "-" + new Intl.NumberFormat("es-CO", {
+                            style: "currency",
+                            currency: "COP",
+                            minimumFractionDigits: 0,
+                          }).format(closure.withdrawn_amount) : "$0"}
+                      </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="font-bold text-emerald-600 text-base">
