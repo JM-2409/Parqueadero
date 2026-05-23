@@ -38,6 +38,7 @@ export default function PrivateParking({
 
   const [spaceData, setSpaceData] = useState({
     space_number: "",
+    vehicle_type: "carros",
   });
 
   const [customFieldsData, setCustomFieldsData] = useState<
@@ -180,7 +181,8 @@ export default function PrivateParking({
           parking_lot_id: parkingLotId,
           plate: plate,
           owner_name: space.owner_name,
-          custom_fields_data: space.custom_fields_data
+          custom_fields_data: space.custom_fields_data,
+          vehicle_type: space.vehicle_type
         });
 
       if (historyError) throw historyError;
@@ -269,6 +271,7 @@ export default function PrivateParking({
                       customFieldsData["Apartamento"] ||
                       "",
                     custom_fields_data: customFieldsData,
+                    vehicle_type: spaceData.vehicle_type,
                   })
                   .eq("id", existingSpace.id);
                if (error) throw error;
@@ -293,6 +296,7 @@ export default function PrivateParking({
                       customFieldsData["Apartamento"] ||
                       "",
                     custom_fields_data: customFieldsData,
+                    vehicle_type: spaceData.vehicle_type,
                   })
                   .eq("id", existingSpace.id);
                if (error) throw error;
@@ -317,6 +321,7 @@ export default function PrivateParking({
                   "",
                 space_number: spaceData.space_number.trim(),
                 custom_fields_data: customFieldsData,
+                vehicle_type: spaceData.vehicle_type,
               })
               .eq("id", editingSpaceId);
 
@@ -357,6 +362,7 @@ export default function PrivateParking({
                       customFieldsData["Apartamento"] ||
                       "",
                     custom_fields_data: customFieldsData,
+                    vehicle_type: spaceData.vehicle_type,
                   })
                   .eq("id", existingSpace.id);
                if (error) throw error;
@@ -380,6 +386,7 @@ export default function PrivateParking({
                       customFieldsData["Apartamento"] ||
                       "",
                     custom_fields_data: customFieldsData,
+                    vehicle_type: spaceData.vehicle_type,
                   })
                   .eq("id", existingSpace.id);
                if (error) throw error;
@@ -404,6 +411,7 @@ export default function PrivateParking({
                   "",
                 space_number: spaceData.space_number.trim(),
                 custom_fields_data: customFieldsData,
+                vehicle_type: spaceData.vehicle_type,
               },
             ]);
 
@@ -412,7 +420,7 @@ export default function PrivateParking({
         }
       }
 
-      setSpaceData({ space_number: "" });
+      setSpaceData({ space_number: "", vehicle_type: "carros" });
       setCustomFieldsData({});
       setIsCreating(false);
       setEditingSpaceId(null);
@@ -424,14 +432,20 @@ export default function PrivateParking({
     }
   };
 
-  const handleDeleteSpace = async (id: string) => {
+  const handleDeleteSpace = async (space: any) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este espacio?")) return;
 
     try {
+      // Si el espacio tiene datos, lo movemos al historial primero
+      const hasData = space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0;
+      if (hasData) {
+         await moveSpaceToHistory(space);
+      }
+
       const { error } = await supabase
         .from("private_parking_spaces")
         .delete()
-        .eq("id", id);
+        .eq("id", space.id);
 
       if (error) throw error;
 
@@ -470,7 +484,8 @@ export default function PrivateParking({
           parking_lot_id: parkingLotId,
           plate: plate,
           owner_name: space.owner_name,
-          custom_fields_data: space.custom_fields_data
+          custom_fields_data: space.custom_fields_data,
+          vehicle_type: space.vehicle_type
         });
 
       if (historyError) throw historyError;
@@ -501,6 +516,7 @@ export default function PrivateParking({
     setEditingSpaceId(space.id);
     setSpaceData({
       space_number: space.space_number || "",
+      vehicle_type: space.vehicle_type || "carros",
     });
     setCustomFieldsData(space.custom_fields_data || {});
     setIsCreating(true);
@@ -510,6 +526,10 @@ export default function PrivateParking({
   const handleSpaceNumberChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSpaceData({ ...spaceData, space_number: value });
+  };
+
+  const handleVehicleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSpaceData({ ...spaceData, vehicle_type: e.target.value });
   };
 
   const handleSearchHistoryForPlate = async (fieldValue: string, fieldName: string) => {
@@ -593,7 +613,7 @@ export default function PrivateParking({
   const cancelEdit = () => {
     setIsCreating(false);
     setEditingSpaceId(null);
-    setSpaceData({ space_number: "" });
+    setSpaceData({ space_number: "", vehicle_type: "carros" });
     setCustomFieldsData({});
   };
 
@@ -601,12 +621,14 @@ export default function PrivateParking({
     // Generate CSV data from spaces
     const fields = [
       "Número de Parqueadero",
+      "Tipo de Vehículo",
       ...configFields.map((f) => f.name),
     ];
 
     const dataToExport = spaces.map((space) => {
       const baseData: any = {
         "Número de Parqueadero": space.space_number || "",
+        "Tipo de Vehículo": space.vehicle_type === 'motos' ? 'Moto' : 'Carro',
       };
 
       // Extract custom fields if available
@@ -658,6 +680,12 @@ export default function PrivateParking({
               }
             });
 
+            let vehicle_type = "carros";
+            if (row["Tipo de Vehículo"]) {
+              const tv = String(row["Tipo de Vehículo"]).toLowerCase().trim();
+              if (tv.includes("moto")) vehicle_type = "motos";
+            }
+
             spacesToUpsert.push({
               parking_lot_id: parkingLotId,
               space_number: String(spaceNum).trim(),
@@ -665,18 +693,40 @@ export default function PrivateParking({
               house_or_apartment: "",
               owner_name: "",
               custom_fields_data: dynamicFields,
+              vehicle_type: vehicle_type,
             });
           }
 
           // Retrieve existing spaces to avoid onConflict constraint error
           const { data: existingSpaces } = await supabase
             .from("private_parking_spaces")
-            .select("id, space_number")
+            .select("*")
             .eq("parking_lot_id", parkingLotId);
 
           const existingMap = new Map();
           if (existingSpaces) {
             existingSpaces.forEach(s => existingMap.set(String(s.space_number).trim(), s.id));
+          }
+
+          // Handle spaces that are not in the CSV anymore (Opción A)
+          const incomingSpaceNumbers = new Set(spacesToUpsert.map(s => s.space_number));
+
+          if (existingSpaces) {
+            for (const space of existingSpaces) {
+              if (!incomingSpaceNumbers.has(String(space.space_number).trim())) {
+                // Releasing space (moves to history and clears data)
+                const hasData = space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0;
+                if (hasData) {
+                  await moveSpaceToHistory(space);
+                  await supabase.from("private_parking_spaces").update({
+                    owner_name: null,
+                    block: null,
+                    house_or_apartment: null,
+                    custom_fields_data: {}
+                  }).eq("id", space.id);
+                }
+              }
+            }
           }
 
           // Assign IDs to spaces that already exist, so upsert works on primary key instead of composite unique constraint
@@ -833,6 +883,21 @@ export default function PrivateParking({
                 />
               </div>
 
+              {/* Tipo de Vehículo */}
+              <div>
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+                  Tipo de Vehículo
+                </label>
+                <select
+                  value={spaceData.vehicle_type}
+                  onChange={handleVehicleTypeChange}
+                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold transition-all"
+                >
+                  <option value="carros">Carro</option>
+                  <option value="motos">Moto</option>
+                </select>
+              </div>
+
               {/* Renderizar campos configurables */}
               {configFields &&
                 configFields.map((field) => {
@@ -954,6 +1019,7 @@ export default function PrivateParking({
                 <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                   <tr>
                     <th className="px-5 py-4 font-bold">Parqueadero</th>
+                    <th className="px-5 py-4 font-bold">Tipo</th>
                     {configFields &&
                       configFields.map((cf) => (
                         <th key={cf.name} className="px-5 py-4 font-bold">
@@ -972,6 +1038,11 @@ export default function PrivateParking({
                       <td className="px-5 py-4">
                         <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                           {space.space_number}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-slate-600 font-bold capitalize">
+                          {space.vehicle_type === 'motos' ? 'Moto' : 'Carro'}
                         </span>
                       </td>
                       {configFields &&
@@ -1002,7 +1073,7 @@ export default function PrivateParking({
                             <UserMinus size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteSpace(space.id)}
+                            onClick={() => handleDeleteSpace(space)}
                             className="p-3 text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all border border-transparent shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
                             title="Eliminar"
                           >
@@ -1043,6 +1114,7 @@ export default function PrivateParking({
                     <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                       <tr>
                         <th className="px-5 py-4 font-bold">Placa/Principal</th>
+                        <th className="px-5 py-4 font-bold">Tipo</th>
                         {configFields &&
                           configFields.map((cf) => (
                             <th key={`hist-${cf.name}`} className="px-5 py-4 font-bold">
@@ -1060,6 +1132,11 @@ export default function PrivateParking({
                           <td className="px-5 py-4">
                             <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                               {record.plate || "N/A"}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-slate-600 font-bold capitalize">
+                              {record.vehicle_type === 'motos' ? 'Moto' : 'Carro'}
                             </span>
                           </td>
                           {configFields &&
