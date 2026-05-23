@@ -103,12 +103,12 @@ export default function ReceiptModal({
 
         <div className="p-6 md:p-8 overflow-y-auto print:overflow-visible">
           <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-6">
-            {appSettings?.logo_url ? (
+            {parkingLot?.logo_url || appSettings?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={appSettings.logo_url}
+                src={parkingLot?.logo_url || appSettings?.logo_url}
                 alt="Logo"
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 shadow-xl border border-slate-100"
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 shadow-xl"
               />
             ) : (
               <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border border-slate-100">

@@ -1840,11 +1840,25 @@ export default function EmployeePage() {
                 className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print:shadow-none print:max-w-none print:w-full print:p-0 flex flex-col print:h-auto print:block print:m-0"
               >
                 <div className="bg-white border-r border-slate-200 border-b border-slate-200 p-4 flex justify-between items-center text-slate-900 print:border-none print:pb-2 print:mb-4 print:border-b print:border-dashed print:border-slate-300">
-                  <div className="flex flex-col">
-                    <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wider hidden print:block text-center mb-2">
-                      {appSettings?.app_name || parkingLot?.name || "Parqueadero"}
-                    </h2>
-                    <h3 className="text-lg font-bold font-mono">
+                  <div className="flex flex-col w-full text-center sm:text-left print:text-center">
+                    <div className="hidden print:flex flex-col items-center justify-center mb-4">
+                      {parkingLot?.logo_url || appSettings?.logo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={parkingLot?.logo_url || appSettings?.logo_url}
+                          alt="Logo"
+                          className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-2 border-2 border-slate-100 shadow-xl"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-xl border border-slate-100">
+                          <Car size={32} />
+                        </div>
+                      )}
+                      <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wider">
+                        {appSettings?.app_name || parkingLot?.name || "Parqueadero"}
+                      </h2>
+                    </div>
+                    <h3 className="text-lg font-bold font-mono print:text-slate-900">
                       Tiquete Vehículo - {viewingSession.vehicles.plate}
                     </h3>
                   </div>

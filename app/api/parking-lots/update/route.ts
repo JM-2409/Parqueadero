@@ -106,6 +106,7 @@ export async function POST(req: Request) {
         "settings",
         "entry_grace_period_mins",
         "shift_grace_period_mins",
+        "logo_url",
       ];
       for (const key of allowedKeys) {
         if (updateData[key] !== undefined) {
@@ -121,6 +122,7 @@ export async function POST(req: Request) {
         "is_active",
         "is_suspended",
         "subscription_end_date",
+        "logo_url",
       ];
       for (const key of allowedKeys) {
         if (updateData[key] !== undefined) {
