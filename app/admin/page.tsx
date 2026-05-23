@@ -24,7 +24,8 @@ import {
   CheckCircle2,
   Home,
   Car,
-  MonitorSmartphone
+  MonitorSmartphone,
+  Upload
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -391,6 +392,23 @@ export default function AdminPage() {
     };
   }, [parkingLot?.id, fetchTodayStats]);
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError("El logo no debe superar los 2MB");
+        setTimeout(() => setError(""), 3000);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setParkingLot({ ...parkingLot, logo_url: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isUpdatingSettings) return;
@@ -412,6 +430,7 @@ export default function AdminPage() {
       settings: parkingSettings,
       entry_grace_period_mins: parkingLot?.entry_grace_period_mins ?? 0,
       shift_grace_period_mins: parkingLot?.shift_grace_period_mins ?? 15,
+      logo_url: parkingLot?.logo_url ?? "",
     };
 
     try {
@@ -1064,6 +1083,39 @@ export default function AdminPage() {
                 </div>
 
                 <form onSubmit={handleUpdateSettings} className="space-y-8">
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-8 flex flex-col items-center justify-center gap-4">
+                    <label className={styles.inputLabel}>Logo del Parqueadero</label>
+                    <div className="flex flex-col sm:flex-row items-center gap-6 p-4 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50">
+                      <div className="w-24 h-24 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-white border-4 border-white shadow-md">
+                        {parkingLot?.logo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={parkingLot.logo_url}
+                            alt="Logo preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Car size={40} className="text-slate-600" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <label className="flex items-center justify-center sm:justify-start gap-2 bg-slate-800 text-white px-4 py-2 rounded-xl cursor-pointer hover:bg-slate-700 transition-colors">
+                          <Upload size={18} />
+                          <span className="font-semibold text-sm">Cambiar Logo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <p className="text-xs text-slate-500 text-center sm:text-left">
+                          Formatos recomendados: PNG o JPG. Tamaño máx: 2MB.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className={styles.inputLabel}>
