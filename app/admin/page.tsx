@@ -57,6 +57,7 @@ import {
 
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { ImageCropper } from "@/components/ui/ImageCropper";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -96,6 +97,7 @@ export default function AdminPage() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [customRoles, setCustomRoles] = useState<any[]>([]);
   const [error, setError] = useState("");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
 
   // Settings states
@@ -392,6 +394,7 @@ export default function AdminPage() {
     };
   }, [parkingLot?.id, fetchTodayStats]);
 
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -403,11 +406,19 @@ export default function AdminPage() {
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setParkingLot({ ...parkingLot, logo_url: reader.result as string });
+        setCropImageSrc(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
+
+  const handleCropComplete = (croppedImageBase64: string) => {
+    if (parkingLot) {
+      setParkingLot({ ...parkingLot, logo_url: croppedImageBase64 });
+    }
+    setCropImageSrc(null);
+  };
+
 
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -869,6 +880,14 @@ export default function AdminPage() {
           )}
 
           {success && <SuccessMessage message={success} />}
+
+          {cropImageSrc && (
+            <ImageCropper
+              imageSrc={cropImageSrc}
+              onCropComplete={handleCropComplete}
+              onCancel={() => setCropImageSrc(null)}
+            />
+          )}
 
           {/* TAB: DASHBOARD / HISTORIAL */}
           {activeTab === "dashboard" && parkingLot && (

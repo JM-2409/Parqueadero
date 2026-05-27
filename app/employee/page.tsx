@@ -963,6 +963,7 @@ export default function EmployeePage() {
             entry: entryTime.toLocaleString(),
             exit: exitTime.toLocaleString(),
             duration: `${hours}h ${minutes}m`,
+            logoUrl: parkingLot?.logo_url || appSettings?.logo_url || "",
             lotName: parkingLot.name,
           });
 

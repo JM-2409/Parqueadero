@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const entry = searchParams.get("entry") || "-";
     const exit = searchParams.get("exit") || "-";
     const appName = searchParams.get("appName") || "Parqueadero";
+    const logoUrl = searchParams.get("logoUrl") || "";
     const nit = searchParams.get("nit") || "-";
     const address = searchParams.get("address") || "";
     const duration = searchParams.get("duration") || "";
@@ -63,7 +64,20 @@ export async function GET(request: Request) {
                 marginBottom: "16px",
               }}
             >
-              <svg
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "9999px"
+                  }}
+                />
+              ) : (
+                <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="40"
                 height="40"
@@ -79,6 +93,7 @@ export async function GET(request: Request) {
                 <path d="M9 17h6" />
                 <circle cx="17" cy="17" r="2" />
               </svg>
+              )}
             </div>
             <span
               style={{
