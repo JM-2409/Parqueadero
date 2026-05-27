@@ -54,10 +54,7 @@ export default function ReceiptModal({
       });
       const mediaUrl = `/api/receipt-image?${params.toString()}`;
 
-      // Enlace directo de respaldo (se enviará por parte del servidor en el texto o lo usamos aquí como fallback visible)
-      const directReceiptLink = `${window.location.origin}/api/receipt-image?${params.toString()}`;
-
-      const text = `*Recibo de Parqueadero*\n\nParqueadero: ${appSettings?.app_name || parkingLot?.name || "Parqueadero"}\nNIT: ${parkingLot?.nit || "-"}\n\nRecibo No.: ${session.receipt_number || "-"}\nPlaca: ${session.vehicles?.plate || "-"}\nTipo: ${session.vehicles?.type || "-"}\nIngreso: ${entryTime.toLocaleString()}\nSalida: ${exitTime.toLocaleString()}\nTotal a Pagar: $${session.total_charged?.toLocaleString() || session.fee?.toLocaleString()}\n\nEnlace del recibo: ${directReceiptLink}\n\n¡Gracias por su visita!`;
+      const text = `¡Gracias por su visita!`;
 
       const response = await fetch("/api/whatsapp", {
         method: "POST",

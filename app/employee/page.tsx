@@ -974,9 +974,9 @@ export default function EmployeePage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              phoneNumber,
+              to: phoneNumber,
               mediaUrl: imageUrl,
-              bodyText: `Recibo de pago de parqueadero ${parkingLot.name}. Placa: ${sessionToExit.vehicles.plate}. Total: $${finalFee}`
+              text: `¡Gracias por su visita!`
             })
           }).catch(err => {
             // Log but don't disrupt user flow
