@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { ImageCropper } from "@/components/ui/ImageCropper";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function SuperAdminPage() {
@@ -44,6 +45,7 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(true);
   const [pendingDevicesCount, setPendingDevicesCount] = useState(0);
   const [error, setError] = useState("");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
   const [appSettings, setAppSettings] = useState({
     id: "",
@@ -282,21 +284,27 @@ export default function SuperAdminPage() {
     checkUser();
   }, [checkUser]);
 
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        // 2MB limit
         setError("La imagen es muy grande. Máximo 2MB.");
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAppSettings({ ...appSettings, logo_url: reader.result as string });
+        setCropImageSrc(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
+
+  const handleCropComplete = (croppedImageBase64: string) => {
+    setAppSettings({ ...appSettings, logo_url: croppedImageBase64 });
+    setCropImageSrc(null);
+  };
+
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -664,6 +672,14 @@ export default function SuperAdminPage() {
           )}
 
           {success && <SuccessMessage message={success} />}
+
+          {cropImageSrc && (
+            <ImageCropper
+              imageSrc={cropImageSrc}
+              onCropComplete={handleCropComplete}
+              onCancel={() => setCropImageSrc(null)}
+            />
+          )}
 
           {activeTab === "devices" && (
             <motion.div

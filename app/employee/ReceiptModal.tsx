@@ -50,6 +50,7 @@ export default function ReceiptModal({
         nit: parkingLot?.nit || "-",
         address: parkingLot?.address || "",
         duration: `${hours}h ${minutes}m`,
+        logoUrl: parkingLot?.logo_url || appSettings?.logo_url || "",
       });
       const mediaUrl = `/api/receipt-image?${params.toString()}`;
 
