@@ -65,7 +65,6 @@ DROP POLICY IF EXISTS "Private Parking History - Access own parking lot" ON priv
 DROP POLICY IF EXISTS "Device Approvals - Access own" ON device_approvals;
 DROP POLICY IF EXISTS "Cash Withdrawals - Access own parking lot" ON cash_withdrawals;
 
-
 -- 3. Crear políticas de seguridad con RLS (Usando las funciones seguras)
 
 -- TABLA: profiles
@@ -77,7 +76,7 @@ CREATE POLICY "Profiles - User can update their own profile" ON profiles
 
 CREATE POLICY "Profiles - Admins can view profiles in their parking lot" ON profiles
     FOR SELECT USING (
-        parking_lot_id = get_user_parking_lot() AND get_user_role() IN ('admin', 'superadmin')
+        profiles.parking_lot_id = get_user_parking_lot() AND get_user_role() IN ('admin', 'superadmin')
     );
 
 -- TABLA: app_settings
@@ -95,7 +94,7 @@ CREATE POLICY "Subscription Plans - Anyone can read" ON subscription_plans
 -- TABLA: parking_lots
 CREATE POLICY "Parking Lots - View own" ON parking_lots
     FOR SELECT USING (
-        id = get_user_parking_lot()
+        parking_lots.id = get_user_parking_lot()
     );
 CREATE POLICY "Parking Lots - Superadmin all" ON parking_lots
     FOR ALL USING (
@@ -103,19 +102,19 @@ CREATE POLICY "Parking Lots - Superadmin all" ON parking_lots
     );
 CREATE POLICY "Parking Lots - Admins update own" ON parking_lots
     FOR UPDATE USING (
-        id = get_user_parking_lot() AND get_user_role() = 'admin'
+        parking_lots.id = get_user_parking_lot() AND get_user_role() = 'admin'
     );
 
 -- TABLA: tariffs
 CREATE POLICY "Tariffs - Access own parking lot" ON tariffs
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        tariffs.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: custom_roles
 CREATE POLICY "Custom Roles - Access own parking lot" ON custom_roles
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        custom_roles.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: vehicles (Globales, pero requieren auth)
@@ -125,37 +124,37 @@ CREATE POLICY "Vehicles - Auth users can access" ON vehicles
 -- TABLA: parking_sessions
 CREATE POLICY "Parking Sessions - Access own parking lot" ON parking_sessions
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        parking_sessions.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: cash_closures
 CREATE POLICY "Cash Closures - Access own parking lot" ON cash_closures
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        cash_closures.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: blacklisted_vehicles
 CREATE POLICY "Blacklisted Vehicles - Access own parking lot" ON blacklisted_vehicles
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        blacklisted_vehicles.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: monthly_subscribers
 CREATE POLICY "Monthly Subscribers - Access own parking lot" ON monthly_subscribers
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        monthly_subscribers.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: private_parking_spaces
 CREATE POLICY "Private Parking Spaces - Access own parking lot" ON private_parking_spaces
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        private_parking_spaces.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: admin_parking_lots
 CREATE POLICY "Admin Parking Lots - Access own" ON admin_parking_lots
     FOR SELECT USING (
-        admin_id = auth.uid()
+        admin_parking_lots.admin_id = auth.uid()
         OR
         get_user_role() = 'superadmin'
     );
@@ -163,19 +162,19 @@ CREATE POLICY "Admin Parking Lots - Access own" ON admin_parking_lots
 -- TABLA: private_parking_history
 CREATE POLICY "Private Parking History - Access own parking lot" ON private_parking_history
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        private_parking_history.parking_lot_id = get_user_parking_lot()
     );
 
 -- TABLA: device_approvals
 CREATE POLICY "Device Approvals - Access own" ON device_approvals
     FOR ALL USING (
-        user_id = auth.uid()
+        device_approvals.user_id = auth.uid()
         OR
-        (parking_lot_id = get_user_parking_lot() AND get_user_role() IN ('admin', 'superadmin'))
+        (device_approvals.parking_lot_id = get_user_parking_lot() AND get_user_role() IN ('admin', 'superadmin'))
     );
 
 -- TABLA: cash_withdrawals
 CREATE POLICY "Cash Withdrawals - Access own parking lot" ON cash_withdrawals
     FOR ALL USING (
-        parking_lot_id = get_user_parking_lot()
+        cash_withdrawals.parking_lot_id = get_user_parking_lot()
     );
