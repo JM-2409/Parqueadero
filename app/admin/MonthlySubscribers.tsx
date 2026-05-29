@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { sanitizeInput } from "@/lib/sanitize";
 
 export default function MonthlySubscribers({
   parkingLotId,
@@ -111,10 +112,10 @@ export default function MonthlySubscribers({
       .insert([
         {
           parking_lot_id: parkingLotId,
-          plate: newSub.plate.toUpperCase(),
-          owner_name: newSub.owner_name,
-          owner_document: newSub.owner_document || null,
-          phone: newSub.phone || null,
+          plate: sanitizeInput(newSub.plate.toUpperCase()),
+          owner_name: sanitizeInput(newSub.owner_name),
+          owner_document: sanitizeInput(newSub.owner_document) || null,
+          phone: sanitizeInput(newSub.phone) || null,
           vehicle_type: newSub.vehicle_type,
           amount_paid: Number(newSub.amount_paid),
           start_date: newSub.start_date,

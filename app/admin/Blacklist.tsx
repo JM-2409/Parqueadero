@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { sanitizeInput } from "@/lib/sanitize";
 
 export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
   const [blacklisted, setBlacklisted] = useState<any[]>([]);
@@ -72,8 +73,8 @@ export default function Blacklist({ parkingLotId }: { parkingLotId: string }) {
       .insert([
         {
           parking_lot_id: parkingLotId,
-          plate: newEntry.plate.toUpperCase(),
-          reason: newEntry.reason,
+          plate: sanitizeInput(newEntry.plate.toUpperCase()),
+          reason: sanitizeInput(newEntry.reason),
           created_by: session?.user?.id,
         },
       ]);

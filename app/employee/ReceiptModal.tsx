@@ -2,6 +2,7 @@
 
 import { Receipt, Printer, X, Car, Send } from "lucide-react";
 import { useState } from "react";
+import { sanitizeInput } from "@/lib/sanitize";
 
 export default function ReceiptModal({
   session,
@@ -183,10 +184,10 @@ export default function ReceiptModal({
                       className="flex justify-between items-start gap-4"
                     >
                       <span className="text-slate-500 capitalize min-w-[80px]">
-                        {key}
+                        {sanitizeInput(key)}
                       </span>
                       <span className="font-bold text-slate-900 text-right break-words">
-                        {value as string}
+                        {sanitizeInput(value as string)}
                       </span>
                     </div>
                   );

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Clock, Calendar, DollarSign, X, HandCoins } from "lucide-react";
 import styles from "./admin.module.css";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { sanitizeInput } from "@/lib/sanitize";
 
 export default function CashClosuresHistory({
   parkingLotId,
@@ -91,7 +92,7 @@ export default function CashClosuresHistory({
         {
           parking_lot_id: parkingLotId,
           amount: amount,
-          reason: withdrawReason,
+          reason: sanitizeInput(withdrawReason),
           withdrawn_by: session?.user?.id,
         },
       ]);
