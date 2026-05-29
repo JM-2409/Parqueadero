@@ -17,15 +17,15 @@ describe("sanitizeInput utility function", () => {
     expect(sanitizeInput(" \t hello world \n ")).toBe("hello world");
   });
 
-  test("removes < and > characters", () => {
-    expect(sanitizeInput("<script>")).toBe("script");
-    expect(sanitizeInput("hello < world >")).toBe("hello  world");
-    expect(sanitizeInput("<<multiple>>")).toBe("multiple");
+  test("removes HTML tags via DOMPurify", () => {
+    expect(sanitizeInput("<script>")).toBe("");
+    expect(sanitizeInput("hello < world >")).toBe("hello &lt; world &gt;"); // DOMPurify might escape or keep valid looking text
+    expect(sanitizeInput("<<multiple>>")).toBe("&lt;&gt;");
   });
 
   test("handles combinations of spaces and tags", () => {
-    expect(sanitizeInput("  <script>alert(1)</script>  ")).toBe("scriptalert(1)/script");
-    expect(sanitizeInput(" < > ")).toBe("");
+    expect(sanitizeInput("  <script>alert(1)</script>  ")).toBe("");
+    expect(sanitizeInput(" < > ")).toBe("&lt; &gt;");
   });
 
   test("leaves normal text unchanged", () => {

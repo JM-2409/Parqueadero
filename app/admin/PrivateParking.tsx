@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { Spinner } from "@/components/ui/Spinner";
+import { sanitizeInput } from "@/lib/sanitize";
 
 import Papa from "papaparse";
 
@@ -396,22 +397,25 @@ export default function PrivateParking({
             const { error } = await supabase.from("private_parking_spaces").insert([
               {
                 parking_lot_id: parkingLotId,
-                owner_name:
+                owner_name: sanitizeInput(
                   customFieldsData["Propietario"] ||
                   customFieldsData["Propietario/Residente"] ||
-                  "",
-                block:
+                  ""
+                ),
+                block: sanitizeInput(
                   customFieldsData["Bloque"] ||
                   customFieldsData["Bloque/Torre"] ||
-                  "",
-                house_or_apartment:
+                  ""
+                ),
+                house_or_apartment: sanitizeInput(
                   customFieldsData["Apto"] ||
                   customFieldsData["Apto/Casa"] ||
                   customFieldsData["Apartamento"] ||
-                  "",
-                space_number: spaceData.space_number.trim(),
+                  ""
+                ),
+                space_number: sanitizeInput(spaceData.space_number.trim()),
                 custom_fields_data: customFieldsData,
-                vehicle_type: spaceData.vehicle_type,
+                vehicle_type: sanitizeInput(spaceData.vehicle_type),
               },
             ]);
 

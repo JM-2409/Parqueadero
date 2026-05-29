@@ -15,6 +15,7 @@ import {
   Copy,
 } from "lucide-react";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { sanitizeInput } from "@/lib/sanitize";
 
 const AVAILABLE_PERMISSIONS = [
   { id: "view_dashboard", label: "Ver Panel Principal" },
@@ -132,7 +133,7 @@ export default function CustomRoles({
         const { error } = await supabase
           .from("custom_roles")
           .update({
-            name: newRoleName.trim(),
+            name: sanitizeInput(newRoleName),
             permissions: newRolePermissions,
           })
           .eq("id", editingRoleId);
@@ -142,7 +143,7 @@ export default function CustomRoles({
       } else {
         const { error } = await supabase.from("custom_roles").insert([
           {
-            name: newRoleName.trim(),
+            name: sanitizeInput(newRoleName),
             permissions: newRolePermissions,
             parking_lot_id: parkingLotId,
           },
