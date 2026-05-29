@@ -76,6 +76,8 @@ export default function ManualEntry({
             newExtraData["Propietario"] = data.owner_name;
 
           setExtraData(newExtraData);
+        } else {
+          setExtraData({});
         }
       } else {
         setExtraData({});
@@ -186,12 +188,19 @@ export default function ManualEntry({
       let vehicleId = null;
       const { data: existingVehicle } = await supabase
         .from("vehicles")
-        .select("id, brand, color, owner_name")
+        .select("id, brand, color, owner_name, custom_fields_data")
         .eq("plate", sanitizeInput(plate.toUpperCase()))
         .maybeSingle();
 
       if (existingVehicle) {
         vehicleId = existingVehicle.id;
+
+        // Merge existing custom fields with new data
+        const mergedCustomFields = {
+          ...(existingVehicle.custom_fields_data || {}),
+          ...extraData,
+        };
+
         // Update existing vehicle with new latest data
         await supabase
           .from("vehicles")
@@ -215,7 +224,7 @@ export default function ManualEntry({
                 existingVehicle.owner_name ||
                 "",
             ),
-            custom_fields_data: extraData,
+            custom_fields_data: mergedCustomFields,
           })
           .eq("id", vehicleId);
       } else {

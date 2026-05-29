@@ -577,6 +577,7 @@ export default function EmployeePage() {
           setIsNewVehicle(false);
         } else {
           setIsNewVehicle(true);
+          setExtraData({});
         }
       } else {
         setIsNewVehicle(true);
@@ -716,12 +717,19 @@ export default function EmployeePage() {
     } else {
       const { data: existingVehicle } = await supabase
         .from("vehicles")
-        .select("id, brand, color, owner_name")
+        .select("id, brand, color, owner_name, custom_fields_data")
         .eq("plate", plate.toUpperCase())
         .maybeSingle();
 
       if (existingVehicle) {
         vehicleId = existingVehicle.id;
+
+        // Merge existing custom fields with new data
+        const mergedCustomFields = {
+          ...(existingVehicle.custom_fields_data || {}),
+          ...extraData,
+        };
+
         await supabase
           .from("vehicles")
           .update({
@@ -744,7 +752,7 @@ export default function EmployeePage() {
                 existingVehicle.owner_name ||
                 "",
             ),
-            custom_fields_data: extraData,
+            custom_fields_data: mergedCustomFields,
           })
           .eq("id", vehicleId);
       }
