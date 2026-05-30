@@ -18,8 +18,8 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
         .from("device_approvals")
         .select(`
           *,
-          profiles:user_id (email, role),
-          parking_lots:parking_lot_id (name)
+          profiles!inner (email, role),
+          parking_lots (name)
         `)
         .eq("parking_lot_id", parkingLotId)
         .eq("profiles.role", "employee")
@@ -27,8 +27,7 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
 
       if (fetchErr) throw fetchErr;
 
-      const empDevices = (data || []).filter((d: any) => d.profiles?.role === "employee");
-      setDevices(empDevices);
+      setDevices(data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
