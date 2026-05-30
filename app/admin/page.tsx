@@ -116,12 +116,16 @@ export default function AdminPage() {
     showNotes: boolean;
     requirePhoto?: boolean;
     auto_send_whatsapp?: boolean;
+    enable_time_alerts?: boolean;
+    time_limit_hours?: number;
   }>({
     autoPrint: false,
     confirmEntry: true,
     showNotes: false,
     requirePhoto: false,
     auto_send_whatsapp: false,
+    enable_time_alerts: false,
+    time_limit_hours: 12,
   });
   const [showSqlAlert, setShowSqlAlert] = useState(false);
 
@@ -1361,6 +1365,49 @@ export default function AdminPage() {
                             className={styles.checkbox}
                           />
                         </label>
+                      )}
+
+                      <label className="flex items-center justify-between p-4 border rounded-xl hover:bg-slate-50 transition-colors">
+                        <div>
+                          <p className="font-semibold text-slate-800">
+                            Alertas de exceso de tiempo
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            Destacar vehículos que superen un límite de tiempo en el operario
+                          </p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={parkingSettings?.enable_time_alerts || false}
+                          onChange={(e) =>
+                            setParkingSettings({
+                              ...parkingSettings,
+                              enable_time_alerts: e.target.checked,
+                            })
+                          }
+                          className={styles.checkbox}
+                        />
+                      </label>
+
+                      {parkingSettings?.enable_time_alerts && (
+                        <div className="p-4 border border-indigo-100 bg-indigo-50/30 rounded-xl space-y-3">
+                          <label className={styles.inputLabel}>
+                            ¿Después de cuántas horas mostrar la alerta?
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="72"
+                            value={parkingSettings?.time_limit_hours || 12}
+                            onChange={(e) =>
+                              setParkingSettings({
+                                ...parkingSettings,
+                                time_limit_hours: parseInt(e.target.value) || 12,
+                              })
+                            }
+                            className={styles.input}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>

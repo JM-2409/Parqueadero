@@ -1609,10 +1609,28 @@ export default function EmployeePage() {
                     </div>
                   ) : (
                     <div className="grid gap-4">
-                      {activeSessions.map((session) => (
+                      {activeSessions.map((session) => {
+                        // Calculate elapsed time in hours
+                        const entryDate = new Date(session.entry_time);
+                        const now = new Date();
+                        const elapsedHours = (now.getTime() - entryDate.getTime()) / (1000 * 60 * 60);
+                        const isOverTimeLimit = 
+                          parkingLot?.settings?.enable_time_alerts && 
+                          parkingLot?.settings?.time_limit_hours && 
+                          elapsedHours > parkingLot.settings.time_limit_hours;
+
+                        return (
                         <div
                           key={session.id}
-                          className={`border border-slate-200  p-4 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-slate-50  ${viewingSession?.id === session.id ? "border-indigo-400 shadow-md border border-slate-100 ring-1 ring-indigo-400" : "hover:border-indigo-300 hover:shadow-md border border-slate-100"}`}
+                          className={`border p-4 rounded-3xl flex flex-col justify-between gap-4 transition-all ${
+                            isOverTimeLimit 
+                              ? "bg-red-50 border-red-200 outline outline-2 outline-red-400 shadow-md" 
+                              : "bg-slate-50 border-slate-200 hover:border-indigo-300 hover:shadow-md"
+                          } ${
+                            viewingSession?.id === session.id 
+                              ? "border-indigo-400 shadow-lg ring-2 ring-indigo-400" 
+                              : ""
+                          }`}
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div
@@ -1625,12 +1643,12 @@ export default function EmployeePage() {
                                 )
                               }
                             >
-                              <div className="w-20 h-16 bg-white  rounded-3xl flex items-center justify-center font-mono font-bold text-lg text-slate-800  border-2 border-slate-200  shadow-md border border-slate-100 shrink-0 group-hover:border-indigo-300 transition-colors">
+                              <div className={`w-20 h-16 bg-white rounded-3xl flex items-center justify-center font-mono font-bold text-lg text-slate-800 border-2 shadow-md shrink-0 transition-colors ${isOverTimeLimit ? "border-red-300 group-hover:border-red-400" : "border-slate-200 group-hover:border-indigo-300"}`}>
                                 {session.vehicles.plate}
                               </div>
                               <div>
                                 <div className="flex items-center gap-3">
-                                  <p className="font-extrabold text-slate-900  capitalize">
+                                  <p className="font-extrabold text-slate-900 capitalize">
                                     {session.vehicles.type}
                                   </p>
                                   {subscribers.some(
@@ -1639,6 +1657,12 @@ export default function EmployeePage() {
                                   ) && (
                                     <span className="bg-indigo-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                                       Abonado
+                                    </span>
+                                  )}
+                                  {isOverTimeLimit && (
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider animate-pulse flex items-center gap-1">
+                                      <Clock size={10} />
+                                      +{Math.floor(elapsedHours)}H ALERTA
                                     </span>
                                   )}
                                 </div>
@@ -1805,7 +1829,8 @@ export default function EmployeePage() {
                             </div>
                           )}
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   )}
                 </div>
