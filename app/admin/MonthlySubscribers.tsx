@@ -6,7 +6,6 @@ import {
   PlusCircle,
   Trash2,
   Calendar,
-  CreditCard,
   ChevronDown,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
