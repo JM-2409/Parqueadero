@@ -398,7 +398,7 @@ export default function EmployeePage() {
           oscillator.stop(audioCtx.currentTime + 0.2);
         }
       } catch (e) {
-        console.log("Audio not supported", e);
+        // Ignorar error si no hay soporte de audio
       }
     }
   }, []);
