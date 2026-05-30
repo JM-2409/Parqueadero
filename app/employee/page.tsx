@@ -1708,7 +1708,7 @@ export default function EmployeePage() {
                                   handleExit(session.id);
                                 }}
                                 disabled={isSubmittingExit === session.id}
-                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-400`}
+                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-400`}
                               >
                                 {isSubmittingExit === session.id ? (
                                   <>

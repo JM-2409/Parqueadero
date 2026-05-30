@@ -731,7 +731,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
                         </td>
                         <td className="p-5">
                           <span
-                            className={`px-3 py-1.5 rounded-3xl text-[10px] font-bold uppercase tracking-wider ${
+                            className={`px-3 py-1.5 rounded-3xl text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
                               isCompleted
                                 ? "bg-slate-100 text-slate-500"
                                 : "bg-emerald-50 text-emerald-600 shadow-xl border border-slate-100 shadow-emerald-100"
