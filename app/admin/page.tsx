@@ -3,7 +3,6 @@ import AdminDeviceManagement from "./DeviceManagement";
 import {
   Bell
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 
 import styles from "./admin.module.css";
 

@@ -1,7 +1,7 @@
 "use client";
 import DeviceManagement from "./DeviceManagement";
 import { Bell } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 
 import styles from "./superadmin.module.css";
 

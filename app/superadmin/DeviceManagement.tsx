@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, X, Trash2, MonitorSmartphone } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function DeviceManagement() {
