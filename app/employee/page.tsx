@@ -1643,7 +1643,7 @@ export default function EmployeePage() {
                                 )
                               }
                             >
-                              <div className={`w-20 h-16 bg-white rounded-3xl flex items-center justify-center font-mono font-bold text-lg text-slate-800 border-2 shadow-md shrink-0 transition-colors ${isOverTimeLimit ? "border-red-300 group-hover:border-red-400" : "border-slate-200 group-hover:border-indigo-300"}`}>
+                              <div className={`w-auto min-w-[5rem] px-3 h-16 bg-white rounded-3xl flex items-center justify-center font-mono font-bold text-lg text-slate-800 border-2 shadow-md shrink-0 transition-colors ${isOverTimeLimit ? "border-red-300 group-hover:border-red-400" : "border-slate-200 group-hover:border-indigo-300"}`}>
                                 {session.vehicles.plate}
                               </div>
                               <div>
@@ -1732,18 +1732,18 @@ export default function EmployeePage() {
                                   handleExit(session.id);
                                 }}
                                 disabled={isSubmittingExit === session.id}
-                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-400`}
+                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[140px] whitespace-nowrap hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-400`}
                               >
                                 {isSubmittingExit === session.id ? (
                                   <>
                                     <Spinner
                                       size={16}
-                                      className="text-white"
+                                      className="text-white shrink-0"
                                     />
-                                    <span className="inline">Saliendo...</span>
+                                    <span>Saliendo...</span>
                                   </>
                                 ) : (
-                                  "Dar Salida"
+                                  <span>Dar Salida</span>
                                 )}
                               </button>
                             </div>

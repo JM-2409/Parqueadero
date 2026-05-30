@@ -13,22 +13,20 @@ export default function DeviceManagement() {
   const fetchDevices = async () => {
     try {
       setLoading(true);
-      // Fetch devices for admins only
+      // Fetch devices for admins only using inner join to correctly filter
       const { data, error: fetchErr } = await supabase
         .from("device_approvals")
         .select(`
           *,
-          profiles:user_id (email, role),
-          parking_lots:parking_lot_id (name)
+          profiles!inner (email, role),
+          parking_lots (name)
         `)
         .eq("profiles.role", "admin")
         .order("created_at", { ascending: false });
 
       if (fetchErr) throw fetchErr;
 
-      // Filter out non-admin results since inner join isn't explicitly used for eq
-      const adminDevices = (data || []).filter((d: any) => d.profiles?.role === "admin");
-      setDevices(adminDevices);
+      setDevices(data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {

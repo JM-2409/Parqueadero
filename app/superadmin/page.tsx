@@ -199,7 +199,7 @@ export default function SuperAdminPage() {
   const fetchAdmins = useCallback(async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*, parking_lots(name)")
+      .select("*, parking_lots (name)")
       .eq("role", "admin")
       .order("created_at", { ascending: false });
     if (error) {
@@ -212,7 +212,7 @@ export default function SuperAdminPage() {
   const fetchEmployees = useCallback(async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*, parking_lots(name)")
+      .select("*, parking_lots (name)")
       .eq("role", "employee")
       .order("created_at", { ascending: false });
     if (error) {
