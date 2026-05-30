@@ -1,5 +1,0 @@
-{
-  "name": "Sistema de Parqueaderos",
-  "description": "Aplicación para gestionar múltiples parqueaderos con roles de dueño, administrador y empleado.",
-  "requestFramePermissions": ["camera"]
-}

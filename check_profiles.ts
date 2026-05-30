@@ -1,14 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
 
-const supabaseUrl = "https://eicnazdxzkqlckpixhym.supabase.co";
-const supabaseServiceKey = "sb_secret_LJXPNHzU2oJ4vnUbS1c0Cg_ssjUo9nB";
+config();
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-async function checkProfiles() {
-  const { data, error } = await supabase.from('profiles').select('*').limit(1);
-  console.log("Profiles data:", data);
-  console.log("Profiles error:", error);
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+async function checkRouteLogic() {
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("*, parking_lots(name)")
+    .eq("role", "admin")
+    .order("created_at", { ascending: false });
+
+  console.log("Route admins:", data);
+  console.log("Route error:", error);
 }
 
-checkProfiles();
+checkRouteLogic();

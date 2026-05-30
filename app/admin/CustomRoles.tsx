@@ -12,6 +12,7 @@ import {
   X,
   Edit2,
   Search,
+  Copy,
 } from "lucide-react";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { sanitizeInput } from "@/lib/sanitize";

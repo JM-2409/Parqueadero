@@ -1,20 +1,34 @@
-const fs = require('fs');
 const https = require('https');
-const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
 
-const url = 'https://codeload.github.com/JM-2409/Parqueadero/zip/refs/heads/main';
-const zipPath = path.join(__dirname, 'repo.zip');
+const url = 'https://github.com/JM-2409/Parqueadero/archive/refs/heads/main.tar.gz';
+const dest = './main.tar.gz';
 
-https.get(url, (res) => {
-  const writeStream = fs.createWriteStream(zipPath);
-  res.pipe(writeStream);
-  writeStream.on('finish', () => {
-    writeStream.close();
-    console.log('Downloaded zip.');
-    const { execSync } = require('child_process');
-    execSync('npx -y extract-zip repo.zip .', { stdio: 'inherit' });
-    console.log('Extracted.');
-  });
-}).on('error', (err) => {
+console.log('Downloading...');
+const file = fs.createWriteStream(dest);
+https.get(url, function(response) {
+  if (response.statusCode === 301 || response.statusCode === 302) {
+    https.get(response.headers.location, function(redirectResponse) {
+       redirectResponse.pipe(file);
+       file.on('finish', function() {
+         file.close();
+         console.log('Extracting...');
+         // tar is likely available in the env
+         execSync('tar -xzf main.tar.gz --strip-components=1', { stdio: 'inherit' });
+         console.log('Done.');
+       });
+    });
+  } else {
+    response.pipe(file);
+    file.on('finish', function() {
+      file.close();
+      console.log('Extracting...');
+      execSync('tar -xzf main.tar.gz --strip-components=1', { stdio: 'inherit' });
+      console.log('Done.');
+    });
+  }
+}).on('error', function(err) {
+  fs.unlink(dest);
   console.error("Error: ", err.message);
 });

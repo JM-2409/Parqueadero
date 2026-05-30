@@ -349,7 +349,7 @@ export default function EmployeeHistory({
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap inline-flex items-center justify-center ${
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             isCompleted
                               ? "bg-slate-100 text-slate-600"
                               : "bg-emerald-100 text-emerald-700"

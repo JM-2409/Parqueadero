@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, X, Trash2, MonitorSmartphone } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: string }) {
@@ -18,8 +19,8 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
         .from("device_approvals")
         .select(`
           *,
-          profiles!inner (email, role),
-          parking_lots (name)
+          profiles:user_id (email, role),
+          parking_lots:parking_lot_id (name)
         `)
         .eq("parking_lot_id", parkingLotId)
         .eq("profiles.role", "employee")
@@ -27,7 +28,8 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
 
       if (fetchErr) throw fetchErr;
 
-      setDevices(data || []);
+      const empDevices = (data || []).filter((d: any) => d.profiles?.role === "employee");
+      setDevices(empDevices);
     } catch (err: any) {
       setError(err.message);
     } finally {

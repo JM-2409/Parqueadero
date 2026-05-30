@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, X, Trash2, MonitorSmartphone } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function DeviceManagement() {
@@ -13,20 +14,14 @@ export default function DeviceManagement() {
   const fetchDevices = async () => {
     try {
       setLoading(true);
-      // Fetch devices for admins only using inner join to correctly filter
-      const { data, error: fetchErr } = await supabase
-        .from("device_approvals")
-        .select(`
-          *,
-          profiles!inner (email, role),
-          parking_lots (name)
-        `)
-        .eq("profiles.role", "admin")
-        .order("created_at", { ascending: false });
+      const res = await fetch("/api/superadmin/data?type=devices");
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+      const data = result.data || [];
 
-      if (fetchErr) throw fetchErr;
-
-      setDevices(data || []);
+      // Filter out non-admin results since inner join isn't explicitly used for eq
+      const adminDevices = (data || []).filter((d: any) => d.profiles?.role === "admin");
+      setDevices(adminDevices);
     } catch (err: any) {
       setError(err.message);
     } finally {

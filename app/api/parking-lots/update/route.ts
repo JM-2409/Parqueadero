@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     const {
       data: { user },
       error: authError,
-    } = await userClient.auth.getUser();
+    } = await userClient.auth.getUser(authHeader.replace("Bearer ", ""));
 
     if (authError || !user) {
       return NextResponse.json(

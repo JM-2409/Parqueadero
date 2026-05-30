@@ -1,2 +1,0 @@
-[test]
-preload = ["./tests/actions/auth.setup.ts"]

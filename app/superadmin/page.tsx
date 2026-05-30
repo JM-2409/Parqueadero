@@ -1,13 +1,13 @@
 "use client";
 import DeviceManagement from "./DeviceManagement";
 import { Bell } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 import styles from "./superadmin.module.css";
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { createUser } from "@/app/actions/auth";
+import { createUser, deleteEmployee } from "@/app/actions/auth";
 import {
   Building2,
   UserPlus,
@@ -138,8 +138,12 @@ export default function SuperAdminPage() {
     setError("");
     setSuccess("");
     try {
-      const { error } = await supabase.from("profiles").delete().eq("id", id);
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error("No estás autenticado.");
+      
+      const result = await deleteEmployee(id, token);
+      if (!result.success) throw new Error(result.error);
 
       setSuccess("Administrador eliminado exitosamente.");
       fetchAdmins();
@@ -197,44 +201,46 @@ export default function SuperAdminPage() {
   }, []);
 
   const fetchAdmins = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*, parking_lots (name)")
-      .eq("role", "admin")
-      .order("created_at", { ascending: false });
-    if (error) {
+    try {
+      const res = await fetch("/api/superadmin/data?type=admins");
+      const result = await res.json();
+      if (result.success) {
+        setAdmins(result.data || []);
+      } else {
+        console.error("Error fetching admins:", result.error);
+        setError(result.error);
+      }
+    } catch (error: any) {
       console.error("Error fetching admins:", error);
-    } else {
-      setAdmins(data || []);
+      setError(error.message);
     }
   }, []);
 
   const fetchEmployees = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*, parking_lots (name)")
-      .eq("role", "employee")
-      .order("created_at", { ascending: false });
-    if (error) {
+    try {
+      const res = await fetch("/api/superadmin/data?type=employees");
+      const result = await res.json();
+      if (result.success) {
+        setEmployees(result.data || []);
+      } else {
+        console.error("Error fetching employees:", result.error);
+        setError(result.error);
+      }
+    } catch (error: any) {
       console.error("Error fetching employees:", error);
-    } else {
-      setEmployees(data || []);
+      setError(error.message);
     }
   }, []);
 
   const fetchPendingDevicesCount = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from("device_approvals")
-        .select(`
-          id,
-          profiles!inner(role)
-        `)
-        .eq("status", "pending")
-        .eq("profiles.role", "admin");
-
-      if (error) throw error;
-      setPendingDevicesCount(data ? data.length : 0);
+      const res = await fetch("/api/superadmin/data?type=pendingDevices");
+      const result = await res.json();
+      if (result.success) {
+        setPendingDevicesCount(result.data || 0);
+      } else {
+        console.error("Error fetching pending devices count:", result.error);
+      }
     } catch (err: any) {
       console.error("Error fetching pending devices count:", err.message);
     }
@@ -603,7 +609,7 @@ export default function SuperAdminPage() {
                   : styles.navItem
               }
           >
-            <UserPlus size={20} />
+            <UserPlus size={20} className="text-white" />
             <span className="font-bold">Administradores</span>
           </button>
           <button
