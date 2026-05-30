@@ -603,7 +603,7 @@ export default function SuperAdminPage() {
                   : styles.navItem
               }
           >
-            <UserPlus size={20} className="text-white" />
+            <UserPlus size={20} />
             <span className="font-bold">Administradores</span>
           </button>
           <button
