@@ -94,8 +94,14 @@ export async function POST(req: Request) {
     }
     const whatsappTo = `whatsapp:+${formattedTo}`;
 
+    // Asegurar que el remitente tenga el prefijo 'whatsapp:' y formato E.164
+    let whatsappFrom = twilioPhone;
+    if (!whatsappFrom.startsWith("whatsapp:")) {
+      whatsappFrom = `whatsapp:+${whatsappFrom.replace(/\D/g, "")}`;
+    }
+
     const messagePayload: any = {
-      from: twilioPhone,
+      from: whatsappFrom,
       to: whatsappTo,
       body: text || "Su recibo de parqueadero adjunto.",
     };
