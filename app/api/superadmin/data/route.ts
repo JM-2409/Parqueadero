@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+     return NextResponse.json({ success: false, error: "⚠️ Error: Supabase configuration is missing." }, { status: 500 });
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+
   try {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ success: false, error: "⚠️ Error Crítico: La variable de entorno 'SUPABASE_SERVICE_ROLE_KEY' no está configurada en los ajustes del proyecto (Settings). Las funciones del Super Administrador requieren esta clave para cargar los usuarios." }, { status: 400 });

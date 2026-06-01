@@ -2,23 +2,23 @@ import { NextResponse } from "next/server";
 import twilio from "twilio";
 import { createClient } from "@supabase/supabase-js";
 
-// 1. Nombres correctos del .env y cero credenciales quemadas
-const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-const twilioToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
-
-let supabaseUrl = (
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
-  ""
-).trim();
-let supabaseServiceKey = (
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  ""
-).trim();
-
 export async function POST(req: Request) {
+  // 1. Nombres correctos del .env y cero credenciales quemadas (variables inicializadas dentro para evitar problemas de build estático en Vercel)
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+
+  let supabaseUrl = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    ""
+  ).trim();
+  let supabaseServiceKey = (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    ""
+  ).trim();
+
   try {
     // Validación estricta de credenciales de Twilio
     if (!twilioSid || !twilioToken || !twilioPhone) {
