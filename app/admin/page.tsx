@@ -189,14 +189,28 @@ export default function AdminPage() {
       if (periodData) {
         const dailyMap: Record<string, number> = {};
         periodData.forEach((s) => {
-          const dateStr = new Date(s.exit_time).toLocaleDateString();
-          dailyMap[dateStr] =
-            (dailyMap[dateStr] || 0) + (Number(s.total_charged) || 0);
+          const exitTime = new Date(s.exit_time);
+          const dateKey = `${exitTime.getFullYear()}-${String(exitTime.getMonth() + 1).padStart(2, "0")}-${String(exitTime.getDate()).padStart(2, "0")}`;
+
+          dailyMap[dateKey] =
+            (dailyMap[dateKey] || 0) + (Number(s.total_charged) || 0);
         });
-        const statsArray = Object.keys(dailyMap).map((date) => ({
-          date,
-          amount: dailyMap[date],
-        }));
+
+        // Ordenamos las fechas correctamente (YYYY-MM-DD)
+        const sortedDates = Object.keys(dailyMap).sort((a, b) => a.localeCompare(b));
+
+        const statsArray = sortedDates.map((dateKey) => {
+          // Parse date back for display
+          const [year, month, day] = dateKey.split("-");
+          const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+          const displayDate = dateObj.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+
+          return {
+            date: displayDate,
+            amount: dailyMap[dateKey],
+          };
+        });
+
         setWeeklyStats(statsArray);
       }
     },
@@ -943,12 +957,13 @@ export default function AdminPage() {
                       <option value="30days">Últimos 30 días</option>
                     </select>
                   </div>
-                  <div className="h-64 mt-6">
+                  <div className="h-64 mt-6 [&_.recharts-wrapper]:outline-none [&_.recharts-surface]:outline-none [&_*:focus]:outline-none">
                     <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
                       <BarChart
                         data={weeklyStats}
                         margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                         style={{ outline: 'none' }}
+                        accessibilityLayer={false}
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
@@ -969,15 +984,15 @@ export default function AdminPage() {
                           tickFormatter={(value) => `$${value / 1000}k`}
                         />
                         <RechartsTooltip
-                          cursor={{ fill: "#f1f5f9" }}
+                          cursor={{ fill: "#f8fafc" }}
                           content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                               return (
-                                <div className="bg-indigo-900 text-slate-900 text-xs py-1.5 px-3 rounded shadow-md border border-slate-100 border border-slate-700">
-                                  <p className="font-bold mb-1">
+                                <div className="bg-white text-slate-700 text-xs py-2 px-3 rounded-lg shadow-lg border border-slate-200">
+                                  <p className="font-semibold text-slate-500 mb-1">
                                     {payload[0].payload.date}
                                   </p>
-                                  <p className="text-emerald-400 font-bold">
+                                  <p className="text-indigo-600 font-bold text-sm">
                                     {new Intl.NumberFormat("es-CO", {
                                       style: "currency",
                                       currency: "COP",
