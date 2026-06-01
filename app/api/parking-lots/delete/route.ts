@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-let supabaseUrl = (
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
-  ""
-).trim();
-let supabaseServiceKey = (
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  ""
-).trim();
+export const dynamic = 'force-dynamic';
 
 export async function DELETE(req: Request) {
   try {
+    let supabaseUrl = (
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.SUPABASE_URL ||
+      ""
+    ).trim();
+    let supabaseServiceKey = (
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      ""
+    ).trim();
+
     const { searchParams } = new URL(req.url);
     const parkingLotId = searchParams.get("id");
 
