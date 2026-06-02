@@ -712,6 +712,12 @@ export default function PrivateParking({
             existingSpaces.forEach(s => existingMap.set(String(s.space_number).trim(), s.id));
           }
 
+          // Separate records into inserts and updates to avoid id null constraint errors
+          const recordsToInsert = [];
+          const recordsToUpdate = [];
+
+          const spacesToArchive = [];
+
           // Handle spaces that are not in the CSV anymore (Opción A)
           const incomingSpaceNumbers = new Set(spacesToUpsert.map(s => s.space_number));
 
@@ -721,21 +727,21 @@ export default function PrivateParking({
                 // Releasing space (moves to history and clears data)
                 const hasData = space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0;
                 if (hasData) {
-                  await moveSpaceToHistory(space);
-                  await supabase.from("private_parking_spaces").update({
+                  spacesToArchive.push(space);
+                  recordsToUpdate.push({
+                    id: space.id,
+                    parking_lot_id: parkingLotId,
+                    space_number: space.space_number,
+                    vehicle_type: space.vehicle_type || "carros",
                     owner_name: null,
                     block: null,
                     house_or_apartment: null,
                     custom_fields_data: {}
-                  }).eq("id", space.id);
+                  });
                 }
               }
             }
           }
-
-          // Separate records into inserts and updates to avoid id null constraint errors
-          const recordsToInsert = [];
-          const recordsToUpdate = [];
 
           for (const s of spacesToUpsert) {
             const existingSpace = existingSpaces?.find(
@@ -747,16 +753,56 @@ export default function PrivateParking({
               // we should move the existing data to history first.
               const hasData = existingSpace.custom_fields_data && Object.keys(existingSpace.custom_fields_data).length > 0;
 
-              // Simple check: if the imported custom_fields_data differs significantly or simply is new
               if (hasData) {
-                  // We'll unconditionally archive the current occupant when updating via CSV
-                  // since the CSV represents a new "sorteo" / assignment cycle.
-                  await moveSpaceToHistory(existingSpace);
+                  spacesToArchive.push(existingSpace);
               }
 
-              recordsToUpdate.push({ ...s, id: existingSpace.id });
+              // Only include exactly the columns being updated to avoid Supabase bulk upsert heterogeneous object errors
+              recordsToUpdate.push({
+                  id: existingSpace.id,
+                  parking_lot_id: parkingLotId,
+                  space_number: s.space_number,
+                  block: s.block || "",
+                  house_or_apartment: s.house_or_apartment || "",
+                  owner_name: s.owner_name || "",
+                  custom_fields_data: s.custom_fields_data || {},
+                  vehicle_type: s.vehicle_type || "carros"
+              });
             } else {
               recordsToInsert.push(s);
+            }
+          }
+
+          // 1. Process batch archives (History) to avoid fetch timeout from individual queries
+          if (spacesToArchive.length > 0) {
+            const historyRecordsToInsert = spacesToArchive.map(space => {
+              let plate = "";
+              const cf = space.custom_fields_data || {};
+              const mainField = configFields.find(f => f.is_main)?.name;
+              if (mainField && cf[mainField]) {
+                  plate = cf[mainField];
+              } else {
+                  const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
+                  if (plateKey) plate = cf[plateKey];
+              }
+
+              return {
+                parking_lot_id: parkingLotId,
+                plate: plate,
+                owner_name: space.owner_name,
+                custom_fields_data: space.custom_fields_data,
+                vehicle_type: space.vehicle_type
+              };
+            });
+
+            // Insert new history records in chunks of 500
+            // Since we aren't enforcing a strict unique constraint on plate in history globally,
+            // we can safely insert new records without deleting previous ones. This preserves
+            // the full historical record over time while moving them to history in batch.
+            for (let i = 0; i < historyRecordsToInsert.length; i += 500) {
+               const chunk = historyRecordsToInsert.slice(i, i + 500);
+               const { error: histErr } = await supabase.from("private_parking_history").insert(chunk);
+               if (histErr) throw histErr;
             }
           }
 
