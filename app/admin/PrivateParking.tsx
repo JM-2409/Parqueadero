@@ -733,24 +733,53 @@ export default function PrivateParking({
             }
           }
 
-          // Assign IDs to spaces that already exist, so upsert works on primary key instead of composite unique constraint
-          const recordsToUpsert = spacesToUpsert.map(s => {
-            const existingId = existingMap.get(String(s.space_number).trim());
-            if (existingId) {
-              return { ...s, id: existingId };
-            }
-            return s;
-          });
+          // Separate records into inserts and updates to avoid id null constraint errors
+          const recordsToInsert = [];
+          const recordsToUpdate = [];
 
-          // Bulk upsert in chunks to avoid payload size limits
+          for (const s of spacesToUpsert) {
+            const existingSpace = existingSpaces?.find(
+              (es) => String(es.space_number).trim() === String(s.space_number).trim()
+            );
+
+            if (existingSpace) {
+              // If the space already exists and has data, and we are importing new data,
+              // we should move the existing data to history first.
+              const hasData = existingSpace.custom_fields_data && Object.keys(existingSpace.custom_fields_data).length > 0;
+
+              // Simple check: if the imported custom_fields_data differs significantly or simply is new
+              if (hasData) {
+                  // We'll unconditionally archive the current occupant when updating via CSV
+                  // since the CSV represents a new "sorteo" / assignment cycle.
+                  await moveSpaceToHistory(existingSpace);
+              }
+
+              recordsToUpdate.push({ ...s, id: existingSpace.id });
+            } else {
+              recordsToInsert.push(s);
+            }
+          }
+
           const chunkSize = 500;
-          for (let i = 0; i < recordsToUpsert.length; i += chunkSize) {
-            const chunk = recordsToUpsert.slice(i, i + chunkSize);
-            const { error: upsertError } = await supabase
+
+          // Process Inserts
+          for (let i = 0; i < recordsToInsert.length; i += chunkSize) {
+            const chunk = recordsToInsert.slice(i, i + chunkSize);
+            const { error: insertError } = await supabase
+              .from("private_parking_spaces")
+              .insert(chunk);
+
+            if (insertError) throw insertError;
+          }
+
+          // Process Updates (upsert works fine when all records have an id)
+          for (let i = 0; i < recordsToUpdate.length; i += chunkSize) {
+            const chunk = recordsToUpdate.slice(i, i + chunkSize);
+            const { error: updateError } = await supabase
               .from("private_parking_spaces")
               .upsert(chunk);
 
-            if (upsertError) throw upsertError;
+            if (updateError) throw updateError;
           }
 
           setSuccess(
@@ -1018,77 +1047,156 @@ export default function PrivateParking({
               &quot;.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-3xl border border-slate-100">
-              <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
-                  <tr>
-                    <th className="px-5 py-4 font-bold">Parqueadero</th>
-                    <th className="px-5 py-4 font-bold">Tipo</th>
-                    {configFields &&
-                      configFields.map((cf) => (
-                        <th key={cf.name} className="px-5 py-4 font-bold">
-                          {cf.name}
-                        </th>
-                      ))}
-                    <th className="px-5 py-4 font-bold text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {filteredSpaces.map((space) => (
-                    <tr
-                      key={space.id}
-                      className="hover:bg-slate-50/80 transition-colors group"
-                    >
-                      <td className="px-5 py-4">
-                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
-                          {space.space_number}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="text-slate-600 font-bold capitalize">
-                          {space.vehicle_type === 'motos' ? 'Moto' : 'Carro'}
-                        </span>
-                      </td>
-                      {configFields &&
-                        configFields.map((cf) => (
-                          <td
-                            key={cf.name}
-                            className="px-5 py-4 text-slate-600 font-bold"
+            <div className="space-y-8">
+              {/* Carros Table */}
+              {filteredSpaces.filter((s) => s.vehicle_type !== 'motos').length > 0 && (
+                <div>
+                  <h4 className="text-md font-bold text-slate-800 mb-4 px-2">Carros</h4>
+                  <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                    <table className="w-full text-sm text-left border-collapse">
+                      <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                        <tr>
+                          <th className="px-5 py-4 font-bold">Parqueadero</th>
+                          {configFields &&
+                            configFields.map((cf) => (
+                              <th key={`car-${cf.name}`} className="px-5 py-4 font-bold">
+                                {cf.name}
+                              </th>
+                            ))}
+                          <th className="px-5 py-4 font-bold text-right">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {filteredSpaces
+                          .filter((s) => s.vehicle_type !== 'motos')
+                          .map((space) => (
+                          <tr
+                            key={space.id}
+                            className="hover:bg-slate-50/80 transition-colors group"
                           >
-                            {space.custom_fields_data?.[cf.name] || (
-                              <span className="text-slate-300">-</span>
-                            )}
-                          </td>
+                            <td className="px-5 py-4">
+                              <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
+                                {space.space_number}
+                              </span>
+                            </td>
+                            {configFields &&
+                              configFields.map((cf) => (
+                                <td
+                                  key={`car-${cf.name}-${space.id}`}
+                                  className="px-5 py-4 text-slate-600 font-bold"
+                                >
+                                  {space.custom_fields_data?.[cf.name] || (
+                                    <span className="text-slate-300">-</span>
+                                  )}
+                                </td>
+                              ))}
+                            <td className="px-5 py-4 text-right">
+                              <div className="flex justify-end gap-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleEditClick(space)}
+                                  className="p-3 text-slate-400 hover:text-slate-900 hover:bg-indigo-50 rounded-3xl transition-colors border border-transparent hover:border-indigo-100"
+                                  title="Editar"
+                                >
+                                  <Edit2 size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleReleaseSpace(space)}
+                                  className="p-3 text-slate-400 hover:text-slate-900 hover:bg-orange-50 rounded-3xl transition-colors border border-transparent hover:border-orange-100"
+                                  title="Liberar Parqueadero (Pasar al historial)"
+                                >
+                                  <UserMinus size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSpace(space)}
+                                  className="p-3 text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all border border-transparent shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
                         ))}
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex justify-end gap-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => handleEditClick(space)}
-                            className="p-3 text-slate-400 hover:text-slate-900 hover:bg-indigo-50 rounded-3xl transition-colors border border-transparent hover:border-indigo-100"
-                            title="Editar"
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Motos Table */}
+              {filteredSpaces.filter((s) => s.vehicle_type === 'motos').length > 0 && (
+                <div>
+                  <h4 className="text-md font-bold text-slate-800 mb-4 px-2">Motos</h4>
+                  <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                    <table className="w-full text-sm text-left border-collapse">
+                      <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                        <tr>
+                          <th className="px-5 py-4 font-bold">Parqueadero</th>
+                          {configFields &&
+                            configFields.map((cf) => (
+                              <th key={`moto-${cf.name}`} className="px-5 py-4 font-bold">
+                                {cf.name}
+                              </th>
+                            ))}
+                          <th className="px-5 py-4 font-bold text-right">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {filteredSpaces
+                          .filter((s) => s.vehicle_type === 'motos')
+                          .map((space) => (
+                          <tr
+                            key={space.id}
+                            className="hover:bg-slate-50/80 transition-colors group"
                           >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleReleaseSpace(space)}
-                            className="p-3 text-slate-400 hover:text-slate-900 hover:bg-orange-50 rounded-3xl transition-colors border border-transparent hover:border-orange-100"
-                            title="Liberar Parqueadero (Pasar al historial)"
-                          >
-                            <UserMinus size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteSpace(space)}
-                            className="p-3 text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all border border-transparent shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
-                            title="Eliminar"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            <td className="px-5 py-4">
+                              <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
+                                {space.space_number}
+                              </span>
+                            </td>
+                            {configFields &&
+                              configFields.map((cf) => (
+                                <td
+                                  key={`moto-${cf.name}-${space.id}`}
+                                  className="px-5 py-4 text-slate-600 font-bold"
+                                >
+                                  {space.custom_fields_data?.[cf.name] || (
+                                    <span className="text-slate-300">-</span>
+                                  )}
+                                </td>
+                              ))}
+                            <td className="px-5 py-4 text-right">
+                              <div className="flex justify-end gap-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleEditClick(space)}
+                                  className="p-3 text-slate-400 hover:text-slate-900 hover:bg-indigo-50 rounded-3xl transition-colors border border-transparent hover:border-indigo-100"
+                                  title="Editar"
+                                >
+                                  <Edit2 size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleReleaseSpace(space)}
+                                  className="p-3 text-slate-400 hover:text-slate-900 hover:bg-orange-50 rounded-3xl transition-colors border border-transparent hover:border-orange-100"
+                                  title="Liberar Parqueadero (Pasar al historial)"
+                                >
+                                  <UserMinus size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSpace(space)}
+                                  className="p-3 text-slate-400 hover:text-white hover:bg-red-500 rounded-full transition-all border border-transparent shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
             </>
@@ -1113,51 +1221,104 @@ export default function PrivateParking({
                   &quot;.
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-3xl border border-slate-100">
-                  <table className="w-full text-sm text-left border-collapse">
-                    <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
-                      <tr>
-                        <th className="px-5 py-4 font-bold">Placa/Principal</th>
-                        <th className="px-5 py-4 font-bold">Tipo</th>
-                        {configFields &&
-                          configFields.map((cf) => (
-                            <th key={`hist-${cf.name}`} className="px-5 py-4 font-bold">
-                              {cf.name}
-                            </th>
-                          ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {filteredHistory.map((record) => (
-                        <tr
-                          key={record.id}
-                          className="hover:bg-slate-50/80 transition-colors"
-                        >
-                          <td className="px-5 py-4">
-                            <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
-                              {record.plate || "N/A"}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4">
-                            <span className="text-slate-600 font-bold capitalize">
-                              {record.vehicle_type === 'motos' ? 'Moto' : 'Carro'}
-                            </span>
-                          </td>
-                          {configFields &&
-                            configFields.map((cf) => (
-                              <td
-                                key={`hist-data-${cf.name}`}
-                                className="px-5 py-4 text-slate-600 font-bold"
+                <div className="space-y-8">
+                  {/* Carros History Table */}
+                  {filteredHistory.filter((r) => r.vehicle_type !== 'motos').length > 0 && (
+                    <div>
+                      <h4 className="text-md font-bold text-slate-800 mb-4 px-2">Carros</h4>
+                      <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                        <table className="w-full text-sm text-left border-collapse">
+                          <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                            <tr>
+                              <th className="px-5 py-4 font-bold">Placa/Principal</th>
+                              {configFields &&
+                                configFields.map((cf) => (
+                                  <th key={`hist-car-${cf.name}`} className="px-5 py-4 font-bold">
+                                    {cf.name}
+                                  </th>
+                                ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            {filteredHistory
+                              .filter((r) => r.vehicle_type !== 'motos')
+                              .map((record) => (
+                              <tr
+                                key={record.id}
+                                className="hover:bg-slate-50/80 transition-colors"
                               >
-                                {record.custom_fields_data?.[cf.name] || (
-                                  <span className="text-slate-300">-</span>
-                                )}
-                              </td>
+                                <td className="px-5 py-4">
+                                  <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
+                                    {record.plate || "N/A"}
+                                  </span>
+                                </td>
+                                {configFields &&
+                                  configFields.map((cf) => (
+                                    <td
+                                      key={`hist-car-data-${cf.name}-${record.id}`}
+                                      className="px-5 py-4 text-slate-600 font-bold"
+                                    >
+                                      {record.custom_fields_data?.[cf.name] || (
+                                        <span className="text-slate-300">-</span>
+                                      )}
+                                    </td>
+                                  ))}
+                              </tr>
                             ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Motos History Table */}
+                  {filteredHistory.filter((r) => r.vehicle_type === 'motos').length > 0 && (
+                    <div>
+                      <h4 className="text-md font-bold text-slate-800 mb-4 px-2">Motos</h4>
+                      <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                        <table className="w-full text-sm text-left border-collapse">
+                          <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                            <tr>
+                              <th className="px-5 py-4 font-bold">Placa/Principal</th>
+                              {configFields &&
+                                configFields.map((cf) => (
+                                  <th key={`hist-moto-${cf.name}`} className="px-5 py-4 font-bold">
+                                    {cf.name}
+                                  </th>
+                                ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            {filteredHistory
+                              .filter((r) => r.vehicle_type === 'motos')
+                              .map((record) => (
+                              <tr
+                                key={record.id}
+                                className="hover:bg-slate-50/80 transition-colors"
+                              >
+                                <td className="px-5 py-4">
+                                  <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
+                                    {record.plate || "N/A"}
+                                  </span>
+                                </td>
+                                {configFields &&
+                                  configFields.map((cf) => (
+                                    <td
+                                      key={`hist-moto-data-${cf.name}-${record.id}`}
+                                      className="px-5 py-4 text-slate-600 font-bold"
+                                    >
+                                      {record.custom_fields_data?.[cf.name] || (
+                                        <span className="text-slate-300">-</span>
+                                      )}
+                                    </td>
+                                  ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </>
