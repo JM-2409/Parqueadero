@@ -37,6 +37,8 @@ export default function PrivateParking({
   const [isCreating, setIsCreating] = useState(false);
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
 
+  const [selectedSpaces, setSelectedSpaces] = useState<string[]>([]);
+
   const [spaceData, setSpaceData] = useState({
     space_number: "",
     vehicle_type: "carros",
@@ -516,6 +518,68 @@ export default function PrivateParking({
     }
   };
 
+  const handleDeleteSelected = async () => {
+    if (!selectedSpaces.length) return;
+    if (!confirm(`¿Estás seguro de que deseas eliminar los ${selectedSpaces.length} espacios seleccionados?`)) return;
+
+    setSuccess("");
+    setError("");
+
+    try {
+      // Find the full space objects for the selected IDs
+      const spacesToDelete = spaces.filter(s => selectedSpaces.includes(s.id));
+
+      // Move any occupied spaces to history first
+      for (const space of spacesToDelete) {
+          const hasData = space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0;
+          if (hasData) {
+             await moveSpaceToHistory(space);
+          }
+      }
+
+      // Delete in batches of 500
+      for (let i = 0; i < selectedSpaces.length; i += 500) {
+        const chunk = selectedSpaces.slice(i, i + 500);
+        const { error } = await supabase
+          .from("private_parking_spaces")
+          .delete()
+          .in("id", chunk);
+
+        if (error) throw error;
+      }
+
+      setSuccess(`Se eliminaron ${selectedSpaces.length} espacios exitosamente.`);
+      setSelectedSpaces([]);
+      fetchSpaces();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      console.error("Error bulk deleting spaces:", err);
+      setError(err.message || "Error al eliminar los espacios seleccionados");
+    }
+  };
+
+  const toggleSelection = (spaceId: string) => {
+    setSelectedSpaces(prev =>
+      prev.includes(spaceId)
+        ? prev.filter(id => id !== spaceId)
+        : [...prev, spaceId]
+    );
+  };
+
+  const toggleSelectAll = (spacesList: any[]) => {
+    const allIds = spacesList.map(s => s.id);
+    const areAllSelected = allIds.every(id => selectedSpaces.includes(id));
+
+    if (areAllSelected) {
+      setSelectedSpaces(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      setSelectedSpaces(prev => {
+        const newSelection = new Set([...prev, ...allIds]);
+        return Array.from(newSelection);
+      });
+    }
+  };
+
   const handleEditClick = (space: any) => {
     setEditingSpaceId(space.id);
     setSpaceData({
@@ -685,9 +749,19 @@ export default function PrivateParking({
             });
 
             let vehicle_type = "carros";
+
+            // Check explicit column first if provided
             if (row["Tipo de Vehículo"]) {
               const tv = String(row["Tipo de Vehículo"]).toLowerCase().trim();
               if (tv.includes("moto")) vehicle_type = "motos";
+            } else {
+              // Automatically infer vehicle type from space number if "Tipo de Vehículo" column is missing
+              const sn = String(spaceNum).trim().toLowerCase();
+              if (sn.startsWith("m")) {
+                vehicle_type = "motos";
+              } else if (sn.startsWith("c")) {
+                vehicle_type = "carros";
+              }
             }
 
             spacesToUpsert.push({
@@ -712,6 +786,12 @@ export default function PrivateParking({
             existingSpaces.forEach(s => existingMap.set(String(s.space_number).trim(), s.id));
           }
 
+          // Separate records into inserts and updates to avoid id null constraint errors
+          const recordsToInsert = [];
+          const recordsToUpdate = [];
+
+          const spacesToArchive = [];
+
           // Handle spaces that are not in the CSV anymore (Opción A)
           const incomingSpaceNumbers = new Set(spacesToUpsert.map(s => s.space_number));
 
@@ -721,21 +801,21 @@ export default function PrivateParking({
                 // Releasing space (moves to history and clears data)
                 const hasData = space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0;
                 if (hasData) {
-                  await moveSpaceToHistory(space);
-                  await supabase.from("private_parking_spaces").update({
+                  spacesToArchive.push(space);
+                  recordsToUpdate.push({
+                    id: space.id,
+                    parking_lot_id: parkingLotId,
+                    space_number: space.space_number,
+                    vehicle_type: space.vehicle_type || "carros",
                     owner_name: null,
                     block: null,
                     house_or_apartment: null,
                     custom_fields_data: {}
-                  }).eq("id", space.id);
+                  });
                 }
               }
             }
           }
-
-          // Separate records into inserts and updates to avoid id null constraint errors
-          const recordsToInsert = [];
-          const recordsToUpdate = [];
 
           for (const s of spacesToUpsert) {
             const existingSpace = existingSpaces?.find(
@@ -747,16 +827,56 @@ export default function PrivateParking({
               // we should move the existing data to history first.
               const hasData = existingSpace.custom_fields_data && Object.keys(existingSpace.custom_fields_data).length > 0;
 
-              // Simple check: if the imported custom_fields_data differs significantly or simply is new
               if (hasData) {
-                  // We'll unconditionally archive the current occupant when updating via CSV
-                  // since the CSV represents a new "sorteo" / assignment cycle.
-                  await moveSpaceToHistory(existingSpace);
+                  spacesToArchive.push(existingSpace);
               }
 
-              recordsToUpdate.push({ ...s, id: existingSpace.id });
+              // Only include exactly the columns being updated to avoid Supabase bulk upsert heterogeneous object errors
+              recordsToUpdate.push({
+                  id: existingSpace.id,
+                  parking_lot_id: parkingLotId,
+                  space_number: s.space_number,
+                  block: s.block || "",
+                  house_or_apartment: s.house_or_apartment || "",
+                  owner_name: s.owner_name || "",
+                  custom_fields_data: s.custom_fields_data || {},
+                  vehicle_type: s.vehicle_type || "carros"
+              });
             } else {
               recordsToInsert.push(s);
+            }
+          }
+
+          // 1. Process batch archives (History) to avoid fetch timeout from individual queries
+          if (spacesToArchive.length > 0) {
+            const historyRecordsToInsert = spacesToArchive.map(space => {
+              let plate = "";
+              const cf = space.custom_fields_data || {};
+              const mainField = configFields.find(f => f.is_main)?.name;
+              if (mainField && cf[mainField]) {
+                  plate = cf[mainField];
+              } else {
+                  const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
+                  if (plateKey) plate = cf[plateKey];
+              }
+
+              return {
+                parking_lot_id: parkingLotId,
+                plate: plate,
+                owner_name: space.owner_name,
+                custom_fields_data: space.custom_fields_data,
+                vehicle_type: space.vehicle_type
+              };
+            });
+
+            // Insert new history records in chunks of 500
+            // Since we aren't enforcing a strict unique constraint on plate in history globally,
+            // we can safely insert new records without deleting previous ones. This preserves
+            // the full historical record over time while moving them to history in batch.
+            for (let i = 0; i < historyRecordsToInsert.length; i += 500) {
+               const chunk = historyRecordsToInsert.slice(i, i + 500);
+               const { error: histErr } = await supabase.from("private_parking_history").insert(chunk);
+               if (histErr) throw histErr;
             }
           }
 
@@ -989,7 +1109,10 @@ export default function PrivateParking({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div className="flex items-center bg-slate-100 p-1 rounded-3xl">
                 <button
-                  onClick={() => setActiveTab("spaces")}
+                  onClick={() => {
+                    setActiveTab("spaces");
+                    setSelectedSpaces([]);
+                  }}
                   className={`px-4 py-2 rounded-3xl text-sm font-bold transition-colors ${
                     activeTab === "spaces"
                       ? "bg-white text-slate-900 shadow-sm"
@@ -999,7 +1122,10 @@ export default function PrivateParking({
                   Espacios Activos
                 </button>
                 <button
-                  onClick={() => setActiveTab("history")}
+                  onClick={() => {
+                    setActiveTab("history");
+                    setSelectedSpaces([]);
+                  }}
                   className={`px-4 py-2 rounded-3xl text-sm font-bold transition-colors ${
                     activeTab === "history"
                       ? "bg-white text-slate-900 shadow-sm"
@@ -1027,6 +1153,21 @@ export default function PrivateParking({
 
           {activeTab === "spaces" ? (
             <>
+              {selectedSpaces.length > 0 && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-3xl flex items-center justify-between">
+                  <span className="text-red-700 font-bold text-sm">
+                    {selectedSpaces.length} espacio(s) seleccionado(s)
+                  </span>
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="px-4 py-2 bg-red-500 text-white rounded-3xl text-sm font-bold shadow-md hover:bg-red-600 transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Eliminar Seleccionados
+                  </button>
+                </div>
+              )}
+
               {spaces.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
               <div className="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-xl border border-slate-100">
@@ -1056,6 +1197,17 @@ export default function PrivateParking({
                     <table className="w-full text-sm text-left border-collapse">
                       <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                         <tr>
+                          <th className="px-5 py-4 font-bold w-10">
+                            <input
+                              type="checkbox"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                              checked={
+                                filteredSpaces.filter(s => s.vehicle_type !== 'motos').length > 0 &&
+                                filteredSpaces.filter(s => s.vehicle_type !== 'motos').every(s => selectedSpaces.includes(s.id))
+                              }
+                              onChange={() => toggleSelectAll(filteredSpaces.filter(s => s.vehicle_type !== 'motos'))}
+                            />
+                          </th>
                           <th className="px-5 py-4 font-bold">Parqueadero</th>
                           {configFields &&
                             configFields.map((cf) => (
@@ -1074,6 +1226,14 @@ export default function PrivateParking({
                             key={space.id}
                             className="hover:bg-slate-50/80 transition-colors group"
                           >
+                            <td className="px-5 py-4">
+                              <input
+                                type="checkbox"
+                                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                                checked={selectedSpaces.includes(space.id)}
+                                onChange={() => toggleSelection(space.id)}
+                              />
+                            </td>
                             <td className="px-5 py-4">
                               <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                                 {space.space_number}
@@ -1131,6 +1291,17 @@ export default function PrivateParking({
                     <table className="w-full text-sm text-left border-collapse">
                       <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                         <tr>
+                          <th className="px-5 py-4 font-bold w-10">
+                            <input
+                              type="checkbox"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                              checked={
+                                filteredSpaces.filter(s => s.vehicle_type === 'motos').length > 0 &&
+                                filteredSpaces.filter(s => s.vehicle_type === 'motos').every(s => selectedSpaces.includes(s.id))
+                              }
+                              onChange={() => toggleSelectAll(filteredSpaces.filter(s => s.vehicle_type === 'motos'))}
+                            />
+                          </th>
                           <th className="px-5 py-4 font-bold">Parqueadero</th>
                           {configFields &&
                             configFields.map((cf) => (
@@ -1149,6 +1320,14 @@ export default function PrivateParking({
                             key={space.id}
                             className="hover:bg-slate-50/80 transition-colors group"
                           >
+                            <td className="px-5 py-4">
+                              <input
+                                type="checkbox"
+                                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                                checked={selectedSpaces.includes(space.id)}
+                                onChange={() => toggleSelection(space.id)}
+                              />
+                            </td>
                             <td className="px-5 py-4">
                               <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                                 {space.space_number}
