@@ -37,6 +37,8 @@ export default function PrivateParking({
   const [isCreating, setIsCreating] = useState(false);
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
 
+  const [selectedSpaces, setSelectedSpaces] = useState<string[]>([]);
+
   const [spaceData, setSpaceData] = useState({
     space_number: "",
     vehicle_type: "carros",
@@ -513,6 +515,68 @@ export default function PrivateParking({
     } catch (err: any) {
       console.error("Error releasing space:", err);
       setError(err.message || "Error al liberar el espacio");
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!selectedSpaces.length) return;
+    if (!confirm(`¿Estás seguro de que deseas eliminar los ${selectedSpaces.length} espacios seleccionados?`)) return;
+
+    setSuccess("");
+    setError("");
+
+    try {
+      // Find the full space objects for the selected IDs
+      const spacesToDelete = spaces.filter(s => selectedSpaces.includes(s.id));
+
+      // Move any occupied spaces to history first
+      for (const space of spacesToDelete) {
+          const hasData = space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0;
+          if (hasData) {
+             await moveSpaceToHistory(space);
+          }
+      }
+
+      // Delete in batches of 500
+      for (let i = 0; i < selectedSpaces.length; i += 500) {
+        const chunk = selectedSpaces.slice(i, i + 500);
+        const { error } = await supabase
+          .from("private_parking_spaces")
+          .delete()
+          .in("id", chunk);
+
+        if (error) throw error;
+      }
+
+      setSuccess(`Se eliminaron ${selectedSpaces.length} espacios exitosamente.`);
+      setSelectedSpaces([]);
+      fetchSpaces();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      console.error("Error bulk deleting spaces:", err);
+      setError(err.message || "Error al eliminar los espacios seleccionados");
+    }
+  };
+
+  const toggleSelection = (spaceId: string) => {
+    setSelectedSpaces(prev =>
+      prev.includes(spaceId)
+        ? prev.filter(id => id !== spaceId)
+        : [...prev, spaceId]
+    );
+  };
+
+  const toggleSelectAll = (spacesList: any[]) => {
+    const allIds = spacesList.map(s => s.id);
+    const areAllSelected = allIds.every(id => selectedSpaces.includes(id));
+
+    if (areAllSelected) {
+      setSelectedSpaces(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      setSelectedSpaces(prev => {
+        const newSelection = new Set([...prev, ...allIds]);
+        return Array.from(newSelection);
+      });
     }
   };
 
@@ -1045,7 +1109,10 @@ export default function PrivateParking({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div className="flex items-center bg-slate-100 p-1 rounded-3xl">
                 <button
-                  onClick={() => setActiveTab("spaces")}
+                  onClick={() => {
+                    setActiveTab("spaces");
+                    setSelectedSpaces([]);
+                  }}
                   className={`px-4 py-2 rounded-3xl text-sm font-bold transition-colors ${
                     activeTab === "spaces"
                       ? "bg-white text-slate-900 shadow-sm"
@@ -1055,7 +1122,10 @@ export default function PrivateParking({
                   Espacios Activos
                 </button>
                 <button
-                  onClick={() => setActiveTab("history")}
+                  onClick={() => {
+                    setActiveTab("history");
+                    setSelectedSpaces([]);
+                  }}
                   className={`px-4 py-2 rounded-3xl text-sm font-bold transition-colors ${
                     activeTab === "history"
                       ? "bg-white text-slate-900 shadow-sm"
@@ -1083,6 +1153,21 @@ export default function PrivateParking({
 
           {activeTab === "spaces" ? (
             <>
+              {selectedSpaces.length > 0 && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-3xl flex items-center justify-between">
+                  <span className="text-red-700 font-bold text-sm">
+                    {selectedSpaces.length} espacio(s) seleccionado(s)
+                  </span>
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="px-4 py-2 bg-red-500 text-white rounded-3xl text-sm font-bold shadow-md hover:bg-red-600 transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Eliminar Seleccionados
+                  </button>
+                </div>
+              )}
+
               {spaces.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
               <div className="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-xl border border-slate-100">
@@ -1112,6 +1197,17 @@ export default function PrivateParking({
                     <table className="w-full text-sm text-left border-collapse">
                       <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                         <tr>
+                          <th className="px-5 py-4 font-bold w-10">
+                            <input
+                              type="checkbox"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                              checked={
+                                filteredSpaces.filter(s => s.vehicle_type !== 'motos').length > 0 &&
+                                filteredSpaces.filter(s => s.vehicle_type !== 'motos').every(s => selectedSpaces.includes(s.id))
+                              }
+                              onChange={() => toggleSelectAll(filteredSpaces.filter(s => s.vehicle_type !== 'motos'))}
+                            />
+                          </th>
                           <th className="px-5 py-4 font-bold">Parqueadero</th>
                           {configFields &&
                             configFields.map((cf) => (
@@ -1130,6 +1226,14 @@ export default function PrivateParking({
                             key={space.id}
                             className="hover:bg-slate-50/80 transition-colors group"
                           >
+                            <td className="px-5 py-4">
+                              <input
+                                type="checkbox"
+                                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                                checked={selectedSpaces.includes(space.id)}
+                                onChange={() => toggleSelection(space.id)}
+                              />
+                            </td>
                             <td className="px-5 py-4">
                               <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                                 {space.space_number}
@@ -1187,6 +1291,17 @@ export default function PrivateParking({
                     <table className="w-full text-sm text-left border-collapse">
                       <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                         <tr>
+                          <th className="px-5 py-4 font-bold w-10">
+                            <input
+                              type="checkbox"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                              checked={
+                                filteredSpaces.filter(s => s.vehicle_type === 'motos').length > 0 &&
+                                filteredSpaces.filter(s => s.vehicle_type === 'motos').every(s => selectedSpaces.includes(s.id))
+                              }
+                              onChange={() => toggleSelectAll(filteredSpaces.filter(s => s.vehicle_type === 'motos'))}
+                            />
+                          </th>
                           <th className="px-5 py-4 font-bold">Parqueadero</th>
                           {configFields &&
                             configFields.map((cf) => (
@@ -1205,6 +1320,14 @@ export default function PrivateParking({
                             key={space.id}
                             className="hover:bg-slate-50/80 transition-colors group"
                           >
+                            <td className="px-5 py-4">
+                              <input
+                                type="checkbox"
+                                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                                checked={selectedSpaces.includes(space.id)}
+                                onChange={() => toggleSelection(space.id)}
+                              />
+                            </td>
                             <td className="px-5 py-4">
                               <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-3xl inline-block">
                                 {space.space_number}
