@@ -685,9 +685,19 @@ export default function PrivateParking({
             });
 
             let vehicle_type = "carros";
+
+            // Check explicit column first if provided
             if (row["Tipo de Vehículo"]) {
               const tv = String(row["Tipo de Vehículo"]).toLowerCase().trim();
               if (tv.includes("moto")) vehicle_type = "motos";
+            } else {
+              // Automatically infer vehicle type from space number if "Tipo de Vehículo" column is missing
+              const sn = String(spaceNum).trim().toLowerCase();
+              if (sn.startsWith("m")) {
+                vehicle_type = "motos";
+              } else if (sn.startsWith("c")) {
+                vehicle_type = "carros";
+              }
             }
 
             spacesToUpsert.push({
