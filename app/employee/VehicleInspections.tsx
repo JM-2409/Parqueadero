@@ -381,108 +381,125 @@ export default function VehicleInspections({
           </div>
         </div>
 
-        {/* Right Col: Inspection Form */}
-        <div className="w-full md:w-2/3">
-          {!selectedVehicle ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 min-h-[300px]">
-              <Camera size={48} className="mb-4 opacity-20" />
-              <p className="font-bold">Selecciona un vehículo para iniciar la revista</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
-                <div>
-                  <span className="text-xs font-bold text-slate-500 block uppercase">Inspeccionando</span>
-                  <span className="text-2xl font-black text-slate-900">{selectedVehicle.plate}</span>
-                </div>
-                <div className="px-3 py-1 bg-white rounded-xl text-sm font-bold text-slate-700 shadow-sm">
-                  {selectedVehicle.label}
-                </div>
-              </div>
-
-              {error && (
-                <div className="p-4 bg-red-50 text-red-700 rounded-2xl text-sm font-bold border border-red-100">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Observaciones {settings.require_notes && <span className="text-red-500">*</span>}
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl p-4 focus:ring-2 focus:ring-slate-500 outline-none min-h-[120px] font-medium resize-none"
-                  placeholder="Detalles sobre el estado del vehículo..."
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-bold text-slate-700">
-                    Evidencia Fotográfica {settings.require_photos && <span className="text-red-500">*</span>}
-                  </label>
-                  <span className="text-xs font-bold text-slate-400">{images.length}/6 fotos</span>
-                </div>
-
-                <div className="flex flex-wrap gap-4">
-                  {images.map((img, idx) => (
-                    <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden group border-2 border-slate-200">
-                      <img src={img} alt="Evidencia" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(idx)}
-                        className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-                  ))}
-
-                  {images.length < 6 && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 flex flex-col items-center justify-center text-slate-400 transition-colors disabled:opacity-50"
-                    >
-                      {uploading ? <Loader2 className="animate-spin" size={24} /> : <ImageIcon size={24} />}
-                      <span className="text-[10px] font-bold mt-1">Agregar</span>
-                    </button>
-                  )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedVehicle(null)}
-                  className="flex-1 py-4 bg-white border-2 border-slate-100 hover:bg-slate-50 text-slate-700 rounded-3xl font-bold transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving || uploading}
-                  className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-2 shadow-xl border border-slate-100 shadow-slate-200 disabled:opacity-50"
-                >
-                  {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                  Guardar Revista
-                </button>
-              </div>
-            </form>
-          )}
+        {/* Right Col: Desktop Instructions (Hidden on Mobile) */}
+        <div className="hidden md:flex w-full md:w-2/3 h-full flex-col items-center justify-center text-slate-400 min-h-[300px]">
+          <Camera size={48} className="mb-4 opacity-20" />
+          <p className="font-bold">Selecciona un vehículo de la lista para iniciar la revista</p>
         </div>
       </div>
+
+      {/* Floating Modal for Inspection Form */}
+      {selectedVehicle && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-8 duration-300">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 shrink-0">
+              <div>
+                <span className="text-xs font-bold text-slate-500 block uppercase tracking-wider">Inspeccionando</span>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-2xl font-black text-slate-900">{selectedVehicle.plate}</span>
+                  <div className="px-3 py-1 bg-slate-100 rounded-xl text-sm font-bold text-slate-700">
+                    {selectedVehicle.label}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedVehicle(null)}
+                className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center hover:bg-slate-200 hover:text-slate-700 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto overscroll-contain">
+              <form id="inspection-form" onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="p-4 bg-red-50 text-red-700 rounded-2xl text-sm font-bold border border-red-100">
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Observaciones {settings.require_notes && <span className="text-red-500">*</span>}
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl p-4 focus:ring-2 focus:ring-slate-500 outline-none min-h-[120px] font-medium resize-none"
+                    placeholder="Detalles sobre el estado del vehículo..."
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-bold text-slate-700">
+                      Evidencia Fotográfica {settings.require_photos && <span className="text-red-500">*</span>}
+                    </label>
+                    <span className="text-xs font-bold text-slate-400">{images.length}/6 fotos</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4">
+                    {images.map((img, idx) => (
+                      <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden group border-2 border-slate-200">
+                        <img src={img} alt="Evidencia" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                    ))}
+
+                    {images.length < 6 && (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 flex flex-col items-center justify-center text-slate-400 transition-colors disabled:opacity-50"
+                      >
+                        {uploading ? <Loader2 className="animate-spin" size={24} /> : <ImageIcon size={24} />}
+                        <span className="text-[10px] font-bold mt-1">Agregar</span>
+                      </button>
+                    )}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl shrink-0 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedVehicle(null)}
+                className="flex-1 py-4 bg-white border-2 border-slate-200 hover:bg-slate-100 text-slate-700 rounded-3xl font-bold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="inspection-form"
+                disabled={saving || uploading}
+                className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-2 shadow-xl border border-slate-100 shadow-slate-200 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                Guardar Revista
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
