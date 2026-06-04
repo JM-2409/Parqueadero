@@ -29,6 +29,7 @@ import { useRef } from "react";
 import EmployeeHistory from "./EmployeeHistory";
 import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
+import InspectionsTab from "./InspectionsTab";
 import { calculateFee } from "@/lib/pricing";
 
 import { sanitizeInput } from "@/lib/sanitize";
@@ -67,7 +68,7 @@ const setSecurePref = (key: string, value: boolean): void => {
 
 export default function EmployeePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("operation"); // operation, history
+  const [activeTab, setActiveTab] = useState("operation"); // operation, history, private, inspections
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Shift state
@@ -1216,6 +1217,17 @@ export default function EmployeePage() {
             <Home size={20} className="flex-shrink-0" />
             <span className="font-bold whitespace-nowrap">Parq. Privados</span>
           </button>
+
+          <button
+            onClick={() => {
+              setActiveTab("inspections");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "inspections" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
+          >
+            <Camera size={20} className="flex-shrink-0" />
+            <span className="font-bold whitespace-nowrap">Revistas</span>
+          </button>
         </nav>
 
         <div className="p-4 mt-auto border-t border-slate-200">
@@ -1825,6 +1837,13 @@ export default function EmployeePage() {
           )}
 
           {/* TAB: PRIVATE SPACES */}
+          {/* TAB: INSPECTIONS */}
+          {activeTab === "inspections" && parkingLot && profile && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <InspectionsTab parkingLot={parkingLot} profile={profile} />
+            </div>
+          )}
+
           {activeTab === "private" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <PrivateSpaces parkingLotId={parkingLot.id} />

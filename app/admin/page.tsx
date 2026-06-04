@@ -25,7 +25,8 @@ import {
   Home,
   Car,
   MonitorSmartphone,
-  Upload
+  Upload,
+  Camera
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -37,6 +38,7 @@ import CustomRoles from "./CustomRoles";
 import PrivateParking from "./PrivateParking";
 import Blacklist from "./Blacklist";
 import MonthlySubscribers from "./MonthlySubscribers";
+import VehicleInspectionsHistory from "../employee/VehicleInspectionsHistory";
 import EmployeeManagement from "./EmployeeManagement";
 import EmployeeLogs from "./EmployeeLogs";
 import {
@@ -860,6 +862,18 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
+              handleTabChange("inspections");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "inspections" ? styles.navItemActive : ""}`}
+          >
+            <Camera size={20} className="text-indigo-500" />
+            <span className="font-bold whitespace-nowrap text-left">
+              Revistas (Inspecciones)
+            </span>
+          </button>
+          <button
+            onClick={() => {
               handleTabChange("settings");
               setIsMobileMenuOpen(false);
             }}
@@ -1099,6 +1113,13 @@ export default function AdminPage() {
           )}
 
           {/* TAB: CONFIGURACIÓN */}
+          {/* TAB: INSPECTIONS */}
+          {activeTab === "inspections" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <VehicleInspectionsHistory parkingLotId={parkingLot.id} isAdmin={true} />
+            </div>
+          )}
+
           {activeTab === "settings" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className={styles.card}>
@@ -1378,6 +1399,66 @@ export default function AdminPage() {
                         </label>
                       )}
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-3xl">
+                    <div>
+                      <span className="font-bold text-slate-800 block">
+                        Revistas (Inspecciones)
+                      </span>
+                      <span className="text-sm text-slate-600 block mt-1">
+                        Habilita la capacidad para que los empleados registren revistas fotográficas de los vehículos.
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={parkingLot?.inspection_settings?.enabled ?? true}
+                        onChange={async (e) => {
+                          const newSettings = { ...(parkingLot.inspection_settings || { require_photos: false, require_notes: false }), enabled: e.target.checked };
+                          try {
+                            await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
+                            fetchParkingLot();
+                            setSuccess("Configuración de revistas actualizada.");
+                            setTimeout(() => setSuccess(""), 3000);
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                      />
+                      <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-slate-800"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-3xl">
+                    <div>
+                      <span className="font-bold text-slate-800 block">
+                        Fotos obligatorias en Revistas
+                      </span>
+                      <span className="text-sm text-slate-600 block mt-1">
+                        Determina si el empleado DEBE subir al menos una foto para guardar la revista.
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={parkingLot?.inspection_settings?.require_photos ?? false}
+                        onChange={async (e) => {
+                          const newSettings = { ...(parkingLot.inspection_settings || { enabled: true, require_notes: false }), require_photos: e.target.checked };
+                          try {
+                            await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
+                            fetchParkingLot();
+                            setSuccess("Configuración de revistas actualizada.");
+                            setTimeout(() => setSuccess(""), 3000);
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                      />
+                      <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-slate-800"></div>
+                    </label>
                   </div>
 
                   <div className="bg-indigo-50 p-4 rounded-xl mb-6 flex justify-between items-center">
