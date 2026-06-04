@@ -867,9 +867,9 @@ export default function AdminPage() {
             }}
             className={`${styles.navItem} ${activeTab === "inspections" ? styles.navItemActive : ""}`}
           >
-            <Camera size={20} className="text-indigo-500" />
+            <Camera size={20} className="text-slate-600" />
             <span className="font-bold whitespace-nowrap text-left">
-              Revistas (Inspecciones)
+              Revista
             </span>
           </button>
           <button
@@ -1404,7 +1404,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-3xl">
                     <div>
                       <span className="font-bold text-slate-800 block">
-                        Revistas (Inspecciones)
+                        Revista
                       </span>
                       <span className="text-sm text-slate-600 block mt-1">
                         Habilita la capacidad para que los empleados registren revistas fotográficas de los vehículos.
@@ -1434,7 +1434,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-3xl">
                     <div>
                       <span className="font-bold text-slate-800 block">
-                        Fotos obligatorias en Revistas
+                        Fotos obligatorias en Revista
                       </span>
                       <span className="text-sm text-slate-600 block mt-1">
                         Determina si el empleado DEBE subir al menos una foto para guardar la revista.
