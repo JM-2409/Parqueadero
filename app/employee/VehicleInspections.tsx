@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { Search, Camera, Save, X, ImageIcon, Loader2 } from "lucide-react";
+import { Search, Camera, Save, X, ImageIcon, Loader2, PlayCircle, CheckCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { v4 as uuidv4 } from "uuid";
 
 export default function VehicleInspections({
   parkingLot,
@@ -14,9 +15,14 @@ export default function VehicleInspections({
   profile: any;
 }) {
   const [vehicles, setVehicles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+
+  // Inspection Session states
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [inspectedPlates, setInspectedPlates] = useState<string[]>([]);
+  const [isFinished, setIsFinished] = useState(false);
 
   // Form states
   const [notes, setNotes] = useState("");
@@ -28,10 +34,6 @@ export default function VehicleInspections({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settings = parkingLot?.inspection_settings || { require_photos: false, require_notes: false, enabled: true };
-
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
 
   const fetchVehicles = async () => {
     try {
@@ -63,6 +65,7 @@ export default function VehicleInspections({
               plate: session.vehicles.plate,
               type: "visitor",
               label: "Visitante",
+              sortKey: "ZZZZZ" // Visitantes al final
             });
           }
         });
@@ -82,10 +85,14 @@ export default function VehicleInspections({
               plate: plate.toUpperCase(),
               type: "private",
               label: `Privado (${space.space_number})`,
+              sortKey: String(space.space_number).padStart(10, '0') // Padding for correct alphanumeric sorting
             });
           }
         });
       }
+
+      // Sort by private space number first, visitors at the end
+      combined.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
       setVehicles(combined);
     } catch (err: any) {
@@ -95,12 +102,76 @@ export default function VehicleInspections({
     }
   };
 
+  const startSession = async () => {
+    setSessionId(uuidv4());
+    setInspectedPlates([]);
+    setIsFinished(false);
+    setSuccess("");
+    await fetchVehicles();
+  };
+
+  const endSession = () => {
+    setSessionId(null);
+    setInspectedPlates([]);
+    setSelectedVehicle(null);
+    setIsFinished(true);
+    setVehicles([]);
+    setSuccess("Revista finalizada.");
+    setTimeout(() => {
+        setIsFinished(false);
+        setSuccess("");
+    }, 5000);
+  };
+
+  // Image resizing function to prevent FileReader crash on large mobile photos
+  const resizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Cannot get canvas context"));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL(file.type || "image/jpeg", 0.7));
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (images.length >= 4) {
-      setError("Máximo 4 imágenes por revista.");
+    if (images.length >= 6) {
+      setError("Máximo 6 imágenes por revista.");
       return;
     }
 
@@ -108,24 +179,21 @@ export default function VehicleInspections({
       setUploading(true);
       setError("");
 
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-        const base64data = reader.result;
+      const base64data = await resizeImage(file);
 
-        const res = await fetch("/api/upload-cloudinary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64data }),
-        });
+      const res = await fetch("/api/upload-cloudinary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64data }),
+      });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Error al subir");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al subir");
 
-        setImages((prev) => [...prev, data.secure_url]);
-      };
+      setImages((prev) => [...prev, data.secure_url]);
+
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Error al procesar la imagen");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -164,12 +232,35 @@ export default function VehicleInspections({
           plate: selectedVehicle.plate,
           notes: notes.trim() || null,
           images: images,
+          session_id: sessionId // Save the session ID
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+          // If the column session_id doesn't exist yet, we can catch it and retry without it
+          // Or log it. We expect the SQL script to have been run.
+          if (insertError.code === '42703') {
+             const { error: retryError } = await supabase
+                .from("vehicle_inspections")
+                .insert({
+                  parking_lot_id: parkingLot.id,
+                  employee_id: profile.id,
+                  employee_name: profile.email,
+                  vehicle_type: selectedVehicle.type,
+                  plate: selectedVehicle.plate,
+                  notes: notes.trim() || null,
+                  images: images,
+                });
+             if (retryError) throw retryError;
+          } else {
+             throw insertError;
+          }
+      }
 
       setSuccess(`Revista guardada para el vehículo ${selectedVehicle.plate}`);
       setTimeout(() => setSuccess(""), 3000);
+
+      // Add to inspected plates to remove from list
+      setInspectedPlates(prev => [...prev, selectedVehicle.plate]);
 
       // Reset form
       setSelectedVehicle(null);
@@ -183,9 +274,20 @@ export default function VehicleInspections({
     }
   };
 
-  const filteredVehicles = vehicles.filter(v =>
+  const pendingVehicles = useMemo(() => {
+    return vehicles.filter(v => !inspectedPlates.includes(v.plate));
+  }, [vehicles, inspectedPlates]);
+
+  const filteredVehicles = pendingVehicles.filter(v =>
     v.plate.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Effect to automatically end session if all vehicles are inspected
+  useEffect(() => {
+      if (sessionId && pendingVehicles.length === 0 && vehicles.length > 0) {
+          endSession();
+      }
+  }, [pendingVehicles, sessionId, vehicles]);
 
   if (!settings.enabled) {
     return (
@@ -195,7 +297,43 @@ export default function VehicleInspections({
     );
   }
 
-  if (loading) return <div className="text-center py-8"><Spinner size={24} className="mx-auto" /></div>;
+  if (loading && !sessionId) return <div className="text-center py-8"><Spinner size={24} className="mx-auto" /></div>;
+
+  if (!sessionId) {
+      return (
+          <div className="space-y-6">
+             {success && <SuccessMessage message={success} />}
+             <div className="bg-white p-12 rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center justify-center text-center min-h-[400px]">
+                 {isFinished ? (
+                     <>
+                        <CheckCircle className="text-green-500 w-24 h-24 mb-6" />
+                        <h2 className="text-3xl font-black text-slate-900 mb-2">¡Revista Finalizada!</h2>
+                        <p className="text-slate-500 font-bold mb-8">Todos los vehículos en el parqueadero han sido revisados.</p>
+                     </>
+                 ) : (
+                     <>
+                        <div className="w-24 h-24 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-6">
+                            <Camera size={48} />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Comenzar Revista</h2>
+                        <p className="text-slate-500 font-bold mb-8 max-w-md">
+                            Inicia un nuevo recorrido para tomar las evidencias y observaciones de los vehículos que se encuentran actualmente en el parqueadero.
+                        </p>
+                     </>
+                 )}
+
+                 <button
+                     onClick={startSession}
+                     disabled={loading}
+                     className="px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 shadow-xl border border-slate-100 shadow-slate-200 text-lg disabled:opacity-50"
+                 >
+                     {loading ? <Spinner size={24} /> : <PlayCircle size={24} />}
+                     {isFinished ? "Iniciar Nueva Revista" : "Iniciar Revista"}
+                 </button>
+             </div>
+          </div>
+      );
+  }
 
   return (
     <div className="space-y-6">
@@ -204,7 +342,15 @@ export default function VehicleInspections({
       <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 flex flex-col md:flex-row gap-6">
         {/* Left Col: Vehicle Selection */}
         <div className="w-full md:w-1/3 flex flex-col gap-4 border-r border-slate-100 pr-0 md:pr-6">
-          <h3 className="text-lg font-bold text-slate-900">Vehículos Activos</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold text-slate-900">Pendientes ({pendingVehicles.length})</h3>
+            <button
+               onClick={endSession}
+               className="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 px-3 py-1.5 rounded-xl transition-colors"
+            >
+               Terminar
+            </button>
+          </div>
 
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -277,7 +423,7 @@ export default function VehicleInspections({
                   <label className="block text-sm font-bold text-slate-700">
                     Evidencia Fotográfica {settings.require_photos && <span className="text-red-500">*</span>}
                   </label>
-                  <span className="text-xs font-bold text-slate-400">{images.length}/4 fotos</span>
+                  <span className="text-xs font-bold text-slate-400">{images.length}/6 fotos</span>
                 </div>
 
                 <div className="flex flex-wrap gap-4">
@@ -294,7 +440,7 @@ export default function VehicleInspections({
                     </div>
                   ))}
 
-                  {images.length < 4 && (
+                  {images.length < 6 && (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}

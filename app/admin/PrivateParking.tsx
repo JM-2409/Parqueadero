@@ -260,19 +260,6 @@ export default function PrivateParking({
                const { error } = await supabase
                   .from("private_parking_spaces")
                   .update({
-                    owner_name:
-                      customFieldsData["Propietario"] ||
-                      customFieldsData["Propietario/Residente"] ||
-                      "",
-                    block:
-                      customFieldsData["Bloque"] ||
-                      customFieldsData["Bloque/Torre"] ||
-                      "",
-                    house_or_apartment:
-                      customFieldsData["Apto"] ||
-                      customFieldsData["Apto/Casa"] ||
-                      customFieldsData["Apartamento"] ||
-                      "",
                     custom_fields_data: customFieldsData,
                     vehicle_type: spaceData.vehicle_type,
                   })
@@ -285,19 +272,6 @@ export default function PrivateParking({
                const { error } = await supabase
                   .from("private_parking_spaces")
                   .update({
-                    owner_name:
-                      customFieldsData["Propietario"] ||
-                      customFieldsData["Propietario/Residente"] ||
-                      "",
-                    block:
-                      customFieldsData["Bloque"] ||
-                      customFieldsData["Bloque/Torre"] ||
-                      "",
-                    house_or_apartment:
-                      customFieldsData["Apto"] ||
-                      customFieldsData["Apto/Casa"] ||
-                      customFieldsData["Apartamento"] ||
-                      "",
                     custom_fields_data: customFieldsData,
                     vehicle_type: spaceData.vehicle_type,
                   })
@@ -309,19 +283,6 @@ export default function PrivateParking({
             const { error } = await supabase
               .from("private_parking_spaces")
               .update({
-                owner_name:
-                  customFieldsData["Propietario"] ||
-                  customFieldsData["Propietario/Residente"] ||
-                  "",
-                block:
-                  customFieldsData["Bloque"] ||
-                  customFieldsData["Bloque/Torre"] ||
-                  "",
-                house_or_apartment:
-                  customFieldsData["Apto"] ||
-                  customFieldsData["Apto/Casa"] ||
-                  customFieldsData["Apartamento"] ||
-                  "",
                 space_number: spaceData.space_number.trim(),
                 custom_fields_data: customFieldsData,
                 vehicle_type: spaceData.vehicle_type,
@@ -351,19 +312,6 @@ export default function PrivateParking({
                const { error } = await supabase
                   .from("private_parking_spaces")
                   .update({
-                    owner_name:
-                      customFieldsData["Propietario"] ||
-                      customFieldsData["Propietario/Residente"] ||
-                      "",
-                    block:
-                      customFieldsData["Bloque"] ||
-                      customFieldsData["Bloque/Torre"] ||
-                      "",
-                    house_or_apartment:
-                      customFieldsData["Apto"] ||
-                      customFieldsData["Apto/Casa"] ||
-                      customFieldsData["Apartamento"] ||
-                      "",
                     custom_fields_data: customFieldsData,
                     vehicle_type: spaceData.vehicle_type,
                   })
@@ -375,19 +323,6 @@ export default function PrivateParking({
                const { error } = await supabase
                   .from("private_parking_spaces")
                   .update({
-                    owner_name:
-                      customFieldsData["Propietario"] ||
-                      customFieldsData["Propietario/Residente"] ||
-                      "",
-                    block:
-                      customFieldsData["Bloque"] ||
-                      customFieldsData["Bloque/Torre"] ||
-                      "",
-                    house_or_apartment:
-                      customFieldsData["Apto"] ||
-                      customFieldsData["Apto/Casa"] ||
-                      customFieldsData["Apartamento"] ||
-                      "",
                     custom_fields_data: customFieldsData,
                     vehicle_type: spaceData.vehicle_type,
                   })
@@ -399,22 +334,6 @@ export default function PrivateParking({
             const { error } = await supabase.from("private_parking_spaces").insert([
               {
                 parking_lot_id: parkingLotId,
-                owner_name: sanitizeInput(
-                  customFieldsData["Propietario"] ||
-                  customFieldsData["Propietario/Residente"] ||
-                  ""
-                ),
-                block: sanitizeInput(
-                  customFieldsData["Bloque"] ||
-                  customFieldsData["Bloque/Torre"] ||
-                  ""
-                ),
-                house_or_apartment: sanitizeInput(
-                  customFieldsData["Apto"] ||
-                  customFieldsData["Apto/Casa"] ||
-                  customFieldsData["Apartamento"] ||
-                  ""
-                ),
                 space_number: sanitizeInput(spaceData.space_number.trim()),
                 custom_fields_data: customFieldsData,
                 vehicle_type: sanitizeInput(spaceData.vehicle_type),
@@ -500,9 +419,6 @@ export default function PrivateParking({
       const { error: updateError } = await supabase
         .from("private_parking_spaces")
         .update({
-          owner_name: null,
-          block: null,
-          house_or_apartment: null,
           custom_fields_data: {}
         })
         .eq("id", space.id);
@@ -767,9 +683,6 @@ export default function PrivateParking({
             spacesToUpsert.push({
               parking_lot_id: parkingLotId,
               space_number: String(spaceNum).trim(),
-              block: "",
-              house_or_apartment: "",
-              owner_name: "",
               custom_fields_data: dynamicFields,
               vehicle_type: vehicle_type,
             });
@@ -807,9 +720,6 @@ export default function PrivateParking({
                     parking_lot_id: parkingLotId,
                     space_number: space.space_number,
                     vehicle_type: space.vehicle_type || "carros",
-                    owner_name: null,
-                    block: null,
-                    house_or_apartment: null,
                     custom_fields_data: {}
                   });
                 }
@@ -836,9 +746,6 @@ export default function PrivateParking({
                   id: existingSpace.id,
                   parking_lot_id: parkingLotId,
                   space_number: s.space_number,
-                  block: s.block || "",
-                  house_or_apartment: s.house_or_apartment || "",
-                  owner_name: s.owner_name || "",
                   custom_fields_data: s.custom_fields_data || {},
                   vehicle_type: s.vehicle_type || "carros"
               });
@@ -925,10 +832,7 @@ export default function PrivateParking({
     const searchLower = searchQuery.toLowerCase();
 
     // Check main fields
-    let matches = (space.space_number && space.space_number.toLowerCase().includes(searchLower)) ||
-      (space.owner_name && space.owner_name.toLowerCase().includes(searchLower)) ||
-      (space.block && space.block.toLowerCase().includes(searchLower)) ||
-      (space.house_or_apartment && space.house_or_apartment.toLowerCase().includes(searchLower));
+    let matches = space.space_number && space.space_number.toLowerCase().includes(searchLower);
 
     // Check custom fields values
     if (!matches && space.custom_fields_data) {
@@ -943,8 +847,7 @@ export default function PrivateParking({
   const filteredHistory = historyRecords.filter((record) => {
     const searchLower = searchQuery.toLowerCase();
 
-    let matches = (record.plate && record.plate.toLowerCase().includes(searchLower)) ||
-      (record.owner_name && record.owner_name.toLowerCase().includes(searchLower));
+    let matches = record.plate && record.plate.toLowerCase().includes(searchLower);
 
     if (!matches && record.custom_fields_data) {
         matches = Object.values(record.custom_fields_data).some((val: any) =>
