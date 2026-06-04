@@ -59,10 +59,7 @@ export default function PrivateSpaces({
 
   const filteredSpaces = spaces.filter((space) => {
     const searchLower = searchQuery.toLowerCase();
-    let matches = (space.space_number && space.space_number.toLowerCase().includes(searchLower)) ||
-      (space.owner_name && space.owner_name.toLowerCase().includes(searchLower)) ||
-      (space.block && space.block.toLowerCase().includes(searchLower)) ||
-      (space.house_or_apartment && space.house_or_apartment.toLowerCase().includes(searchLower));
+    let matches = space.space_number && space.space_number.toLowerCase().includes(searchLower);
 
     if (!matches && space.custom_fields_data) {
         matches = Object.values(space.custom_fields_data).some((val: any) =>
@@ -126,9 +123,6 @@ export default function PrivateSpaces({
                     <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                       <tr>
                         <th className="px-5 py-4 font-bold">N° Parqueadero</th>
-                        <th className="px-5 py-4 font-bold">Propietario</th>
-                        <th className="px-5 py-4 font-bold">Bloque/Torre</th>
-                        <th className="px-5 py-4 font-bold">Apto/Casa</th>
                         {configFields.map((field) => (
                           <th key={field.name} className="px-5 py-4 font-bold">
                             {field.name}
@@ -143,15 +137,6 @@ export default function PrivateSpaces({
                             <span className="font-extrabold text-slate-900 bg-slate-100 px-3 py-1 rounded-xl">
                               {space.space_number}
                             </span>
-                          </td>
-                          <td className="px-5 py-4 font-bold text-slate-700">
-                            {space.owner_name || "-"}
-                          </td>
-                          <td className="px-5 py-4 text-slate-600 font-medium">
-                            {space.block || "-"}
-                          </td>
-                          <td className="px-5 py-4 text-slate-600 font-medium">
-                            {space.house_or_apartment || "-"}
                           </td>
                           {configFields.map((field) => (
                             <td key={field.name} className="px-5 py-4 text-slate-600">
@@ -175,9 +160,6 @@ export default function PrivateSpaces({
                     <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                       <tr>
                         <th className="px-5 py-4 font-bold">N° Parqueadero</th>
-                        <th className="px-5 py-4 font-bold">Propietario</th>
-                        <th className="px-5 py-4 font-bold">Bloque/Torre</th>
-                        <th className="px-5 py-4 font-bold">Apto/Casa</th>
                         {configFields.map((field) => (
                           <th key={field.name} className="px-5 py-4 font-bold">
                             {field.name}
@@ -192,15 +174,6 @@ export default function PrivateSpaces({
                             <span className="font-extrabold text-slate-900 bg-slate-100 px-3 py-1 rounded-xl">
                               {space.space_number}
                             </span>
-                          </td>
-                          <td className="px-5 py-4 font-bold text-slate-700">
-                            {space.owner_name || "-"}
-                          </td>
-                          <td className="px-5 py-4 text-slate-600 font-medium">
-                            {space.block || "-"}
-                          </td>
-                          <td className="px-5 py-4 text-slate-600 font-medium">
-                            {space.house_or_apartment || "-"}
                           </td>
                           {configFields.map((field) => (
                             <td key={field.name} className="px-5 py-4 text-slate-600">
