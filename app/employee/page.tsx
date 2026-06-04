@@ -1226,7 +1226,7 @@ export default function EmployeePage() {
             className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "inspections" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
           >
             <Camera size={20} className="flex-shrink-0" />
-            <span className="font-bold whitespace-nowrap">Revistas</span>
+            <span className="font-bold whitespace-nowrap">Revista</span>
           </button>
         </nav>
 
