@@ -59,33 +59,65 @@ export default function VehicleInspectionsHistory({
   // Group inspections by session_id
   const groupedSessions = useMemo(() => {
     const sessionsMap = new Map<string, any>();
-    const oldInspections: any[] = []; // those without session_id
 
-    inspections.forEach((ins) => {
-      if (ins.session_id) {
-        if (!sessionsMap.has(ins.session_id)) {
-          sessionsMap.set(ins.session_id, {
-            id: ins.session_id,
-            employee_name: ins.employee_name.split("@")[0],
-            inspections: [],
-            start_time: ins.created_at,
-            end_time: ins.created_at,
-          });
+    // Fallback ID generator for grouping legacy inspections
+    let legacyCounter = 0;
+    let currentLegacySessionId = `legacy_session_${legacyCounter}`;
+    let lastLegacyTime: Date | null = null;
+    let lastLegacyEmployee: string | null = null;
+
+    // First pass: sort inspections chronologically so we can group legacy ones
+    const sortedInspections = [...inspections].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+
+    sortedInspections.forEach((ins) => {
+      let activeSessionId = ins.session_id;
+
+      // Group legacy inspections heuristically if session_id is missing
+      if (!activeSessionId) {
+        const insTime = new Date(ins.created_at);
+        const insEmployee = ins.employee_name;
+
+        // If more than 4 hours passed or employee changed, create a new legacy session
+        if (
+          !lastLegacyTime ||
+          !lastLegacyEmployee ||
+          lastLegacyEmployee !== insEmployee ||
+          insTime.getTime() - lastLegacyTime.getTime() > 4 * 60 * 60 * 1000
+        ) {
+          legacyCounter++;
+          currentLegacySessionId = `legacy_session_${legacyCounter}`;
         }
-        const session = sessionsMap.get(ins.session_id);
-        session.inspections.push(ins);
 
-        // Update start/end times
-        if (new Date(ins.created_at) < new Date(session.start_time))
-          session.start_time = ins.created_at;
-        if (new Date(ins.created_at) > new Date(session.end_time))
-          session.end_time = ins.created_at;
-      } else {
-        oldInspections.push(ins);
+        activeSessionId = currentLegacySessionId;
+        lastLegacyTime = insTime;
+        lastLegacyEmployee = insEmployee;
       }
+
+      if (!sessionsMap.has(activeSessionId)) {
+        sessionsMap.set(activeSessionId, {
+          id: activeSessionId,
+          employee_name: ins.employee_name.split("@")[0],
+          inspections: [],
+          start_time: ins.created_at,
+          end_time: ins.created_at,
+          isLegacy: !ins.session_id,
+        });
+      }
+
+      const session = sessionsMap.get(activeSessionId);
+      session.inspections.push(ins);
+
+      // Update start/end times
+      if (new Date(ins.created_at) < new Date(session.start_time))
+        session.start_time = ins.created_at;
+      if (new Date(ins.created_at) > new Date(session.end_time))
+        session.end_time = ins.created_at;
     });
 
-    // Convert map to array and sort by start_time descending
+    // Convert map to array and sort by start_time descending (newest first)
     let sessionsArray = Array.from(sessionsMap.values()).sort(
       (a, b) =>
         new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
@@ -98,10 +130,10 @@ export default function VehicleInspectionsHistory({
       session_number: totalSessions - index,
     }));
 
-    return { sessions: sessionsArray, oldInspections };
+    return { sessions: sessionsArray };
   }, [inspections]);
 
-  const { sessions, oldInspections } = groupedSessions;
+  const { sessions } = groupedSessions;
 
   const filteredSessions = sessions.filter((s) => {
     if (!searchQuery) return true;
@@ -112,10 +144,6 @@ export default function VehicleInspectionsHistory({
       ins.plate.toLowerCase().includes(searchLower),
     );
   });
-
-  const filteredOldInspections = oldInspections.filter((ins) =>
-    ins.plate.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
 
   if (loading)
     return (
@@ -143,7 +171,7 @@ export default function VehicleInspectionsHistory({
           </div>
         </div>
 
-        {sessions.length === 0 && oldInspections.length === 0 ? (
+        {sessions.length === 0 ? (
           <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
             <div className="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-xl">
               <History size={32} />
@@ -152,14 +180,12 @@ export default function VehicleInspectionsHistory({
               No hay revistas registradas.
             </p>
           </div>
-        ) : filteredSessions.length === 0 &&
-          filteredOldInspections.length === 0 ? (
+        ) : filteredSessions.length === 0 ? (
           <div className="text-center py-12 text-slate-500 font-bold bg-slate-50 rounded-3xl border border-dashed border-slate-100">
             No se encontraron revistas que coincidan con la búsqueda.
           </div>
         ) : (
           <div className="space-y-4">
-            {/* New format: Grouped by Sessions */}
             {filteredSessions.map((session) => (
               <div
                 key={session.id}
@@ -172,28 +198,15 @@ export default function VehicleInspectionsHistory({
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-lg">
-                      Revista {session.session_number}
+                      Revista del{" "}
+                      {new Date(session.start_time).toLocaleDateString("es-CO")}{" "}
+                      -{" "}
+                      {new Date(session.start_time).toLocaleTimeString(
+                        "es-CO",
+                        { hour: "2-digit", minute: "2-digit" },
+                      )}
                     </h4>
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-500 mt-1">
-                      <div className="flex items-center gap-1">
-                        <Calendar size={14} />{" "}
-                        {new Date(session.start_time).toLocaleDateString(
-                          "es-CO",
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock size={14} />{" "}
-                        {new Date(session.start_time).toLocaleTimeString(
-                          "es-CO",
-                          { hour: "2-digit", minute: "2-digit" },
-                        )}{" "}
-                        -{" "}
-                        {new Date(session.end_time).toLocaleTimeString(
-                          "es-CO",
-                          { hour: "2-digit", minute: "2-digit" },
-                        )}
-                      </div>
-                    </div>
+
                     <div className="text-sm font-bold text-slate-600 mt-2 flex items-center gap-2">
                       <span className="px-2 py-1 bg-slate-100 rounded-xl">
                         Por: {session.employee_name}
@@ -210,76 +223,6 @@ export default function VehicleInspectionsHistory({
                 </div>
               </div>
             ))}
-
-            {/* Old Format: Un-grouped inspections (Legacy) */}
-            {filteredOldInspections.length > 0 && (
-              <div className="mt-8">
-                <h4 className="font-bold text-slate-800 mb-4 px-2">
-                  Revistas Anteriores (Sin Agrupar)
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredOldInspections.map((ins) => (
-                    <div
-                      key={ins.id}
-                      className="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex justify-between items-start mb-3">
-                          <span className="font-black text-xl text-slate-900 bg-white px-3 py-1 rounded-xl shadow-sm border border-slate-100">
-                            {ins.plate}
-                          </span>
-                          <span className="text-xs font-bold text-slate-500 bg-slate-200/50 px-2 py-1 rounded-lg uppercase">
-                            {ins.vehicle_type === "visitor"
-                              ? "Visitante"
-                              : "Privado"}
-                          </span>
-                        </div>
-
-                        <p className="text-sm font-medium text-slate-600 mb-4 line-clamp-3">
-                          {ins.notes || (
-                            <span className="italic text-slate-400">
-                              Sin observaciones
-                            </span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                          {ins.images && ins.images.length > 0 ? (
-                            ins.images.map((img: string, idx: number) => (
-                              <a
-                                key={idx}
-                                href={img}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="shrink-0 relative group"
-                              >
-                                <img
-                                  src={img}
-                                  alt="Revista"
-                                  className="w-16 h-16 object-cover rounded-xl border border-slate-200"
-                                />
-                              </a>
-                            ))
-                          ) : (
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                              <ImageIcon size={14} /> Sin fotos
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex justify-between items-center text-xs font-bold text-slate-400 pt-3 border-t border-slate-200/50">
-                          <span>
-                            {new Date(ins.created_at).toLocaleString("es-CO")}
-                          </span>
-                          <span>{ins.employee_name.split("@")[0]}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -292,14 +235,17 @@ export default function VehicleInspectionsHistory({
             <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <div>
                 <h2 className="text-2xl font-black text-slate-900">
-                  Revista #{selectedSession.session_number}
+                  Revista del{" "}
+                  {new Date(selectedSession.start_time).toLocaleDateString(
+                    "es-CO",
+                  )}{" "}
+                  -{" "}
+                  {new Date(selectedSession.start_time).toLocaleTimeString(
+                    "es-CO",
+                    { hour: "2-digit", minute: "2-digit" },
+                  )}
                 </h2>
                 <p className="text-sm font-bold text-slate-500 mt-1">
-                  {new Date(selectedSession.start_time).toLocaleString(
-                    "es-CO",
-                    { dateStyle: "medium", timeStyle: "short" },
-                  )}
-                  <span className="mx-2">•</span>
                   Empleado: {selectedSession.employee_name}
                 </p>
               </div>
