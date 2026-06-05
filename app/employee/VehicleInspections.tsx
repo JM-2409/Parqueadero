@@ -64,6 +64,7 @@ export default function VehicleInspections({
               id: session.id,
               plate: session.vehicles.plate,
               type: "visitor",
+              vehicleType: session.vehicles.type,
               label: "Visitante",
               sortKey: "ZZZZZ" // Visitantes al final
             });
@@ -84,6 +85,7 @@ export default function VehicleInspections({
               id: space.id,
               plate: plate.toUpperCase(),
               type: "private",
+              vehicleType: space.vehicle_type,
               label: `Privado (${space.space_number})`,
               sortKey: String(space.space_number).padStart(10, '0') // Padding for correct alphanumeric sorting
             });
@@ -339,16 +341,19 @@ export default function VehicleInspections({
     <div className="space-y-6">
       {success && <SuccessMessage message={success} />}
 
-      <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 flex flex-col md:flex-row gap-6">
-        {/* Left Col: Vehicle Selection */}
-        <div className="w-full md:w-1/3 flex flex-col gap-4 border-r border-slate-100 pr-0 md:pr-6">
+      <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 flex flex-col h-[calc(100vh-12rem)] min-h-[500px]">
+        {/* Header & Search */}
+        <div className="flex flex-col gap-4 mb-6 shrink-0">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-900">Pendientes ({pendingVehicles.length})</h3>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">Vehículos Pendientes</h2>
+              <p className="text-sm font-bold text-slate-500">Total a revisar: {pendingVehicles.length}</p>
+            </div>
             <button
                onClick={endSession}
-               className="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 px-3 py-1.5 rounded-xl transition-colors"
+               className="text-sm font-bold text-red-500 hover:text-red-700 bg-red-50 px-4 py-2 rounded-xl transition-colors"
             >
-               Terminar
+               Terminar Turno
             </button>
           </div>
 
@@ -362,29 +367,63 @@ export default function VehicleInspections({
               className="w-full bg-slate-50 border-0 text-sm text-slate-900 rounded-3xl pl-11 pr-4 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold placeholder:font-normal"
             />
           </div>
-
-          <div className="flex-1 overflow-y-auto max-h-[500px] space-y-2 pr-2">
-            {filteredVehicles.length === 0 ? (
-              <p className="text-center text-slate-500 text-sm mt-4 font-bold">No hay vehículos.</p>
-            ) : (
-              filteredVehicles.map(v => (
-                <button
-                  key={`${v.type}-${v.id}`}
-                  onClick={() => { setSelectedVehicle(v); setNotes(""); setImages([]); setError(""); }}
-                  className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${selectedVehicle?.id === v.id ? 'border-slate-900 bg-slate-50' : 'border-transparent hover:bg-slate-50'}`}
-                >
-                  <div className="font-black text-lg text-slate-800">{v.plate}</div>
-                  <div className="text-xs font-bold text-slate-500">{v.label}</div>
-                </button>
-              ))
-            )}
-          </div>
         </div>
 
-        {/* Right Col: Desktop Instructions (Hidden on Mobile) */}
-        <div className="hidden md:flex w-full md:w-2/3 h-full flex-col items-center justify-center text-slate-400 min-h-[300px]">
-          <Camera size={48} className="mb-4 opacity-20" />
-          <p className="font-bold">Selecciona un vehículo de la lista para iniciar la revista</p>
+        {/* List (Motos and Carros) */}
+        <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* CARROS */}
+            <div>
+                <h3 className="text-lg font-black text-slate-800 mb-4 sticky top-0 bg-white py-2 z-10 border-b border-slate-100">Carros</h3>
+                <div className="space-y-2">
+                    {filteredVehicles.filter(v => {
+                        const type = v.vehicleType?.toLowerCase() || '';
+                        return !type.includes('moto') && !type.includes('motorcycle');
+                    }).length === 0 ? (
+                        <p className="text-center text-slate-500 text-sm py-4 font-bold bg-slate-50 rounded-2xl">No hay carros pendientes.</p>
+                    ) : (
+                        filteredVehicles.filter(v => {
+                            const type = v.vehicleType?.toLowerCase() || '';
+                            return !type.includes('moto') && !type.includes('motorcycle');
+                        }).map(v => (
+                            <button
+                                key={`${v.type}-${v.id}`}
+                                onClick={() => { setSelectedVehicle(v); setNotes(""); setImages([]); setError(""); }}
+                                className="w-full text-left p-4 rounded-2xl border-2 transition-all border-slate-100 hover:border-slate-300 hover:bg-slate-50"
+                            >
+                                <div className="font-black text-lg text-slate-800">{v.plate}</div>
+                                <div className="text-xs font-bold text-slate-500">{v.label}</div>
+                            </button>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* MOTOS */}
+            <div>
+                <h3 className="text-lg font-black text-slate-800 mb-4 sticky top-0 bg-white py-2 z-10 border-b border-slate-100">Motos</h3>
+                <div className="space-y-2">
+                    {filteredVehicles.filter(v => {
+                        const type = v.vehicleType?.toLowerCase() || '';
+                        return type.includes('moto') || type.includes('motorcycle');
+                    }).length === 0 ? (
+                        <p className="text-center text-slate-500 text-sm py-4 font-bold bg-slate-50 rounded-2xl">No hay motos pendientes.</p>
+                    ) : (
+                        filteredVehicles.filter(v => {
+                            const type = v.vehicleType?.toLowerCase() || '';
+                            return type.includes('moto') || type.includes('motorcycle');
+                        }).map(v => (
+                            <button
+                                key={`${v.type}-${v.id}`}
+                                onClick={() => { setSelectedVehicle(v); setNotes(""); setImages([]); setError(""); }}
+                                className="w-full text-left p-4 rounded-2xl border-2 transition-all border-slate-100 hover:border-slate-300 hover:bg-slate-50"
+                            >
+                                <div className="font-black text-lg text-slate-800">{v.plate}</div>
+                                <div className="text-xs font-bold text-slate-500">{v.label}</div>
+                            </button>
+                        ))
+                    )}
+                </div>
+            </div>
         </div>
       </div>
 
