@@ -208,12 +208,8 @@ export default function VehicleInspectionsHistory({
                     </h4>
 
                     <div className="text-sm font-bold text-slate-600 mt-2 flex items-center gap-2">
-                      <span className="px-2 py-1 bg-slate-100 rounded-xl">
-                        Por: {session.employee_name}
-                      </span>
-                      <span className="px-2 py-1 bg-slate-100 rounded-xl">
-                        <Car size={14} className="inline mr-1" />{" "}
-                        {session.inspections.length} vehículos
+                      <span className="px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200">
+                        Realizado por: <span className="text-slate-800">{session.employee_name}</span>
                       </span>
                     </div>
                   </div>
