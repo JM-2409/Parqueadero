@@ -16,11 +16,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta la imagen' }, { status: 400 });
     }
 
-    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
-    if (!buckets?.find(b => b.name === 'revistas')) {
-      await supabaseAdmin.storage.createBucket('revistas', { public: true });
-    }
-
     const matches = image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
       return NextResponse.json({ error: 'Formato de imagen inválido' }, { status: 400 });

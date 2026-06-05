@@ -130,8 +130,8 @@ export default function VehicleInspections({
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          const MAX_WIDTH = 1024;
-          const MAX_HEIGHT = 1024;
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
           let width = img.width;
           let height = img.height;
 
@@ -156,7 +156,7 @@ export default function VehicleInspections({
             return;
           }
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL(file.type || "image/jpeg", 0.7));
+          resolve(canvas.toDataURL("image/webp", 0.5));
         };
         img.onerror = () => reject(new Error("Failed to load image"));
         img.src = event.target?.result as string;
@@ -232,7 +232,7 @@ export default function VehicleInspections({
           plate: selectedVehicle.plate,
           notes: notes.trim() || null,
           images: images,
-          session_id: sessionId // Save the session ID
+          session_id: selectedVehicle?.type === 'visitor' ? sessionId : null // Only for visitors
         });
 
       if (insertError) {

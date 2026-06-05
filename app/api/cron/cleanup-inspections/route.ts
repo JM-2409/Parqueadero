@@ -13,7 +13,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 export async function GET(request: Request) {
   try {
     const limitDate = new Date();
-    limitDate.setDate(limitDate.getDate() - 15);
+    limitDate.setDate(limitDate.getDate() - 7);
     const limitDateISO = limitDate.toISOString();
 
     const { data: oldInspections, error: fetchError } = await supabaseAdmin
