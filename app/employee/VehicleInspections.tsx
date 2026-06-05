@@ -64,6 +64,7 @@ export default function VehicleInspections({
               id: session.id,
               plate: session.vehicles.plate,
               type: "visitor",
+              vehicleType: session.vehicles.type,
               label: "Visitante",
               sortKey: "ZZZZZ" // Visitantes al final
             });
@@ -84,6 +85,7 @@ export default function VehicleInspections({
               id: space.id,
               plate: plate.toUpperCase(),
               type: "private",
+              vehicleType: space.vehicle_type,
               label: `Privado (${space.space_number})`,
               sortKey: String(space.space_number).padStart(10, '0') // Padding for correct alphanumeric sorting
             });
@@ -373,10 +375,16 @@ export default function VehicleInspections({
             <div>
                 <h3 className="text-lg font-black text-slate-800 mb-4 sticky top-0 bg-white py-2 z-10 border-b border-slate-100">Carros</h3>
                 <div className="space-y-2">
-                    {filteredVehicles.filter(v => v.vehicleType === 'car').length === 0 ? (
+                    {filteredVehicles.filter(v => {
+                        const type = v.vehicleType?.toLowerCase() || '';
+                        return !type.includes('moto') && !type.includes('motorcycle');
+                    }).length === 0 ? (
                         <p className="text-center text-slate-500 text-sm py-4 font-bold bg-slate-50 rounded-2xl">No hay carros pendientes.</p>
                     ) : (
-                        filteredVehicles.filter(v => v.vehicleType === 'car').map(v => (
+                        filteredVehicles.filter(v => {
+                            const type = v.vehicleType?.toLowerCase() || '';
+                            return !type.includes('moto') && !type.includes('motorcycle');
+                        }).map(v => (
                             <button
                                 key={`${v.type}-${v.id}`}
                                 onClick={() => { setSelectedVehicle(v); setNotes(""); setImages([]); setError(""); }}
@@ -394,10 +402,16 @@ export default function VehicleInspections({
             <div>
                 <h3 className="text-lg font-black text-slate-800 mb-4 sticky top-0 bg-white py-2 z-10 border-b border-slate-100">Motos</h3>
                 <div className="space-y-2">
-                    {filteredVehicles.filter(v => v.vehicleType === 'motorcycle').length === 0 ? (
+                    {filteredVehicles.filter(v => {
+                        const type = v.vehicleType?.toLowerCase() || '';
+                        return type.includes('moto') || type.includes('motorcycle');
+                    }).length === 0 ? (
                         <p className="text-center text-slate-500 text-sm py-4 font-bold bg-slate-50 rounded-2xl">No hay motos pendientes.</p>
                     ) : (
-                        filteredVehicles.filter(v => v.vehicleType === 'motorcycle').map(v => (
+                        filteredVehicles.filter(v => {
+                            const type = v.vehicleType?.toLowerCase() || '';
+                            return type.includes('moto') || type.includes('motorcycle');
+                        }).map(v => (
                             <button
                                 key={`${v.type}-${v.id}`}
                                 onClick={() => { setSelectedVehicle(v); setNotes(""); setImages([]); setError(""); }}
