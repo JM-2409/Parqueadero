@@ -34,14 +34,14 @@ export default function InspectionsTab({
               : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
           }`}
         >
-          Historial del Día
+          Última Revista
         </button>
       </div>
 
       {view === "new" ? (
         <VehicleInspections parkingLot={parkingLot} profile={profile} />
       ) : (
-        <VehicleInspectionsHistory parkingLotId={parkingLot.id} />
+        <VehicleInspectionsHistory parkingLotId={parkingLot.id} limitToLatestSession={true} isAdmin={false} />
       )}
     </div>
   );

@@ -28,6 +28,7 @@ export default function ManualEntry({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSpecialFee, setIsSpecialFee] = useState(false);
   const [totalFee, setTotalFee] = useState("");
+  const [manualReceiptNumber, setManualReceiptNumber] = useState("");
   const [extraData, setExtraData] = useState<Record<string, string>>({});
   const [tariffs, setTariffs] = useState<any[]>([]);
 
@@ -281,19 +282,24 @@ export default function ManualEntry({
       };
 
       if (isCompleted) {
-        // Generar consecutivo usando sequence property si se quiere, o autocalculado
-        const { data: lotData } = await supabase
-          .from("parking_lots")
-          .select("receipt_sequence")
-          .eq("id", parkingLotId)
-          .single();
-        const nextSeq = (lotData?.receipt_sequence || 0) + 1;
-        await supabase
-          .from("parking_lots")
-          .update({ receipt_sequence: nextSeq })
-          .eq("id", parkingLotId);
+        let receiptNumber = manualReceiptNumber.trim();
 
-        const receiptNumber = `REC-${nextSeq.toString().padStart(6, "0")}`;
+        // Generar consecutivo usando sequence property si se quiere, o autocalculado
+        if (!receiptNumber) {
+          const { data: lotData } = await supabase
+            .from("parking_lots")
+            .select("receipt_sequence")
+            .eq("id", parkingLotId)
+            .single();
+          const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+          await supabase
+            .from("parking_lots")
+            .update({ receipt_sequence: nextSeq })
+            .eq("id", parkingLotId);
+
+          receiptNumber = `REC-${nextSeq.toString().padStart(6, "0")}`;
+        }
+
         const durationMinutes = Math.round(
           (new Date(exitTimestamp!).getTime() -
             new Date(entryTimestamp).getTime()) /
@@ -317,6 +323,7 @@ export default function ManualEntry({
       setSuccess("Registro histórico añadido exitosamente");
       setPlate("");
       setTotalFee("");
+      setManualReceiptNumber("");
       setExtraData({});
 
       setTimeout(() => setSuccess(""), 3000);
@@ -548,6 +555,22 @@ export default function ManualEntry({
                       para modificarlo.
                     </p>
                   )}
+
+                  <div className="mt-6">
+                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                      Número de Recibo Físico (Opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={manualReceiptNumber}
+                      onChange={(e) => setManualReceiptNumber(e.target.value)}
+                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all placeholder-slate-300"
+                      placeholder="Ej. REC-00123"
+                    />
+                    <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1">
+                      Si se deja en blanco, el sistema continuará con el consecutivo automáticamente.
+                    </p>
+                  </div>
                 </div>
               </>
             )}

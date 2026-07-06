@@ -224,12 +224,16 @@ export default function VehicleInspections({
       setSaving(true);
       setError("");
 
+      // Use shiftName from sessionStorage as employee name if available
+      const storedShiftName = typeof window !== 'undefined' ? sessionStorage.getItem('shiftName') : null;
+      const employeeName = storedShiftName && storedShiftName.trim() !== '' ? storedShiftName.trim() : profile.email;
+
       const { error: insertError } = await supabase
         .from("vehicle_inspections")
         .insert({
           parking_lot_id: parkingLot.id,
           employee_id: profile.id,
-          employee_name: profile.email,
+          employee_name: employeeName,
           vehicle_type: selectedVehicle.type,
           plate: selectedVehicle.plate,
           notes: notes.trim() || null,
@@ -246,7 +250,7 @@ export default function VehicleInspections({
                 .insert({
                   parking_lot_id: parkingLot.id,
                   employee_id: profile.id,
-                  employee_name: profile.email,
+                  employee_name: employeeName,
                   vehicle_type: selectedVehicle.type,
                   plate: selectedVehicle.plate,
                   notes: notes.trim() || null,
