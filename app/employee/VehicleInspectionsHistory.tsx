@@ -18,9 +18,11 @@ import { Spinner } from "@/components/ui/Spinner";
 export default function VehicleInspectionsHistory({
   parkingLotId,
   isAdmin = false,
+  limitToLatestSession = false,
 }: {
   parkingLotId: string;
   isAdmin?: boolean;
+  limitToLatestSession?: boolean;
 }) {
   const [inspections, setInspections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,10 @@ export default function VehicleInspectionsHistory({
 
   const { sessions } = groupedSessions;
 
-  const filteredSessions = sessions.filter((s) => {
+  // If limitToLatestSession is true, we only show the very first session (the newest one)
+  const displayedSessions = limitToLatestSession ? sessions.slice(0, 1) : sessions;
+
+  const filteredSessions = displayedSessions.filter((s) => {
     if (!searchQuery) return true;
     const searchLower = searchQuery.toLowerCase();
     // Search by employee name or any plate in the session
@@ -171,7 +176,7 @@ export default function VehicleInspectionsHistory({
           </div>
         </div>
 
-        {sessions.length === 0 ? (
+        {displayedSessions.length === 0 ? (
           <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50">
             <div className="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-xl">
               <History size={32} />
@@ -196,18 +201,19 @@ export default function VehicleInspectionsHistory({
                   <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-lg shrink-0 shadow-lg">
                     #{session.session_number}
                   </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-lg">
-                      Revista del{" "}
-                      {new Date(session.start_time).toLocaleDateString("es-CO")}{" "}
-                      -{" "}
-                      {new Date(session.start_time).toLocaleTimeString(
-                        "es-CO",
-                        { hour: "2-digit", minute: "2-digit" },
-                      )}
+                  <div className="flex flex-col">
+                    <h4 className="font-bold text-slate-900 text-lg flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                      <span>Revista del {new Date(session.start_time).toLocaleDateString("es-CO")}</span>
+                      <span className="hidden sm:inline">-</span>
+                      <span>
+                        {new Date(session.start_time).toLocaleTimeString(
+                          "es-CO",
+                          { hour: "2-digit", minute: "2-digit" },
+                        )}
+                      </span>
                     </h4>
 
-                    <div className="text-sm font-bold text-slate-600 mt-2 flex items-center gap-2">
+                    <div className="text-sm font-bold text-slate-600 mt-2 flex flex-wrap items-center gap-2">
                       <span className="px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200">
                         Realizado por: <span className="text-slate-800">{session.employee_name}</span>
                       </span>
@@ -230,16 +236,20 @@ export default function VehicleInspectionsHistory({
             {/* Header */}
             <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <div>
-                <h2 className="text-2xl font-black text-slate-900">
-                  Revista del{" "}
-                  {new Date(selectedSession.start_time).toLocaleDateString(
-                    "es-CO",
-                  )}{" "}
-                  -{" "}
-                  {new Date(selectedSession.start_time).toLocaleTimeString(
-                    "es-CO",
-                    { hour: "2-digit", minute: "2-digit" },
-                  )}
+                <h2 className="text-2xl font-black text-slate-900 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                  <span>
+                    Revista del{" "}
+                    {new Date(selectedSession.start_time).toLocaleDateString(
+                      "es-CO",
+                    )}
+                  </span>
+                  <span className="hidden sm:inline">-</span>
+                  <span>
+                    {new Date(selectedSession.start_time).toLocaleTimeString(
+                      "es-CO",
+                      { hour: "2-digit", minute: "2-digit" },
+                    )}
+                  </span>
                 </h2>
                 <p className="text-sm font-bold text-slate-500 mt-1">
                   Empleado: {selectedSession.employee_name}
