@@ -275,7 +275,35 @@ export default function ManualEntry({
       // Determinar número de recibo para todas las sesiones (activas o completadas)
       let receiptNumber = manualReceiptNumber.trim();
 
-      if (!receiptNumber) {
+      if (receiptNumber) {
+        // El usuario ingresó un recibo manualmente.
+        // Intentamos extraer la parte numérica para actualizar la secuencia de la base de datos
+        // y asegurar que el SIGUIENTE auto-generado sea el que sigue después de este.
+        const numericPart = receiptNumber.replace(/\D/g, "");
+        if (numericPart) {
+          const parsedNumber = parseInt(numericPart, 10);
+          if (!isNaN(parsedNumber)) {
+            // Obtenemos la secuencia actual primero
+            const { data: lotData } = await supabase
+              .from("parking_lots")
+              .select("receipt_sequence")
+              .eq("id", parkingLotId)
+              .single();
+
+            const currentSeq = lotData?.receipt_sequence || 0;
+
+            // Solo actualizamos si el número ingresado es mayor al que el sistema ya llevaba,
+            // para evitar que el consecutivo se reinicie hacia atrás si digitan un recibo antiguo.
+            if (parsedNumber > currentSeq) {
+              await supabase
+                .from("parking_lots")
+                .update({ receipt_sequence: parsedNumber })
+                .eq("id", parkingLotId);
+            }
+          }
+        }
+      } else {
+        // No hay recibo manual, autogeneramos el consecutivo.
         const { data: lotData } = await supabase
           .from("parking_lots")
           .select("receipt_sequence")
