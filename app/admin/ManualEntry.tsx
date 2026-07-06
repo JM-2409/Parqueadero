@@ -292,13 +292,15 @@ export default function ManualEntry({
 
             const currentSeq = lotData?.receipt_sequence || 0;
 
-            // Solo actualizamos si el número ingresado es mayor al que el sistema ya llevaba,
-            // para evitar que el consecutivo se reinicie hacia atrás si digitan un recibo antiguo.
-            if (parsedNumber > currentSeq) {
-              await supabase
-                .from("parking_lots")
-                .update({ receipt_sequence: parsedNumber })
-                .eq("id", parkingLotId);
+            // Forzamos la actualización de la secuencia al número ingresado
+            // para asegurar que el sistema continúe a partir de aquí.
+            const { error: updateError } = await supabase
+              .from("parking_lots")
+              .update({ receipt_sequence: parsedNumber })
+              .eq("id", parkingLotId);
+
+            if (updateError) {
+              console.error("Error updating receipt sequence:", updateError);
             }
           }
         }
