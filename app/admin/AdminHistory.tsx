@@ -225,7 +225,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
         .update({ receipt_sequence: nextSeq })
         .eq("id", parkingLotId);
 
-      const receiptNumber = `REC-${nextSeq.toString().padStart(6, "0")}`;
+      const receiptNumber = nextSeq.toString();
       const durationMinutes = Math.round(
         (exitTime.getTime() - entryTime.getTime()) / 60000,
       );

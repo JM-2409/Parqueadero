@@ -292,13 +292,15 @@ export default function ManualEntry({
 
             const currentSeq = lotData?.receipt_sequence || 0;
 
-            // Solo actualizamos si el número ingresado es mayor al que el sistema ya llevaba,
-            // para evitar que el consecutivo se reinicie hacia atrás si digitan un recibo antiguo.
-            if (parsedNumber > currentSeq) {
-              await supabase
-                .from("parking_lots")
-                .update({ receipt_sequence: parsedNumber })
-                .eq("id", parkingLotId);
+            // Forzamos la actualización de la secuencia al número ingresado
+            // para asegurar que el sistema continúe a partir de aquí.
+            const { error: updateError } = await supabase
+              .from("parking_lots")
+              .update({ receipt_sequence: parsedNumber })
+              .eq("id", parkingLotId);
+
+            if (updateError) {
+              console.error("Error updating receipt sequence:", updateError);
             }
           }
         }
@@ -315,7 +317,7 @@ export default function ManualEntry({
           .update({ receipt_sequence: nextSeq })
           .eq("id", parkingLotId);
 
-        receiptNumber = `REC-${nextSeq.toString().padStart(6, "0")}`;
+        receiptNumber = nextSeq.toString();
       }
 
       const sessionData: any = {
@@ -495,7 +497,7 @@ export default function ManualEntry({
                 value={manualReceiptNumber}
                 onChange={(e) => setManualReceiptNumber(e.target.value)}
                 className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all placeholder-slate-300"
-                placeholder="Ej. REC-00123"
+                placeholder="Ej. 12345"
               />
               <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1">
                 Aplica tanto para vehículos activos como completados. Si se deja en blanco, se genera el consecutivo automáticamente.
