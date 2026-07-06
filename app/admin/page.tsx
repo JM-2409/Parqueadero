@@ -1419,7 +1419,7 @@ export default function AdminPage() {
                           const newSettings = { ...(parkingLot.inspection_settings || { require_photos: false, require_notes: false }), enabled: e.target.checked };
                           try {
                             await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
-                            fetchParkingLot();
+                            fetchParkingLot(parkingLot.id);
                             setSuccess("Configuración de revistas actualizada.");
                             setTimeout(() => setSuccess(""), 3000);
                           } catch (err) {
@@ -1449,7 +1449,7 @@ export default function AdminPage() {
                           const newSettings = { ...(parkingLot.inspection_settings || { enabled: true, require_notes: false }), require_photos: e.target.checked };
                           try {
                             await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
-                            fetchParkingLot();
+                            fetchParkingLot(parkingLot.id);
                             setSuccess("Configuración de revistas actualizada.");
                             setTimeout(() => setSuccess(""), 3000);
                           } catch (err) {

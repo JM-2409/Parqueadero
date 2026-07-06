@@ -272,6 +272,24 @@ export default function ManualEntry({
         ? new Date(`${exitDate}T${exitTime}`).toISOString()
         : null;
 
+      // Determinar número de recibo para todas las sesiones (activas o completadas)
+      let receiptNumber = manualReceiptNumber.trim();
+
+      if (!receiptNumber) {
+        const { data: lotData } = await supabase
+          .from("parking_lots")
+          .select("receipt_sequence")
+          .eq("id", parkingLotId)
+          .single();
+        const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+        await supabase
+          .from("parking_lots")
+          .update({ receipt_sequence: nextSeq })
+          .eq("id", parkingLotId);
+
+        receiptNumber = `REC-${nextSeq.toString().padStart(6, "0")}`;
+      }
+
       const sessionData: any = {
         parking_lot_id: parkingLotId,
         vehicle_id: vehicleId,
@@ -279,27 +297,10 @@ export default function ManualEntry({
         entry_time: entryTimestamp,
         entry_employee_name: "Admin (Manual)",
         extra_data: sanitizedExtraData,
+        receipt_number: receiptNumber,
       };
 
       if (isCompleted) {
-        let receiptNumber = manualReceiptNumber.trim();
-
-        // Generar consecutivo usando sequence property si se quiere, o autocalculado
-        if (!receiptNumber) {
-          const { data: lotData } = await supabase
-            .from("parking_lots")
-            .select("receipt_sequence")
-            .eq("id", parkingLotId)
-            .single();
-          const nextSeq = (lotData?.receipt_sequence || 0) + 1;
-          await supabase
-            .from("parking_lots")
-            .update({ receipt_sequence: nextSeq })
-            .eq("id", parkingLotId);
-
-          receiptNumber = `REC-${nextSeq.toString().padStart(6, "0")}`;
-        }
-
         const durationMinutes = Math.round(
           (new Date(exitTimestamp!).getTime() -
             new Date(entryTimestamp).getTime()) /
@@ -310,7 +311,6 @@ export default function ManualEntry({
         sessionData.exit_employee_name = "Admin (Manual)";
         sessionData.fee = parseFloat(totalFee);
         sessionData.total_charged = parseFloat(totalFee);
-        sessionData.receipt_number = receiptNumber;
         sessionData.duration_minutes = durationMinutes;
       }
 
@@ -458,6 +458,22 @@ export default function ManualEntry({
               </div>
             </div>
 
+            <div className="mt-6 mb-4">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                Número de Recibo Físico (Opcional)
+              </label>
+              <input
+                type="text"
+                value={manualReceiptNumber}
+                onChange={(e) => setManualReceiptNumber(e.target.value)}
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all placeholder-slate-300"
+                placeholder="Ej. REC-00123"
+              />
+              <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1">
+                Aplica tanto para vehículos activos como completados. Si se deja en blanco, se genera el consecutivo automáticamente.
+              </p>
+            </div>
+
             <div className="flex items-center gap-3 mt-6 mb-2 p-4 bg-slate-50 rounded-3xl border border-slate-100">
               <input
                 type="checkbox"
@@ -556,21 +572,6 @@ export default function ManualEntry({
                     </p>
                   )}
 
-                  <div className="mt-6">
-                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-                      Número de Recibo Físico (Opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={manualReceiptNumber}
-                      onChange={(e) => setManualReceiptNumber(e.target.value)}
-                      className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all placeholder-slate-300"
-                      placeholder="Ej. REC-00123"
-                    />
-                    <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1">
-                      Si se deja en blanco, el sistema continuará con el consecutivo automáticamente.
-                    </p>
-                  </div>
                 </div>
               </>
             )}
