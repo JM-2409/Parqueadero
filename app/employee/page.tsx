@@ -804,6 +804,22 @@ export default function EmployeePage() {
         }
       }
 
+      // Generate receipt number on entry
+      const { data: lotData } = await supabase
+        .from("parking_lots")
+        .select("receipt_sequence")
+        .eq("id", parkingLot.id)
+        .single();
+
+      const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+
+      await supabase
+        .from("parking_lots")
+        .update({ receipt_sequence: nextSeq })
+        .eq("id", parkingLot.id);
+
+      const receiptNumber = nextSeq.toString();
+
       const { error: sessionError } = await supabase
         .from("parking_sessions")
         .insert([
@@ -813,6 +829,7 @@ export default function EmployeePage() {
             status: "active",
             entry_employee_name: shiftName,
             extra_data: sanitizedExtraData,
+            receipt_number: receiptNumber,
           },
         ]);
 
@@ -832,6 +849,7 @@ export default function EmployeePage() {
             status: "active",
             entry_time: new Date().toISOString(),
             vehicles: { plate: plate.toUpperCase(), type },
+            receipt_number: receiptNumber,
           });
           setShowReceipt(true);
         }
@@ -908,19 +926,23 @@ export default function EmployeePage() {
       });
     }
 
-    // Generar consecutivo usando sequence property si se quiere, o autocalculado
-    const { data: lotData } = await supabase
-      .from("parking_lots")
-      .select("receipt_sequence")
-      .eq("id", parkingLot.id)
-      .single();
-    const nextSeq = (lotData?.receipt_sequence || 0) + 1;
-    await supabase
-      .from("parking_lots")
-      .update({ receipt_sequence: nextSeq })
-      .eq("id", parkingLot.id);
+    // Preserve existing receipt number, or generate if missing (for backwards compatibility)
+    let receiptNumber = sessionToExit.receipt_number;
 
-    const receiptNumber = nextSeq.toString();
+    if (!receiptNumber) {
+      const { data: lotData } = await supabase
+        .from("parking_lots")
+        .select("receipt_sequence")
+        .eq("id", parkingLot.id)
+        .single();
+      const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+      await supabase
+        .from("parking_lots")
+        .update({ receipt_sequence: nextSeq })
+        .eq("id", parkingLot.id);
+      receiptNumber = nextSeq.toString();
+    }
+
     const durationMinutes = Math.round(
       (exitTime.getTime() - entryTime.getTime()) / 60000,
     );
