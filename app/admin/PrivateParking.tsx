@@ -445,11 +445,62 @@ export default function PrivateParking({
       // Find the full space objects for the selected IDs
       const spacesToDelete = spaces.filter(s => selectedSpaces.includes(s.id));
 
-      // Move any occupied spaces to history first
-      for (const space of spacesToDelete) {
-          const hasData = space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0;
-          if (hasData) {
-             await moveSpaceToHistory(space);
+      // Move any occupied spaces to history in bulk to avoid N+1 query
+      const spacesWithData = spacesToDelete.filter(
+          space => space.custom_fields_data && Object.keys(space.custom_fields_data).length > 0
+      );
+
+      if (spacesWithData.length > 0) {
+          const platesToDelete: string[] = [];
+          const historyRecordsToInsert: any[] = [];
+
+          for (const space of spacesWithData) {
+              let plate = "";
+              const cf = space.custom_fields_data || {};
+              const mainField = configFields.find(f => f.is_main)?.name;
+
+              if (mainField && cf[mainField]) {
+                  plate = cf[mainField];
+              } else {
+                  const plateKey = Object.keys(cf).find(k => k.toLowerCase() === "placa");
+                  if (plateKey) plate = cf[plateKey];
+              }
+
+              if (plate) {
+                  platesToDelete.push(plate);
+              }
+
+              historyRecordsToInsert.push({
+                  parking_lot_id: parkingLotId,
+                  plate: plate,
+                  owner_name: space.owner_name,
+                  custom_fields_data: space.custom_fields_data,
+                  vehicle_type: space.vehicle_type
+              });
+          }
+
+          // Batch delete old history records for these plates
+          if (platesToDelete.length > 0) {
+              for (let i = 0; i < platesToDelete.length; i += 500) {
+                  const chunk = platesToDelete.slice(i, i + 500);
+                  const { error: delError } = await supabase
+                      .from("private_parking_history")
+                      .delete()
+                      .eq("parking_lot_id", parkingLotId)
+                      .in("plate", chunk);
+                  if (delError) throw delError;
+              }
+          }
+
+          // Batch insert new history records
+          if (historyRecordsToInsert.length > 0) {
+              for (let i = 0; i < historyRecordsToInsert.length; i += 500) {
+                  const chunk = historyRecordsToInsert.slice(i, i + 500);
+                  const { error: insError } = await supabase
+                      .from("private_parking_history")
+                      .insert(chunk);
+                  if (insError) throw insError;
+              }
           }
       }
 
