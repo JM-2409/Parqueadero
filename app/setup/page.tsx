@@ -23,7 +23,7 @@ export default function VersionsPage() {
         "Corrección de superposición de botones en el menú lateral de todas las vistas.",
         "Corrección de desbordamiento de pantalla en los filtros de búsqueda en dispositivos móviles.",
         "Eliminación del nombre del guardia en el recibo impreso (solo visible para administradores).",
-        "Implementación de recibos con numeración consecutiva automática (ej. REC-000001).",
+        "Implementación de recibos con numeración consecutiva automática (ej. 1, 2, 3).",
         "Configuración de retención de historial a un máximo de 7 días.",
       ],
     },
