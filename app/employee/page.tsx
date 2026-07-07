@@ -35,6 +35,7 @@ import { calculateFee } from "@/lib/pricing";
 import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { getErrorMessage } from "@/lib/error";
 
 // Validación segura de preferencias en localStorage
 const ALLOWED_PREF_KEYS = [
@@ -199,10 +200,10 @@ export default function EmployeePage() {
 
       // re-fetch revenue to reset to $0
       await fetchRevenue(parkingLot.id);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error cerrado caja", err);
       playBeep("error");
-      setError("No se pudo cerrar la caja: " + err.message);
+      setError("No se pudo cerrar la caja: " + getErrorMessage(err));
     } finally {
       setIsClosingRegister(false);
     }

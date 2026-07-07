@@ -7,6 +7,7 @@ import { sanitizeInput } from "@/lib/sanitize";
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { getErrorMessage } from "@/lib/error";
 
 export default function ManualEntry({
   parkingLot,
@@ -357,8 +358,8 @@ export default function ManualEntry({
       setExtraData({});
 
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      setError(err.message || "Error al guardar el registro");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Error al guardar el registro");
     } finally {
       setLoading(false);
     }

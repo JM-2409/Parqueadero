@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       format: extension,
       bytes: buffer.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading to Supabase:', error);
     return NextResponse.json(
       { error: 'Hubo un error al subir la imagen' },

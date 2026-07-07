@@ -6,6 +6,7 @@ import { createUser, deleteEmployee, updateEmployeePassword } from "@/app/action
 import { UserPlus, X, Eye, EyeOff, ShieldCheck, Trash2, Edit2, CheckCircle2 } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
+import { getErrorMessage } from "@/lib/error";
 
 export default function EmployeeManagement({
   parkingLotId,
@@ -129,9 +130,9 @@ export default function EmployeeManagement({
 
       if (data) setEmployees(data);
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Handle known Supabase Auth errors gracefully if possible
-      const message = err.message || "Error al crear empleado";
+      const message = getErrorMessage(err) || "Error al crear empleado";
       setError(
         message.includes("User already registered")
           ? "Este usuario ya existe en el sistema."
@@ -174,8 +175,8 @@ export default function EmployeeManagement({
       setEditPassword("");
       setEditConfirmPassword("");
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      setError(err.message || "Error al actualizar la contraseña.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Error al actualizar la contraseña.");
     } finally {
       setIsUpdatingEmployee(false);
     }
@@ -198,8 +199,8 @@ export default function EmployeeManagement({
       setSuccess("Operario eliminado exitosamente.");
       setEmployees(employees.filter(emp => emp.id !== employeeId));
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      setError(err.message || "Error al eliminar operario.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Error al eliminar operario.");
     } finally {
       setIsDeletingEmployee(null);
     }

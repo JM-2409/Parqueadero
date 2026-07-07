@@ -19,6 +19,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { sanitizeInput } from "@/lib/sanitize";
 
 import Papa from "papaparse";
+import { getErrorMessage } from "@/lib/error";
 
 export default function PrivateParking({
   parkingLotId,
@@ -93,9 +94,9 @@ export default function PrivateParking({
         });
         setSpaces(sortedData);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching spaces:", err);
-      setError(err.message || "Error al cargar los espacios.");
+      setError(getErrorMessage(err) || "Error al cargar los espacios.");
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export default function PrivateParking({
 
         if (error) throw error;
         setHistoryRecords(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error("Error fetching history:", err);
     }
   }, [parkingLotId]);
@@ -351,9 +352,9 @@ export default function PrivateParking({
       setEditingSpaceId(null);
       fetchSpaces();
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error saving space:", err);
-      setError(err.message || "Error al guardar el espacio");
+      setError(getErrorMessage(err) || "Error al guardar el espacio");
     }
   };
 
@@ -377,9 +378,9 @@ export default function PrivateParking({
       setSuccess("Espacio eliminado exitosamente");
       fetchSpaces();
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error deleting space:", err);
-      setError(err.message || "Error al eliminar el espacio");
+      setError(getErrorMessage(err) || "Error al eliminar el espacio");
     }
   };
 
@@ -428,9 +429,9 @@ export default function PrivateParking({
       setSuccess(`Parqueadero ${space.space_number} liberado exitosamente.`);
       fetchSpaces();
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error releasing space:", err);
-      setError(err.message || "Error al liberar el espacio");
+      setError(getErrorMessage(err) || "Error al liberar el espacio");
     }
   };
 
@@ -519,9 +520,9 @@ export default function PrivateParking({
       setSelectedSpaces([]);
       fetchSpaces();
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error bulk deleting spaces:", err);
-      setError(err.message || "Error al eliminar los espacios seleccionados");
+      setError(getErrorMessage(err) || "Error al eliminar los espacios seleccionados");
     }
   };
 
@@ -864,8 +865,8 @@ export default function PrivateParking({
             `Se importaron ${spacesToUpsert.length} parqueaderos correctamente.`,
           );
           fetchSpaces();
-        } catch (err: any) {
-          setError(`Error importando CSV: ${err.message}`);
+        } catch (err: unknown) {
+          setError(`Error importando CSV: ${getErrorMessage(err)}`);
         } finally {
           setIsImporting(false);
           // reset input

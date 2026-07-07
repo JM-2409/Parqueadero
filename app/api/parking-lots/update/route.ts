@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getErrorMessage } from "@/lib/error";
 
 export const dynamic = 'force-dynamic';
 
@@ -152,10 +153,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, data });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in /api/parking-lots/update:", error);
     return NextResponse.json(
-      { error: error.message || "Error interno del servidor" },
+      { error: getErrorMessage(error) || "Error interno del servidor" },
       { status: 500 },
     );
   }

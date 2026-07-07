@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getErrorMessage } from "@/lib/error";
 
 export const dynamic = 'force-dynamic';
 
@@ -103,10 +104,10 @@ export async function DELETE(req: Request) {
       success: true,
       message: "Parqueadero eliminado exitosamente",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in /api/parking-lots/delete:", error);
     return NextResponse.json(
-      { error: error.message || "Error interno del servidor" },
+      { error: getErrorMessage(error) || "Error interno del servidor" },
       { status: 500 },
     );
   }

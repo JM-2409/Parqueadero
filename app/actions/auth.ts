@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { getErrorMessage } from "@/lib/error";
 
 let supabaseUrl = (
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -160,8 +161,8 @@ export async function createUser(
     }
 
     return { success: true, user: authData.user };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -244,8 +245,8 @@ export async function deleteEmployee(userId: string, token: string) {
     await supabaseAdmin.from("profiles").delete().eq("id", userId);
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -330,7 +331,7 @@ export async function updateEmployeePassword(
     if (updateError) throw updateError;
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
