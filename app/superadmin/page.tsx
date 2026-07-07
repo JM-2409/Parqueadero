@@ -33,6 +33,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { ImageCropper } from "@/components/ui/ImageCropper";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { getErrorMessage } from "@/lib/error";
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -121,8 +122,8 @@ export default function SuperAdminPage() {
       fetchAdmins();
       fetchEmployees();
       setTimeout(() => setSuccess(""), 4000);
-    } catch (err: any) {
-      setError("Error al eliminar parqueadero: " + err.message);
+    } catch (err: unknown) {
+      setError("Error al eliminar parqueadero: " + getErrorMessage(err));
     } finally {
       closeDeleteModal();
     }
@@ -148,8 +149,8 @@ export default function SuperAdminPage() {
       setSuccess("Administrador eliminado exitosamente.");
       fetchAdmins();
       setTimeout(() => setSuccess(""), 4000);
-    } catch (err: any) {
-      setError("Error al eliminar administrador: " + err.message);
+    } catch (err: unknown) {
+      setError("Error al eliminar administrador: " + getErrorMessage(err));
     }
   };
 
@@ -210,9 +211,9 @@ export default function SuperAdminPage() {
         console.error("Error fetching admins:", result.error);
         setError(result.error);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching admins:", error);
-      setError(error.message);
+      setError(getErrorMessage(error));
     }
   }, []);
 
@@ -226,9 +227,9 @@ export default function SuperAdminPage() {
         console.error("Error fetching employees:", result.error);
         setError(result.error);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching employees:", error);
-      setError(error.message);
+      setError(getErrorMessage(error));
     }
   }, []);
 
@@ -241,8 +242,8 @@ export default function SuperAdminPage() {
       } else {
         console.error("Error fetching pending devices count:", result.error);
       }
-    } catch (err: any) {
-      console.error("Error fetching pending devices count:", err.message);
+    } catch (err: unknown) {
+      console.error("Error fetching pending devices count:", getErrorMessage(err));
     }
   }, []);
 
@@ -393,8 +394,8 @@ export default function SuperAdminPage() {
         await fetchParkingLots();
         setTimeout(() => setSuccess(""), 3000);
       }
-    } catch (err: any) {
-      setError("Error de red al actualizar parqueadero: " + err.message);
+    } catch (err: unknown) {
+      setError("Error de red al actualizar parqueadero: " + getErrorMessage(err));
     }
     setIsEditingLot(false);
   };

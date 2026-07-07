@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { sanitizeInput } from "@/lib/sanitize";
+import { getErrorMessage } from "@/lib/error";
 
 const AVAILABLE_PERMISSIONS = [
   { id: "view_dashboard", label: "Ver Panel Principal" },
@@ -81,16 +82,16 @@ export default function CustomRoles({
         setRoles(data || []);
         setShowSqlScript(false);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching roles:", err);
       if (
-        err.code === "42P01" ||
-        err.code === "PGRST205" ||
-        err.message?.includes("does not exist")
+        (err as any).code === "42P01" ||
+        (err as any).code === "PGRST205" ||
+        getErrorMessage(err)?.includes("does not exist")
       ) {
         setShowSqlScript(true);
       } else {
-        setError(err.message || "Error al cargar los roles.");
+        setError(getErrorMessage(err) || "Error al cargar los roles.");
       }
     } finally {
       setLoading(false);
@@ -160,16 +161,16 @@ export default function CustomRoles({
       fetchRoles();
 
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (
-        err.code === "42P01" ||
-        err.code === "PGRST205" ||
-        err.message?.includes("does not exist")
+        (err as any).code === "42P01" ||
+        (err as any).code === "PGRST205" ||
+        getErrorMessage(err)?.includes("does not exist")
       ) {
         setShowSqlScript(true);
       } else {
         setError(
-          err.message ||
+          getErrorMessage(err) ||
             "Error al guardar el rol. Verifica que hayas ejecutado el script SQL.",
         );
       }
@@ -187,8 +188,8 @@ export default function CustomRoles({
 
       if (error) throw error;
       fetchRoles();
-    } catch (err: any) {
-      setError(err.message || "Error al eliminar el rol");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Error al eliminar el rol");
     }
   };
 

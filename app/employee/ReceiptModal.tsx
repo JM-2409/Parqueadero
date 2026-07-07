@@ -3,6 +3,7 @@
 import { Receipt, Printer, X, Car, Send } from "lucide-react";
 import { useState } from "react";
 import { sanitizeInput } from "@/lib/sanitize";
+import { getErrorMessage } from "@/lib/error";
 
 export default function ReceiptModal({
   session,
@@ -77,10 +78,10 @@ export default function ReceiptModal({
       setTimeout(() => {
         setSendResult("idle");
       }, 5000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       setSendResult("error");
-      setErrorMessage(error.message);
+      setErrorMessage(getErrorMessage(error));
     } finally {
       setIsSending(false);
     }

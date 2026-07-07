@@ -8,6 +8,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getErrorMessage } from "@/lib/error";
 
 function LoginContent() {
   const [username, setUsername] = useState("");
@@ -203,8 +204,8 @@ function LoginContent() {
       } else {
         router.push("/");
       }
-    } catch (err: any) {
-      setError(err.message || "Ocurrió un error inesperado.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Ocurrió un error inesperado.");
       setLoading(false);
     }
   };

@@ -45,7 +45,7 @@ export default function PrivateSpaces({
         });
         setSpaces(sortedData);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching spaces:", err);
       setSpaces([]);
     } finally {

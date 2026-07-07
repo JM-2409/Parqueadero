@@ -6,6 +6,7 @@ import { Clock, Calendar, DollarSign, X, HandCoins } from "lucide-react";
 import styles from "./admin.module.css";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { sanitizeInput } from "@/lib/sanitize";
+import { getErrorMessage } from "@/lib/error";
 
 export default function CashClosuresHistory({
   parkingLotId,
@@ -110,9 +111,9 @@ export default function CashClosuresHistory({
       if (onRegisterClosed) {
         onRegisterClosed();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error al retirar dinero", err);
-      setError("No se pudo retirar el dinero: " + err.message);
+      setError("No se pudo retirar el dinero: " + getErrorMessage(err));
     } finally {
       setIsWithdrawing(false);
     }
@@ -168,9 +169,9 @@ export default function CashClosuresHistory({
         onRegisterClosed();
       }
       fetchClosures();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error cerrado caja", err);
-      setError("No se pudo cerrar la caja: " + err.message);
+      setError("No se pudo cerrar la caja: " + getErrorMessage(err));
     } finally {
       setIsClosingRegister(false);
     }

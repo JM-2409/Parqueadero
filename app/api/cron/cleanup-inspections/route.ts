@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getErrorMessage } from "@/lib/error";
 
 export const dynamic = 'force-dynamic';
 
@@ -82,8 +83,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       message: `Limpieza completada. ${idsToDelete.length} revistas eliminadas. ${deletedImagesCount} fotos borradas del almacenamiento.`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error cleaning up inspections:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

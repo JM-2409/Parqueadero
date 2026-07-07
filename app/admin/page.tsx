@@ -68,6 +68,7 @@ import {
   ArrowUp,
   ArrowDown
 } from "lucide-react";
+import { getErrorMessage } from "@/lib/error";
 
 function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -309,8 +310,8 @@ export default function AdminPage() {
 
       if (error) throw error;
       setPendingDevicesCount(count || 0);
-    } catch (err: any) {
-      console.error("Error fetching pending devices count:", err.message);
+    } catch (err: unknown) {
+      console.error("Error fetching pending devices count:", getErrorMessage(err));
     }
   }, []);
 
@@ -495,8 +496,8 @@ export default function AdminPage() {
         setSuccess("Configuración actualizada exitosamente");
         setTimeout(() => setSuccess(""), 3000);
       }
-    } catch (err: any) {
-      setError("Error de red al actualizar configuración: " + err.message);
+    } catch (err: unknown) {
+      setError("Error de red al actualizar configuración: " + getErrorMessage(err));
     }
     setIsUpdatingSettings(false);
   };

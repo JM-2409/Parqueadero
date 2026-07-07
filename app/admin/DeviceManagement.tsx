@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Check, X, Trash2, MonitorSmartphone } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
+import { getErrorMessage } from "@/lib/error";
 
 export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: string }) {
   const [devices, setDevices] = useState<any[]>([]);
@@ -30,8 +31,8 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
 
       const empDevices = (data || []).filter((d: any) => d.profiles?.role === "employee");
       setDevices(empDevices);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -62,8 +63,8 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
         if (error) throw error;
       }
       fetchDevices();
-    } catch (err: any) {
-      alert("Error: " + err.message);
+    } catch (err: unknown) {
+      alert("Error: " + getErrorMessage(err));
     }
   };
 

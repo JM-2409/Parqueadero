@@ -6,6 +6,7 @@ import { Search, Camera, Save, X, ImageIcon, Loader2, PlayCircle, CheckCircle } 
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { v4 as uuidv4 } from "uuid";
+import { getErrorMessage } from "@/lib/error";
 
 export default function VehicleInspections({
   parkingLot,
@@ -97,7 +98,7 @@ export default function VehicleInspections({
       combined.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
       setVehicles(combined);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching vehicles:", err);
     } finally {
       setLoading(false);
@@ -194,8 +195,8 @@ export default function VehicleInspections({
 
       setImages((prev) => [...prev, data.secure_url]);
 
-    } catch (err: any) {
-      setError(err.message || "Error al procesar la imagen");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Error al procesar la imagen");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -273,8 +274,8 @@ export default function VehicleInspections({
       setNotes("");
       setImages([]);
 
-    } catch (err: any) {
-      setError(err.message || "Error al guardar la revista.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Error al guardar la revista.");
     } finally {
       setSaving(false);
     }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import twilio from "twilio";
 import { createClient } from "@supabase/supabase-js";
+import { getErrorMessage } from "@/lib/error";
 
 export const dynamic = 'force-dynamic';
 
@@ -186,9 +187,9 @@ export async function POST(req: Request) {
     console.log("Mensaje aceptado por Twilio, SID:", message.sid);
 
     return NextResponse.json({ success: true, messageSid: message.sid });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Twilio Error");
-    let errMsg = error.message || "Error al enviar el mensaje por WhatsApp";
+    let errMsg = getErrorMessage(error) || "Error al enviar el mensaje por WhatsApp";
     errMsg = errMsg.replace(/https:\/\/api\.twilio\.com[^\s]*/g, "");
     return NextResponse.json(
       { success: false, error: errMsg },

@@ -47,7 +47,7 @@ export default function VehicleInspectionsHistory({
       const { data, error } = await query;
       if (error) throw error;
       setInspections(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching inspections:", err);
     } finally {
       setLoading(false);
