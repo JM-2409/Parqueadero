@@ -46,7 +46,6 @@ export async function createUser(
   }
 
   try {
-    // Auth Validation (Security Fix)
     const { data: superadmins, error: saError } = await supabaseAdmin
       .from("profiles")
       .select("id")
