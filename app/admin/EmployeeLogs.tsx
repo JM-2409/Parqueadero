@@ -26,7 +26,7 @@ export default function EmployeeLogs({
         setLogs(data);
       }
     } catch (e) {
-      console.log("Tabla employee_logs no existe aún");
+      // Si la tabla no existe, el bloque inferior muestra las instrucciones de creación
     } finally {
       setLoading(false);
     }
