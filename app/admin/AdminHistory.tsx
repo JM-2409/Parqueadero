@@ -214,18 +214,21 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
         shift_grace_period_mins: parkingLot.shift_grace_period_mins,
       });
 
-      const { data: lotData } = await supabase
-        .from("parking_lots")
-        .select("receipt_sequence")
-        .eq("id", parkingLotId)
-        .single();
-      const nextSeq = (lotData?.receipt_sequence || 0) + 1;
-      await supabase
-        .from("parking_lots")
-        .update({ receipt_sequence: nextSeq })
-        .eq("id", parkingLotId);
+      let receiptNumber = sessionToExit.receipt_number;
+      if (!receiptNumber) {
+        const { data: lotData } = await supabase
+          .from("parking_lots")
+          .select("receipt_sequence")
+          .eq("id", parkingLotId)
+          .single();
+        const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+        await supabase
+          .from("parking_lots")
+          .update({ receipt_sequence: nextSeq })
+          .eq("id", parkingLotId);
+        receiptNumber = nextSeq.toString();
+      }
 
-      const receiptNumber = nextSeq.toString();
       const durationMinutes = Math.round(
         (exitTime.getTime() - entryTime.getTime()) / 60000,
       );
