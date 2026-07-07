@@ -34,35 +34,40 @@ export async function GET(request: Request) {
 
     let deletedImagesCount = 0;
     const idsToDelete: string[] = [];
+    const allFilenamesToDelete: string[] = [];
 
     for (const inspection of oldInspections) {
       idsToDelete.push(inspection.id);
 
       const images: string[] = inspection.images || [];
-      const filenamesToDelete: string[] = [];
 
       for (const imageUrl of images) {
         try {
           const urlParts = imageUrl.split('/');
           const filename = urlParts[urlParts.length - 1];
           if (filename) {
-            filenamesToDelete.push(filename);
+            allFilenamesToDelete.push(filename);
           }
         } catch(e) {
           console.error(`Fallo al extraer el filename de la URL ${imageUrl}:`, e);
         }
       }
+    }
 
-      if (filenamesToDelete.length > 0) {
+    // Procesar borrado de imágenes en lotes para evitar solicitudes de red excesivas
+    if (allFilenamesToDelete.length > 0) {
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < allFilenamesToDelete.length; i += BATCH_SIZE) {
+        const batch = allFilenamesToDelete.slice(i, i + BATCH_SIZE);
         try {
-          const { error } = await supabaseAdmin.storage.from('revistas').remove(filenamesToDelete);
+          const { error } = await supabaseAdmin.storage.from('revistas').remove(batch);
           if (!error) {
-           deletedImagesCount += filenamesToDelete.length;
+            deletedImagesCount += batch.length;
           } else {
-           console.error(`Fallo al borrar imágenes en Supabase:`, error);
+            console.error(`Fallo al borrar imágenes en Supabase para el lote (offset ${i}):`, error);
           }
         } catch(e) {
-          console.error(`Fallo al borrar imágenes en Supabase:`, e);
+          console.error(`Fallo al borrar imágenes en Supabase para el lote (offset ${i}):`, e);
         }
       }
     }
