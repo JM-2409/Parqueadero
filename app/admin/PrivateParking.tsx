@@ -454,11 +454,11 @@ export default function PrivateParking({
       if (spacesWithData.length > 0) {
           const platesToDelete: string[] = [];
           const historyRecordsToInsert: any[] = [];
+          const mainField = configFields.find(f => f.is_main)?.name;
 
           for (const space of spacesWithData) {
               let plate = "";
               const cf = space.custom_fields_data || {};
-              const mainField = configFields.find(f => f.is_main)?.name;
 
               if (mainField && cf[mainField]) {
                   plate = cf[mainField];
@@ -808,10 +808,10 @@ export default function PrivateParking({
 
           // 1. Process batch archives (History) to avoid fetch timeout from individual queries
           if (spacesToArchive.length > 0) {
+            const mainField = configFields.find(f => f.is_main)?.name;
             const historyRecordsToInsert = spacesToArchive.map(space => {
               let plate = "";
               const cf = space.custom_fields_data || {};
-              const mainField = configFields.find(f => f.is_main)?.name;
               if (mainField && cf[mainField]) {
                   plate = cf[mainField];
               } else {
