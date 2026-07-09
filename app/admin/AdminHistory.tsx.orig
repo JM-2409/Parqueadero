@@ -19,8 +19,6 @@ import {
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import ReceiptModal from "../employee/ReceiptModal";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const PAGE_SIZE = 20;
 
@@ -52,15 +50,6 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
   const [newPlate, setNewPlate] = useState("");
   const [isEditingPlate, setIsEditingPlate] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState<any>(null);
-
-  // PDF Export States
-  const [isExportPdfModalOpen, setIsExportPdfModalOpen] = useState(false);
-  const [pdfFilterDateFrom, setPdfFilterDateFrom] = useState("");
-  const [pdfFilterDateTo, setPdfFilterDateTo] = useState("");
-  const [pdfFilterType, setPdfFilterType] = useState("all");
-  const [pdfFilterEmployee, setPdfFilterEmployee] = useState("");
-  const [pdfFilterReceiptStart, setPdfFilterReceiptStart] = useState("");
-  const [pdfFilterReceiptEnd, setPdfFilterReceiptEnd] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -370,90 +359,6 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
       entry_grace_period_mins: parkingLot.entry_grace_period_mins,
       shift_grace_period_mins: parkingLot.shift_grace_period_mins,
     });
-  };
-
-  const exportToPDF = async () => {
-    setIsExporting(true);
-    try {
-      let query = supabase
-        .from("parking_sessions")
-        .select(`*, vehicles!inner (*)`)
-        .eq("parking_lot_id", parkingLotId)
-        .order("entry_time", { ascending: false });
-
-      // Apply PDF filters
-      if (pdfFilterDateFrom) {
-        query = query.gte("entry_time", new Date(pdfFilterDateFrom).toISOString());
-      }
-      if (pdfFilterDateTo) {
-        const dt = new Date(pdfFilterDateTo);
-        dt.setHours(23, 59, 59, 999);
-        query = query.lte("entry_time", dt.toISOString());
-      }
-      if (pdfFilterType !== "all") {
-        query = query.eq("vehicles.type", pdfFilterType);
-      }
-      if (pdfFilterEmployee) {
-        query = query.or(`entry_employee_name.ilike.%${pdfFilterEmployee}%,exit_employee_name.ilike.%${pdfFilterEmployee}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      let filteredData = data || [];
-
-      if (pdfFilterReceiptStart) {
-         filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) >= parseInt(pdfFilterReceiptStart));
-      }
-      if (pdfFilterReceiptEnd) {
-         filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) <= parseInt(pdfFilterReceiptEnd));
-      }
-
-      if (filteredData.length === 0) {
-        alert("No hay datos para exportar con estos filtros.");
-        setIsExporting(false);
-        return;
-      }
-
-      const doc = new jsPDF("landscape");
-      doc.text(`Reporte de Recibos - ${parkingLot.name}`, 14, 15);
-
-      const tableColumn = ["Ticket", "Placa", "Tipo", "Ingreso", "Salida", "Operario", "Estado", "Valor"];
-      const tableRows: any[] = [];
-
-      filteredData.forEach(row => {
-        const isCompleted = row.status === "completed";
-        const entryDate = new Date(row.entry_time).toLocaleString();
-        const exitDate = isCompleted ? new Date(row.exit_time).toLocaleString() : "-";
-
-        const rowData = [
-          row.receipt_number || "-",
-          row.vehicles?.plate || "",
-          row.vehicles?.type || "",
-          entryDate,
-          exitDate,
-          row.exit_employee_name || row.entry_employee_name || "",
-          isCompleted ? "Completado" : "Activo",
-          new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(row.total_charged || row.fee || 0)
-        ];
-
-        tableRows.push(rowData);
-      });
-
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 20,
-      });
-
-      doc.save(`reporte_recibos_${new Date().toLocaleDateString().replace(/\//g, "-")}.pdf`);
-      setIsExportPdfModalOpen(false);
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      alert("Ocurrió un error al exportar el PDF.");
-    } finally {
-      setIsExporting(false);
-    }
   };
 
   const exportToCSV = async () => {
@@ -1203,84 +1108,6 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
           parkingLot={parkingLot}
           onClose={() => setViewingReceipt(null)}
         />
-      )}
-
-      {/* Modal Exportar PDF */}
-      {isExportPdfModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
-                <FileText size={20} className="text-red-500" />
-                Exportar a PDF
-              </h3>
-              <button
-                onClick={() => setIsExportPdfModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-3xl hover:bg-slate-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-              <p className="text-sm text-slate-500">Configura los filtros para tu reporte en PDF.</p>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Fecha Desde</label>
-                  <input type="date" value={pdfFilterDateFrom} onChange={(e) => setPdfFilterDateFrom(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Fecha Hasta</label>
-                  <input type="date" value={pdfFilterDateTo} onChange={(e) => setPdfFilterDateTo(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Recibo Inicial (#)</label>
-                  <input type="number" placeholder="Ej. 100" value={pdfFilterReceiptStart} onChange={(e) => setPdfFilterReceiptStart(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Recibo Final (#)</label>
-                  <input type="number" placeholder="Ej. 200" value={pdfFilterReceiptEnd} onChange={(e) => setPdfFilterReceiptEnd(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tipo de Vehículo</label>
-                <select value={pdfFilterType} onChange={(e) => setPdfFilterType(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm bg-white">
-                  <option value="all">Todos</option>
-                  <option value="motos">Motos</option>
-                  <option value="carros">Carros</option>
-                  <option value="bicicletas">Bicicletas</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Operario</label>
-                <input type="text" placeholder="Nombre del operario..." value={pdfFilterEmployee} onChange={(e) => setPdfFilterEmployee(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-              </div>
-
-            </div>
-            <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
-              <button
-                onClick={() => setIsExportPdfModalOpen(false)}
-                className="px-5 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-3xl transition-colors"
-                disabled={isExporting}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={exportToPDF}
-                className="px-5 py-3 font-bold text-white bg-red-600 hover:bg-red-700 rounded-3xl transition-colors flex items-center justify-center min-w-[120px] gap-2"
-                disabled={isExporting}
-              >
-                {isExporting ? <Spinner className="w-4 h-4 text-white" /> : <FileText size={16} />}
-                {isExporting ? "Generando..." : "Generar PDF"}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </>
   );

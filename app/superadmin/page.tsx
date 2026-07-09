@@ -429,6 +429,7 @@ export default function SuperAdminPage() {
             monthly_subscribers: false,
             multiple_employees: false,
             reports: false,
+            pdf_exports: false,
           },
         },
       ])
@@ -842,6 +843,7 @@ export default function SuperAdminPage() {
                                     monthly_subscribers: false,
                                     multiple_employees: false,
                                     reports: false,
+                                    pdf_exports: false,
                                   },
                                 })
                               }
@@ -913,6 +915,11 @@ export default function SuperAdminPage() {
                                 {lot.features.reports && (
                                   <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-700 rounded">
                                     Reportes
+                                  </span>
+                                )}
+                                {lot.features.pdf_exports && (
+                                  <span className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-700 rounded">
+                                    Exportar PDF
                                   </span>
                                 )}
                               </div>
@@ -1611,6 +1618,31 @@ export default function SuperAdminPage() {
                         </div>
                         <div className="text-xs text-slate-600">
                           Cierres de caja y analíticas
+                        </div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 border border-slate-200  rounded-3xl cursor-pointer hover:bg-slate-50  transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={editingLot.features?.pdf_exports || false}
+                        onChange={(e) =>
+                          setEditingLot({
+                            ...editingLot,
+                            features: {
+                              ...editingLot.features,
+                              pdf_exports: e.target.checked,
+                            },
+                          })
+                        }
+                        className="w-5 h-5 text-slate-800 rounded border-slate-300  focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-bold text-slate-900  text-sm">
+                          Exportar a PDF
+                        </div>
+                        <div className="text-xs text-slate-600">
+                          Permitir exportar recibos en PDF
                         </div>
                       </div>
                     </label>
