@@ -184,9 +184,14 @@ export default function VehicleInspections({
 
       const base64data = await resizeImage(file);
 
+      const { data: { session } } = await supabase.auth.getSession();
+
       const res = await fetch("/api/upload-cloudinary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ image: base64data }),
       });
 
