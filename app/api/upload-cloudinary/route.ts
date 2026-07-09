@@ -12,6 +12,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing supabaseUrl. Skipping execution.' }, { status: 500 });
     }
 
+    // Usar la autorización proveniente del header Authorization para validar la sesión
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const userClient = createClient(
+      supabaseUrl,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseServiceKey,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+      error: authError,
+    } = await userClient.auth.getUser(authHeader.replace("Bearer ", ""));
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Token inválido o expirado" },
+        { status: 401 }
+      );
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
