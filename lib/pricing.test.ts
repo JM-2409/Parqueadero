@@ -12,12 +12,14 @@ describe("calculateFee", () => {
   });
 
   test("should return 0 when rules is null", () => {
-    const result = calculateFee(entryTime, exitTime, null as any);
+    // @ts-expect-error: Testing behavior with invalid null input
+    const result = calculateFee(entryTime, exitTime, null);
     expect(result).toBe(0);
   });
 
   test("should return 0 when rules is undefined", () => {
-    const result = calculateFee(entryTime, exitTime, undefined as any);
+    // @ts-expect-error: Testing behavior with invalid undefined input
+    const result = calculateFee(entryTime, exitTime, undefined);
     expect(result).toBe(0);
   });
 
