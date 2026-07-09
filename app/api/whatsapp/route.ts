@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import twilio from "twilio";
 import { createClient } from "@supabase/supabase-js";
 import { getErrorMessage } from "@/lib/error";
+import { formatPhoneNumber } from "@/lib/whatsapp-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -89,11 +90,7 @@ export async function POST(req: Request) {
 
     const client = twilio(twilioSid, twilioToken);
 
-    let formattedTo = to.replace(/\D/g, "");
-    if (!formattedTo.startsWith("57")) {
-      formattedTo = "57" + formattedTo;
-    }
-    const whatsappTo = `whatsapp:+${formattedTo}`;
+    const whatsappTo = formatPhoneNumber(to);
 
     // Asegurar que el remitente tenga el prefijo 'whatsapp:' y formato E.164
     let whatsappFrom = twilioPhone;
