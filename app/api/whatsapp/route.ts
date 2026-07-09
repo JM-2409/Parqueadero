@@ -98,7 +98,7 @@ export async function POST(req: Request) {
       whatsappFrom = `whatsapp:+${whatsappFrom.replace(/\D/g, "")}`;
     }
 
-    const messagePayload: any = {
+    const messagePayload: { from: string; to: string; body: string; mediaUrl?: string[] } = {
       from: whatsappFrom,
       to: whatsappTo,
       body: text || "Su recibo de parqueadero adjunto.",
@@ -117,8 +117,8 @@ export async function POST(req: Request) {
           } else {
              parsedUrl = new URL(mediaUrl, "http://localhost");
           }
-        } catch (e) {
-          throw new Error("URL malformada");
+        } catch (e: unknown) {
+          throw new Error(`URL malformada: ${getErrorMessage(e)}`);
         }
 
         if (parsedUrl.origin !== "http://localhost" || parsedUrl.pathname !== "/api/receipt-image") {
@@ -173,8 +173,8 @@ export async function POST(req: Request) {
             );
           }
         }
-      } catch (uploadObjError) {
-        console.error("Error in image generation or upload", uploadObjError);
+      } catch (uploadObjError: unknown) {
+        console.error("Error in image generation or upload", getErrorMessage(uploadObjError));
         // Fallback: Si algo falla, ignoramos silenciosamente la imagen y enviamos solo el texto.
         // El texto original enviado por el cliente ya contiene la URL directa (directReceiptLink).
       }
@@ -186,7 +186,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, messageSid: message.sid });
   } catch (error: unknown) {
     console.error("Twilio Error");
-    let errMsg = getErrorMessage(error) || "Error al enviar el mensaje por WhatsApp";
+    let errMsg = "Error al enviar el mensaje por WhatsApp";
+    if (error instanceof Error) {
+      errMsg = error.message;
+    } else if (error !== null && typeof error === "object" && "message" in error) {
+      errMsg = String((error as Record<string, unknown>).message);
+    } else if (typeof error === "string") {
+      errMsg = error;
+    }
+
     errMsg = errMsg.replace(/https:\/\/api\.twilio\.com[^\s]*/g, "");
     return NextResponse.json(
       { success: false, error: errMsg },
