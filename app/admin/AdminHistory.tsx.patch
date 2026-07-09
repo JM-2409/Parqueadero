@@ -1,0 +1,140 @@
+--- app/admin/AdminHistory.tsx
++++ app/admin/AdminHistory.tsx
+@@ -16,6 +16,8 @@
+ } from "lucide-react";
+ import { calculateFee } from "@/lib/pricing";
+ import { Spinner } from "@/components/ui/Spinner";
+ import ReceiptModal from "../employee/ReceiptModal";
++import jsPDF from "jspdf";
++import autoTable from "jspdf-autotable";
+
+ const PAGE_SIZE = 20;
+
+@@ -47,6 +49,15 @@
+   const [newPlate, setNewPlate] = useState("");
+   const [isEditingPlate, setIsEditingPlate] = useState(false);
+   const [viewingReceipt, setViewingReceipt] = useState<any>(null);
++
++  // PDF Export States
++  const [isExportPdfModalOpen, setIsExportPdfModalOpen] = useState(false);
++  const [pdfFilterDateFrom, setPdfFilterDateFrom] = useState("");
++  const [pdfFilterDateTo, setPdfFilterDateTo] = useState("");
++  const [pdfFilterType, setPdfFilterType] = useState("all");
++  const [pdfFilterEmployee, setPdfFilterEmployee] = useState("");
++  const [pdfFilterReceiptStart, setPdfFilterReceiptStart] = useState("");
++  const [pdfFilterReceiptEnd, setPdfFilterReceiptEnd] = useState("");
+
+   useEffect(() => {
+     const timer = setTimeout(() => {
+@@ -375,6 +386,96 @@
+     }
+   };
+
++  const exportToPDF = async () => {
++    setIsExporting(true);
++    try {
++      let query = supabase
++        .from("parking_sessions")
++        .select(`*, vehicles!inner (*)`)
++        .eq("parking_lot_id", parkingLotId)
++        .order("entry_time", { ascending: false });
++
++      // Apply PDF filters
++      if (pdfFilterDateFrom) {
++        query = query.gte("entry_time", new Date(pdfFilterDateFrom).toISOString());
++      }
++      if (pdfFilterDateTo) {
++        const dt = new Date(pdfFilterDateTo);
++        dt.setHours(23, 59, 59, 999);
++        query = query.lte("entry_time", dt.toISOString());
++      }
++      if (pdfFilterType !== "all") {
++        query = query.eq("vehicles.type", pdfFilterType);
++      }
++      if (pdfFilterEmployee) {
++        query = query.or(`entry_employee_name.ilike.%${pdfFilterEmployee}%,exit_employee_name.ilike.%${pdfFilterEmployee}%`);
++      }
++
++      // Receipt filters logic
++      if (pdfFilterReceiptStart || pdfFilterReceiptEnd) {
++        // Supabase string greater than/less than can be tricky for numbers, but receipt_number is a string.
++        // To accurately filter by numeric receipts we might have to fetch and filter locally if they contain strings,
++        // but assuming they are standard sequential numbers.
++        // We will fetch and filter locally to be perfectly safe as receipt_number is TEXT
++      }
++
++      const { data, error } = await query;
++      if (error) throw error;
++
++      let filteredData = data || [];
++
++      if (pdfFilterReceiptStart) {
++         filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) >= parseInt(pdfFilterReceiptStart));
++      }
++      if (pdfFilterReceiptEnd) {
++         filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) <= parseInt(pdfFilterReceiptEnd));
++      }
++
++      if (filteredData.length === 0) {
++        alert("No hay datos para exportar con estos filtros.");
++        setIsExporting(false);
++        return;
++      }
++
++      const doc = new jsPDF("landscape");
++      doc.text(`Reporte de Recibos - ${parkingLot.name}`, 14, 15);
++
++      const tableColumn = ["Ticket", "Placa", "Tipo", "Ingreso", "Salida", "Operario", "Estado", "Valor"];
++      const tableRows: any[] = [];
++
++      filteredData.forEach(row => {
++        const isCompleted = row.status === "completed";
++        const entryDate = new Date(row.entry_time).toLocaleString();
++        const exitDate = isCompleted ? new Date(row.exit_time).toLocaleString() : "-";
++
++        const rowData = [
++          row.receipt_number || "-",
++          row.vehicles?.plate || "",
++          row.vehicles?.type || "",
++          entryDate,
++          exitDate,
++          row.exit_employee_name || row.entry_employee_name || "",
++          isCompleted ? "Completado" : "Activo",
++          new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(row.total_charged || row.fee || 0)
++        ];
++
++        tableRows.push(rowData);
++      });
++
++      autoTable(doc, {
++        head: [tableColumn],
++        body: tableRows,
++        startY: 20,
++      });
++
++      doc.save(`reporte_recibos_${new Date().toLocaleDateString().replace(/\//g, "-")}.pdf`);
++      setIsExportPdfModalOpen(false);
++    } catch (error) {
++      console.error("Error exporting data:", error);
++      alert("Ocurrió un error al exportar el PDF.");
++    } finally {
++      setIsExporting(false);
++    }
++  };
++
+   return (
+     <>
+       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mt-8 relative group hover:border-indigo-100 transition-all">
+@@ -395,6 +496,15 @@
+             </button>
++            {parkingLot?.features?.pdf_exports && (
++              <button
++                onClick={() => setIsExportPdfModalOpen(true)}
++                className="w-full sm:w-auto px-5 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-3xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl border border-slate-100 text-sm"
++              >
++                <FileText size={18} />
++                Exportar PDF
++              </button>
++            )}
+           </div>
+         </div>

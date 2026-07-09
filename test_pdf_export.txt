@@ -1,0 +1,2 @@
+Let's define a new feature in the settings JSONB for parking lots: `pdf_exports`.
+And add a new component `ExportPdfModal` in `AdminHistory.tsx` to handle this.
