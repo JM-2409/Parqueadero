@@ -2,19 +2,22 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Clock, Calendar, DollarSign, X, HandCoins } from "lucide-react";
+import { Clock, Calendar, DollarSign, X, HandCoins, Download, FileText } from "lucide-react";
 import styles from "./admin.module.css";
+import { downloadClosureReport } from "@/lib/reports";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { sanitizeInput } from "@/lib/sanitize";
 import { getErrorMessage } from "@/lib/error";
 
 export default function CashClosuresHistory({
   parkingLotId,
+  parkingLotName,
   currentShiftRevenue,
   shiftWithdrawals = 0,
   onRegisterClosed,
 }: {
   parkingLotId: string;
+  parkingLotName?: string;
   currentShiftRevenue?: number;
   shiftWithdrawals?: number;
   onRegisterClosed?: () => void;
@@ -22,6 +25,7 @@ export default function CashClosuresHistory({
   const [closures, setClosures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClosingRegister, setIsClosingRegister] = useState(false);
+  const [isExporting, setIsExporting] = useState<string | null>(null);
 
   // Withdrawal Modal state
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -147,7 +151,7 @@ export default function CashClosuresHistory({
 
       const closureNotes = "Cierre de caja - Admin";
 
-      const { error: insertError } = await supabase.from("cash_closures").insert([
+      const { data: newClosure, error: insertError } = await supabase.from("cash_closures").insert([
         {
           parking_lot_id: parkingLotId,
           total_revenue: currentRegisterCash,
@@ -157,11 +161,17 @@ export default function CashClosuresHistory({
           opened_at: opened_at,
           notes: closureNotes,
         },
-      ]);
+      ]).select().single();
 
       if (insertError) throw insertError;
 
       setSuccess("Caja cerrada exitosamente.");
+
+      // Auto-download report after closure
+      if (newClosure) {
+        downloadClosureReport(newClosure, parkingLotName);
+      }
+
       setTimeout(() => setSuccess(""), 3000);
 
       // Reload stats
@@ -175,6 +185,12 @@ export default function CashClosuresHistory({
     } finally {
       setIsClosingRegister(false);
     }
+  };
+
+  const handleDownloadReport = async (closure: any) => {
+    setIsExporting(closure.id);
+    await downloadClosureReport(closure, parkingLotName);
+    setIsExporting(null);
   };
 
   if (loading) {
@@ -370,6 +386,7 @@ export default function CashClosuresHistory({
                   <th className="px-6 py-4">Retiros</th>
                   <th className="px-6 py-4">Total en Caja</th>
                   <th className="px-6 py-4">Realizado por</th>
+                  <th className="px-6 py-4 text-center">Reporte</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -453,6 +470,20 @@ export default function CashClosuresHistory({
                           closure.notes?.split("-")[1]?.trim() ||
                           "Admin"}
                       </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleDownloadReport(closure)}
+                        disabled={isExporting === closure.id}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors disabled:opacity-50"
+                        title="Descargar reporte detallado"
+                      >
+                        {isExporting === closure.id ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
+                        ) : (
+                          <Download size={20} />
+                        )}
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -1041,6 +1041,7 @@ export default function AdminPage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <CashClosuresHistory
                 parkingLotId={parkingLot.id}
+                parkingLotName={parkingLot.name}
                 currentShiftRevenue={currentShiftRevenue}
                 shiftWithdrawals={shiftWithdrawals}
                 onRegisterClosed={() => fetchEmployees(parkingLot.id)}

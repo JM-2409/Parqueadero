@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Image as ImageIcon,
   Printer,
+  Download,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
@@ -36,6 +37,7 @@ import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { getErrorMessage } from "@/lib/error";
+import { downloadClosureReport } from "@/lib/reports";
 
 // Validación segura de preferencias en localStorage
 const ALLOWED_PREF_KEYS = [
@@ -157,6 +159,7 @@ export default function EmployeePage() {
     }
   }, []);
 
+
   const handleCloseRegister = async () => {
     if (
       !window.confirm(
@@ -182,7 +185,7 @@ export default function EmployeePage() {
         ? lastClosure.closed_at
         : new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-      const { error } = await supabase.from("cash_closures").insert([
+      const { data: newClosure, error } = await supabase.from("cash_closures").insert([
         {
           parking_lot_id: parkingLot.id,
           total_revenue: accumulatedRevenue,
@@ -190,12 +193,18 @@ export default function EmployeePage() {
           opened_at: opened_at,
           notes: `Cierre de caja - ${shiftName || "Operario"}`,
         },
-      ]);
+      ]).select().single();
 
       if (error) throw error;
 
       playBeep("success");
       setSuccess("Caja cerrada exitosamente.");
+
+      // Auto-download report
+      if (newClosure) {
+        downloadClosureReport(newClosure, parkingLot?.name);
+      }
+
       setTimeout(() => setSuccess(""), 3000);
 
       // re-fetch revenue to reset to $0

@@ -25,6 +25,7 @@ import {
   Eye,
   EyeOff,
   MonitorSmartphone,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,6 +35,7 @@ import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { ImageCropper } from "@/components/ui/ImageCropper";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { getErrorMessage } from "@/lib/error";
+import { downloadClosureReport } from "@/lib/reports";
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -167,6 +169,7 @@ export default function SuperAdminPage() {
 
   const [metrics, setMetrics] = useState<any[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [isExporting, setIsExporting] = useState<string | null>(null);
 
   const fetchMetrics = useCallback(async () => {
     setLoadingMetrics(true);
@@ -185,6 +188,12 @@ export default function SuperAdminPage() {
     }
     setLoadingMetrics(false);
   }, []);
+
+  const handleDownloadReport = async (closure: any) => {
+    setIsExporting(closure.id);
+    await downloadClosureReport(closure);
+    setIsExporting(null);
+  };
 
   const fetchParkingLots = useCallback(async () => {
     setLoading(true);
@@ -1266,6 +1275,9 @@ export default function SuperAdminPage() {
                           <th className="py-3 px-5 text-sm font-extrabold text-slate-600 ">
                             Cierre Por
                           </th>
+                          <th className="py-3 px-5 text-sm font-extrabold text-slate-600 text-center">
+                            Reporte
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -1309,6 +1321,20 @@ export default function SuperAdminPage() {
                             </td>
                             <td className="py-3 px-5 text-sm text-slate-600">
                               {m.closed_by || "Sistema"}
+                            </td>
+                            <td className="py-3 px-5 text-sm text-center">
+                              <button
+                                onClick={() => handleDownloadReport(m)}
+                                disabled={isExporting === m.id}
+                                className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors disabled:opacity-50"
+                                title="Descargar reporte detallado"
+                              >
+                                {isExporting === m.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mx-auto"></div>
+                                ) : (
+                                  <Download size={18} />
+                                )}
+                              </button>
                             </td>
                           </tr>
                         ))}
