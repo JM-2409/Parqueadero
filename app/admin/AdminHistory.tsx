@@ -24,7 +24,13 @@ import autoTable from "jspdf-autotable";
 
 const PAGE_SIZE = 20;
 
-export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
+export default function AdminHistory({
+  parkingLot,
+  initialFilterStatus = "all"
+}: {
+  parkingLot: any;
+  initialFilterStatus?: string;
+}) {
   const parkingLotId = parkingLot.id;
   const [sessions, setSessions] = useState<any[]>([]);
   const [tariffs, setTariffs] = useState<any[]>([]);
@@ -34,7 +40,7 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
   const [localEmployeeSearchTerm, setLocalEmployeeSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("active");
+  const [filterStatus, setFilterStatus] = useState(initialFilterStatus);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
@@ -171,10 +177,15 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
     };
   }, [parkingLotId, fetchData]);
 
-  // Reset page when search changes
+  // Sync filter status when initialFilterStatus prop changes
+  useEffect(() => {
+    setFilterStatus(initialFilterStatus);
+  }, [initialFilterStatus]);
+
+  // Reset page when search or filters change
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, employeeSearchTerm]);
+  }, [searchTerm, employeeSearchTerm, filterStatus]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -591,6 +602,13 @@ export default function AdminHistory({ parkingLot }: { parkingLot: any }) {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => setIsExportPdfModalOpen(true)}
+              className="w-full sm:w-auto px-5 py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-3xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl border border-red-100 text-sm"
+            >
+              <FileText size={18} />
+              Exportar PDF
+            </button>
             <button
               onClick={exportToCSV}
               disabled={isExporting || sessions.length === 0}

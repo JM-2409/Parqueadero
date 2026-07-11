@@ -154,11 +154,19 @@ export const downloadClosureReport = async (closure: any, parkingLotName?: strin
 
     autoTable(doc, {
       startY: currentY + 5,
-      head: [["Ticket", "Placa", "Tipo", "Entrada", "Salida", "Cobrado"]],
-      body: sessionRows,
+      head: [["Ticket", "Placa", "Tipo", "Entrada", "Salida", "Operario", "Cobrado"]],
+      body: (sessions || []).map(s => [
+        s.receipt_number || "-",
+        s.vehicles?.plate || "-",
+        s.vehicles?.type || "-",
+        new Date(s.entry_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        new Date(s.exit_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        s.exit_employee_name || s.entry_employee_name || "-",
+        new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(s.total_charged || 0)
+      ]),
       theme: "striped",
       headStyles: { fillColor: [71, 85, 105] }, // slate-600
-      columnStyles: { 5: { halign: "right" } }
+      columnStyles: { 6: { halign: "right" } }
     });
 
     const fileName = `cierre_${finalParkingLotName.replace(/\s+/g, '_')}_${new Date(closedAt).toISOString().split('T')[0]}.pdf`;
