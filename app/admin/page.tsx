@@ -1045,13 +1045,21 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
-              <AdminHistory parkingLot={parkingLot} initialFilterStatus="active" />
+              <AdminHistory
+                parkingLot={parkingLot}
+                initialFilterStatus="active"
+                hideStatusTabs={true}
+              />
             </div>
           )}
 
           {activeTab === "history" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <AdminHistory parkingLot={parkingLot} initialFilterStatus="completed" />
+              <AdminHistory
+                parkingLot={parkingLot}
+                initialFilterStatus="completed"
+                hideStatusTabs={true}
+              />
             </div>
           )}
 
