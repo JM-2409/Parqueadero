@@ -26,10 +26,12 @@ const PAGE_SIZE = 20;
 
 export default function AdminHistory({
   parkingLot,
-  initialFilterStatus = "all"
+  initialFilterStatus = "all",
+  hideStatusTabs = false
 }: {
   parkingLot: any;
   initialFilterStatus?: string;
+  hideStatusTabs?: boolean;
 }) {
   const parkingLotId = parkingLot.id;
   const [sessions, setSessions] = useState<any[]>([]);
@@ -594,10 +596,10 @@ export default function AdminHistory({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Historial de Vehículos
+                {filterStatus === "active" ? "Vehículos en Sistema" : filterStatus === "completed" ? "Historial de Salidas" : "Historial de Vehículos"}
               </h2>
               <p className="text-sm font-bold text-slate-500 mt-1">
-                Registro de ingresos y salidas
+                {filterStatus === "active" ? "Listado de vehículos estacionados" : "Registro de ingresos y salidas"}
               </p>
             </div>
           </div>
@@ -621,26 +623,28 @@ export default function AdminHistory({
         </div>
 
         {/* Status Tabs */}
-        <div className="flex gap-3 border-b border-slate-100 mb-6 overflow-x-auto hide-scrollbar pb-1">
-          <button
-            onClick={() => setFilterStatus("active")}
-            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "active" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
-          >
-            En Sistema
-          </button>
-          <button
-            onClick={() => setFilterStatus("completed")}
-            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "completed" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
-          >
-            Salieron (Completados)
-          </button>
-          <button
-            onClick={() => setFilterStatus("all")}
-            className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "all" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
-          >
-            Todos
-          </button>
-        </div>
+        {!hideStatusTabs && (
+          <div className="flex gap-3 border-b border-slate-100 mb-6 overflow-x-auto hide-scrollbar pb-1">
+            <button
+              onClick={() => setFilterStatus("active")}
+              className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "active" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            >
+              En Sistema
+            </button>
+            <button
+              onClick={() => setFilterStatus("completed")}
+              className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "completed" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            >
+              Salieron (Completados)
+            </button>
+            <button
+              onClick={() => setFilterStatus("all")}
+              className={`px-6 py-3.5 font-bold text-sm rounded-3xl transition-all whitespace-nowrap ${filterStatus === "all" ? "bg-indigo-50 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}
+            >
+              Todos
+            </button>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 bg-slate-50/50 p-3 sm:p-4 rounded-3xl border border-slate-100/50">
