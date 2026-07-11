@@ -17,6 +17,7 @@ import {
   Users,
   DollarSign,
   LayoutDashboard,
+  History,
   Menu,
   X,
   Plus,
@@ -755,6 +756,30 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
+              handleTabChange("active_sessions");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "active_sessions" ? styles.navItemActive : ""}`}
+          >
+            <Car size={20} />
+            <span className="font-bold whitespace-nowrap text-left">
+              Activos
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              handleTabChange("history");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "history" ? styles.navItemActive : ""}`}
+          >
+            <History size={20} />
+            <span className="font-bold whitespace-nowrap text-left">
+              Historial
+            </span>
+          </button>
+          <button
+            onClick={() => {
               handleTabChange("cash_closures");
               setIsMobileMenuOpen(false);
             }}
@@ -1032,7 +1057,18 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
-              <AdminHistory parkingLot={parkingLot} />
+            </div>
+          )}
+
+          {activeTab === "active_sessions" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <AdminHistory parkingLot={parkingLot} initialFilterStatus="active" />
+            </div>
+          )}
+
+          {activeTab === "history" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <AdminHistory parkingLot={parkingLot} initialFilterStatus="completed" />
             </div>
           )}
 
