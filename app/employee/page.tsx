@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   DollarSign,
   Clock,
-  Receipt,
   User,
   History,
   Menu,
@@ -21,9 +20,7 @@ import {
   Bike,
   Truck,
   AlertTriangle,
-  Image as ImageIcon,
   Printer,
-  Download,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
@@ -89,6 +86,9 @@ export default function EmployeePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showConfirmEntry, setShowConfirmEntry] = useState(false);
+
+  // Search in Active Sessions
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
 
   // Preferencias Opcionales
   const [showPreferences, setShowPreferences] = useState(false);
@@ -492,9 +492,6 @@ export default function EmployeePage() {
           // Determinamos el campo principal
           const mainField = parkingLot.private_custom_fields?.find((f: any) => f.is_main)?.name;
 
-          // Attempt to find by plate in custom_fields_data->>'Placa' or similar.
-          // We'll fetch all private spaces for this lot and filter in memory,
-          // since the exact key might vary (placa, Placa).
           const { data: privateSpaces } = await supabase
             .from("private_parking_spaces")
             .select("custom_fields_data")
@@ -1047,6 +1044,10 @@ export default function EmployeePage() {
     if (key === "pref_confirmEntry") setPrefConfirmEntry(value);
     if (key === "pref_showNotes") setPrefShowNotes(value);
   };
+
+  const filteredActiveSessions = activeSessions.filter(s =>
+    s.vehicles.plate.toLowerCase().includes(activeSearchQuery.toLowerCase())
+  );
 
   if (loading)
     return (
@@ -1629,31 +1630,28 @@ export default function EmployeePage() {
                         </span>
                       </h2>
                     </div>
-                    {parkingLot?.show_revenue && (
-                      <div className="flex items-center gap-3 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-3xl text-sm font-bold border border-emerald-100 max-w-full overflow-hidden">
-                        <DollarSign size={16} className="shrink-0" />
-                        <span className="font-bold truncate">
-                          Recaudo:{" "}
-                          {new Intl.NumberFormat("es-CO", {
-                            style: "currency",
-                            currency: "COP",
-                            minimumFractionDigits: 0,
-                          }).format(accumulatedRevenue)}
-                        </span>
-                      </div>
-                    )}
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Buscar placa activa..."
+                            value={activeSearchQuery}
+                            onChange={(e) => setActiveSearchQuery(e.target.value.toUpperCase())}
+                            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
+                        />
+                    </div>
                   </div>
 
-                  {activeSessions.length === 0 ? (
+                  {filteredActiveSessions.length === 0 ? (
                     <div className="text-center py-16 border-2 border-dashed border-slate-200  rounded-3xl bg-slate-50 ">
                       <Car size={48} className="mx-auto text-slate-500 mb-4" />
                       <p className="text-slate-500 font-bold">
-                        No hay vehículos en el parqueadero.
+                        {activeSearchQuery ? "No se encontraron vehículos con esa placa." : "No hay vehículos en el parqueadero."}
                       </p>
                     </div>
                   ) : (
                     <div className="grid gap-4">
-                      {activeSessions.map((session) => (
+                      {filteredActiveSessions.map((session) => (
                         <div
                           key={session.id}
                           className={`border border-slate-200  p-4 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-slate-50  ${viewingSession?.id === session.id ? "border-indigo-400 shadow-md border border-slate-100 ring-1 ring-indigo-400" : "hover:border-indigo-300 hover:shadow-md border border-slate-100"}`}

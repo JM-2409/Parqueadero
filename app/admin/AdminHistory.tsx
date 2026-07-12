@@ -10,11 +10,14 @@ import {
   ChevronRight,
   Car,
   User,
-  Palette,
   Tag,
   X,
   Trash2,
   Edit2,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  Hash,
 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
@@ -61,14 +64,12 @@ export default function AdminHistory({
   const [isEditingPlate, setIsEditingPlate] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState<any>(null);
 
-  // PDF Export States
-  const [isExportPdfModalOpen, setIsExportPdfModalOpen] = useState(false);
-  const [pdfFilterDateFrom, setPdfFilterDateFrom] = useState("");
-  const [pdfFilterDateTo, setPdfFilterDateTo] = useState("");
-  const [pdfFilterType, setPdfFilterType] = useState("all");
-  const [pdfFilterEmployee, setPdfFilterEmployee] = useState("");
-  const [pdfFilterReceiptStart, setPdfFilterReceiptStart] = useState("");
-  const [pdfFilterReceiptEnd, setPdfFilterReceiptEnd] = useState("");
+  // New States for enhanced filtering
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const [receiptFilterMode, setReceiptFilterMode] = useState<"none" | "unique" | "range">("none");
+  const [receiptUnique, setReceiptUnique] = useState("");
+  const [receiptStart, setReceiptStart] = useState("");
+  const [receiptEnd, setReceiptEnd] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -102,28 +103,41 @@ export default function AdminHistory({
       .order("entry_time", { ascending: false });
 
     if (searchTerm) {
-      // Search by plate
       query = query.ilike("vehicles.plate", `%${searchTerm}%`);
     }
-    if (employeeSearchTerm) {
-      // Search by employee name (entry or exit)
-      query = query.or(
-        `entry_employee_name.ilike.%${employeeSearchTerm}%,exit_employee_name.ilike.%${employeeSearchTerm}%`,
-      );
+
+    // Only apply advanced filters if not in "active" status or if they are explicitly set
+    if (filterStatus !== "active") {
+        if (employeeSearchTerm) {
+            query = query.or(
+                `entry_employee_name.ilike.%${employeeSearchTerm}%,exit_employee_name.ilike.%${employeeSearchTerm}%`,
+            );
+        }
+        if (filterType !== "all") {
+            query = query.eq("vehicles.type", filterType);
+        }
+        if (dateFrom) {
+            query = query.gte("entry_time", new Date(dateFrom).toISOString());
+        }
+        if (dateTo) {
+            const dt = new Date(dateTo);
+            dt.setHours(23, 59, 59, 999);
+            query = query.lte("entry_time", dt.toISOString());
+        }
+
+        if (receiptFilterMode === "unique" && receiptUnique) {
+            query = query.eq("receipt_number", receiptUnique);
+        }
+        // Note: range filtering on text receipt_number can be inaccurate lexicographically.
+        // For better results, we might need a numeric column or cast, but for now we apply what we can.
+        if (receiptFilterMode === "range") {
+            if (receiptStart) query = query.gte("receipt_number", receiptStart);
+            if (receiptEnd) query = query.lte("receipt_number", receiptEnd);
+        }
     }
-    if (filterType !== "all") {
-      query = query.eq("vehicles.type", filterType);
-    }
+
     if (filterStatus !== "all") {
       query = query.eq("status", filterStatus);
-    }
-    if (dateFrom) {
-      query = query.gte("entry_time", new Date(dateFrom).toISOString());
-    }
-    if (dateTo) {
-      const dt = new Date(dateTo);
-      dt.setHours(23, 59, 59, 999);
-      query = query.lte("entry_time", dt.toISOString());
     }
 
     const from = (page - 1) * PAGE_SIZE;
@@ -151,6 +165,10 @@ export default function AdminHistory({
     filterStatus,
     dateFrom,
     dateTo,
+    receiptFilterMode,
+    receiptUnique,
+    receiptStart,
+    receiptEnd
   ]);
 
   useEffect(() => {
@@ -179,15 +197,13 @@ export default function AdminHistory({
     };
   }, [parkingLotId, fetchData]);
 
-  // Sync filter status when initialFilterStatus prop changes
   useEffect(() => {
     setFilterStatus(initialFilterStatus);
   }, [initialFilterStatus]);
 
-  // Reset page when search or filters change
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, employeeSearchTerm, filterStatus]);
+  }, [searchTerm, employeeSearchTerm, filterStatus, receiptFilterMode, receiptUnique, receiptStart, receiptEnd]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -199,7 +215,6 @@ export default function AdminHistory({
 
   const handleExit = (sessionToExit: any) => {
     const now = new Date();
-    // Default config values
     const dStr = now.toISOString().split("T")[0];
     const tStr = now.toTimeString().substring(0, 5);
     setForceExitConfig({
@@ -273,7 +288,7 @@ export default function AdminHistory({
         .single();
 
       if (!updateError && updatedSession) {
-        fetchData(); // Reload list
+        fetchData();
         setViewingReceipt(updatedSession);
       }
     } catch (e) {
@@ -294,7 +309,7 @@ export default function AdminHistory({
 
       if (error) throw error;
       setSessionToDelete(null);
-      fetchData(); // Reload
+      fetchData();
     } catch (e) {
       console.error(e);
       alert("Hubo un error al eliminar el registro.");
@@ -307,7 +322,6 @@ export default function AdminHistory({
     try {
       const uppercasePlate = newPlate.trim().toUpperCase();
 
-      // Check if vehicle with new plate already exists
       const { data: existingVehicle } = await supabase
         .from("vehicles")
         .select("id")
@@ -315,26 +329,22 @@ export default function AdminHistory({
         .maybeSingle();
 
       if (existingVehicle) {
-        // Just link session to this existing vehicle
         await supabase
           .from("parking_sessions")
           .update({ vehicle_id: existingVehicle.id })
           .eq("id", sessionToEdit.id);
       } else {
-        // Create new vehicle with new plate (copying old properties would be better but this works) or update existing vehicle if only 1 session
         const { data: sessionsWithVehicle } = await supabase
           .from("parking_sessions")
           .select("id")
           .eq("vehicle_id", sessionToEdit.vehicle_id);
 
         if (sessionsWithVehicle && sessionsWithVehicle.length === 1) {
-          // It's safe to update the vehicle directly since only this session relies on it
           await supabase
             .from("vehicles")
             .update({ plate: uppercasePlate })
             .eq("id", sessionToEdit.vehicle_id);
         } else {
-          // Create new vehicle
           const { data: newV } = await supabase
             .from("vehicles")
             .insert([
@@ -374,7 +384,7 @@ export default function AdminHistory({
       return session.total_charged || session.fee;
 
     const entryTime = new Date(session.entry_time);
-    const exitTime = new Date(); // Current time
+    const exitTime = new Date();
     const rules = tariffs.filter(
       (t) => t.vehicle_type === session.vehicles.type,
     );
@@ -394,20 +404,29 @@ export default function AdminHistory({
         .eq("parking_lot_id", parkingLotId)
         .order("entry_time", { ascending: false });
 
-      // Apply PDF filters
-      if (pdfFilterDateFrom) {
-        query = query.gte("entry_time", new Date(pdfFilterDateFrom).toISOString());
+      if (searchTerm) {
+        query = query.ilike("vehicles.plate", `%${searchTerm}%`);
       }
-      if (pdfFilterDateTo) {
-        const dt = new Date(pdfFilterDateTo);
-        dt.setHours(23, 59, 59, 999);
-        query = query.lte("entry_time", dt.toISOString());
+
+      if (filterStatus !== "active") {
+          if (employeeSearchTerm) {
+            query = query.or(`entry_employee_name.ilike.%${employeeSearchTerm}%,exit_employee_name.ilike.%${employeeSearchTerm}%`);
+          }
+          if (filterType !== "all") {
+            query = query.eq("vehicles.type", filterType);
+          }
+          if (dateFrom) {
+            query = query.gte("entry_time", new Date(dateFrom).toISOString());
+          }
+          if (dateTo) {
+            const dt = new Date(dateTo);
+            dt.setHours(23, 59, 59, 999);
+            query = query.lte("entry_time", dt.toISOString());
+          }
       }
-      if (pdfFilterType !== "all") {
-        query = query.eq("vehicles.type", pdfFilterType);
-      }
-      if (pdfFilterEmployee) {
-        query = query.or(`entry_employee_name.ilike.%${pdfFilterEmployee}%,exit_employee_name.ilike.%${pdfFilterEmployee}%`);
+
+      if (filterStatus !== "all") {
+        query = query.eq("status", filterStatus);
       }
 
       const { data, error } = await query;
@@ -415,11 +434,17 @@ export default function AdminHistory({
 
       let filteredData = data || [];
 
-      if (pdfFilterReceiptStart) {
-         filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) >= parseInt(pdfFilterReceiptStart));
-      }
-      if (pdfFilterReceiptEnd) {
-         filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) <= parseInt(pdfFilterReceiptEnd));
+      if (filterStatus !== "active") {
+          if (receiptFilterMode === "unique" && receiptUnique) {
+              filteredData = filteredData.filter((row: any) => row.receipt_number === receiptUnique);
+          } else if (receiptFilterMode === "range") {
+              if (receiptStart) {
+                  filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) >= parseInt(receiptStart));
+              }
+              if (receiptEnd) {
+                  filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) <= parseInt(receiptEnd));
+              }
+          }
       }
 
       if (filteredData.length === 0) {
@@ -460,7 +485,6 @@ export default function AdminHistory({
       });
 
       doc.save(`reporte_recibos_${new Date().toLocaleDateString().replace(/\//g, "-")}.pdf`);
-      setIsExportPdfModalOpen(false);
     } catch (error) {
       console.error("Error exporting data:", error);
       alert("Ocurrió un error al exportar el PDF.");
@@ -487,16 +511,51 @@ export default function AdminHistory({
         query = query.ilike("vehicles.plate", `%${searchTerm}%`);
       }
 
+      if (filterStatus !== "active") {
+          if (employeeSearchTerm) {
+            query = query.or(`entry_employee_name.ilike.%${employeeSearchTerm}%,exit_employee_name.ilike.%${employeeSearchTerm}%`);
+          }
+          if (filterType !== "all") {
+            query = query.eq("vehicles.type", filterType);
+          }
+          if (dateFrom) {
+            query = query.gte("entry_time", new Date(dateFrom).toISOString());
+          }
+          if (dateTo) {
+            const dt = new Date(dateTo);
+            dt.setHours(23, 59, 59, 999);
+            query = query.lte("entry_time", dt.toISOString());
+          }
+      }
+
+      if (filterStatus !== "all") {
+        query = query.eq("status", filterStatus);
+      }
+
       const { data, error } = await query;
       if (error) throw error;
 
-      if (!data || data.length === 0) {
+      let filteredData = data || [];
+
+      if (filterStatus !== "active") {
+        if (receiptFilterMode === "unique" && receiptUnique) {
+            filteredData = filteredData.filter((row: any) => row.receipt_number === receiptUnique);
+        } else if (receiptFilterMode === "range") {
+            if (receiptStart) {
+                filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) >= parseInt(receiptStart));
+            }
+            if (receiptEnd) {
+                filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) <= parseInt(receiptEnd));
+            }
+        }
+      }
+
+      if (filteredData.length === 0) {
         alert("No hay datos para exportar.");
         setIsExporting(false);
         return;
       }
 
-      // Extract custom field names
       const publicCustomFields = (parkingLot?.custom_fields || []).map(
         (f: any) => f.name,
       );
@@ -507,7 +566,6 @@ export default function AdminHistory({
         new Set([...publicCustomFields, ...privateCustomFieldsObj]),
       );
 
-      // Generate CSV content
       const headers = [
         "Ticket",
         "Placa",
@@ -524,7 +582,7 @@ export default function AdminHistory({
 
       const csvRows = [headers.join(",")];
 
-      for (const row of data) {
+      for (const row of filteredData) {
         const isCompleted = row.status === "completed";
         const entryDate = new Date(row.entry_time).toLocaleString();
         const exitDate = isCompleted
@@ -605,11 +663,12 @@ export default function AdminHistory({
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <button
-              onClick={() => setIsExportPdfModalOpen(true)}
+              onClick={exportToPDF}
+              disabled={isExporting || sessions.length === 0}
               className="w-full sm:w-auto px-5 py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-3xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl border border-red-100 text-sm"
             >
               <FileText size={18} />
-              Exportar PDF
+              {isExporting ? "Exportando..." : "Exportar PDF"}
             </button>
             <button
               onClick={exportToCSV}
@@ -646,71 +705,149 @@ export default function AdminHistory({
           </div>
         )}
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 bg-slate-50/50 p-3 sm:p-4 rounded-3xl border border-slate-100/50">
-          <div className="relative">
+        {/* Main Search (Plate) */}
+        <div className="flex flex-col md:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              size={16}
+              size={18}
             />
             <input
               type="text"
-              placeholder="Placa..."
+              placeholder="Buscar por placa..."
               value={localSearchTerm}
               onChange={(e) => setLocalSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full font-bold uppercase transition-all shadow-xl border border-slate-100"
+              className="pl-11 pr-4 py-4 bg-white border border-slate-200 rounded-3xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-lg w-full font-bold uppercase transition-all shadow-sm"
             />
           </div>
-          <div className="relative">
-            <User
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              size={16}
-            />
-            <input
-              type="text"
-              placeholder="Operario..."
-              value={localEmployeeSearchTerm}
-              onChange={(e) => setLocalEmployeeSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full transition-all shadow-xl border border-slate-100"
-            />
-          </div>
-          <div className="relative">
-            <Car
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-              size={16}
-            />
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full appearance-none transition-all shadow-xl border border-slate-100"
+          {filterStatus !== "active" && (
+            <button
+              onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+              className={`px-6 py-4 rounded-3xl font-bold transition-all flex items-center justify-center gap-3 border shadow-sm ${isFiltersVisible ? "bg-indigo-900 text-white border-indigo-900" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"}`}
             >
-              <option value="all">Todos los vehículos</option>
-              <option value="motos">Motos</option>
-              <option value="carros">Carros</option>
-              <option value="bicicletas">Bicicletas</option>
-              <option value="camionetas">Camionetas</option>
-              <option value="camiones">Camiones</option>
-            </select>
-            <ChevronLeft
-              size={14}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none -rotate-90"
-            />
-          </div>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
-            title="Fecha Inicio"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="px-5 py-3 bg-white border border-slate-200 rounded-3xl focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none text-sm w-full text-slate-600 transition-all shadow-xl border border-slate-100 font-bold"
-            title="Fecha Fin"
-          />
+              <Filter size={18} />
+              {isFiltersVisible ? "Ocultar Filtros" : "Más Filtros"}
+              {isFiltersVisible ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+          )}
         </div>
+
+        {/* Advanced Filters Section (Collapsible) */}
+        {isFiltersVisible && filterStatus !== "active" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-200 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase ml-2">Operario</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Nombre..."
+                  value={localEmployeeSearchTerm}
+                  onChange={(e) => setLocalEmployeeSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase ml-2">Tipo Vehículo</label>
+              <div className="relative">
+                <Car className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full appearance-none"
+                >
+                  <option value="all">Todos</option>
+                  <option value="motos">Motos</option>
+                  <option value="carros">Carros</option>
+                  <option value="bicicletas">Bicicletas</option>
+                  <option value="camionetas">Camionetas</option>
+                  <option value="camiones">Camiones</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase ml-2">Desde</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase ml-2">Hasta</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
+              />
+            </div>
+
+            {/* Receipt Filter Row */}
+            <div className="col-span-full border-t border-slate-200 pt-4 mt-2">
+               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="space-y-1 min-w-[200px]">
+                     <label className="text-xs font-bold text-slate-500 uppercase ml-2">Filtrar por Recibo</label>
+                     <select
+                        value={receiptFilterMode}
+                        onChange={(e) => setReceiptFilterMode(e.target.value as any)}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
+                     >
+                        <option value="none">Sin filtro de recibo</option>
+                        <option value="unique">Número único</option>
+                        <option value="range">Rango de números</option>
+                     </select>
+                  </div>
+
+                  {receiptFilterMode === "unique" && (
+                    <div className="flex-1 space-y-1 animate-in fade-in slide-in-from-left-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase ml-2">Número de Recibo</label>
+                        <div className="relative">
+                            <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <input
+                                type="text"
+                                placeholder="Ej. 1234"
+                                value={receiptUnique}
+                                onChange={(e) => setReceiptUnique(e.target.value)}
+                                className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
+                            />
+                        </div>
+                    </div>
+                  )}
+
+                  {receiptFilterMode === "range" && (
+                    <div className="flex-1 flex gap-4 animate-in fade-in slide-in-from-left-2">
+                        <div className="flex-1 space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase ml-2">Recibo Desde</label>
+                            <input
+                                type="text"
+                                placeholder="Desde..."
+                                value={receiptStart}
+                                onChange={(e) => setReceiptStart(e.target.value)}
+                                className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
+                            />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase ml-2">Recibo Hasta</label>
+                            <input
+                                type="text"
+                                placeholder="Hasta..."
+                                value={receiptEnd}
+                                onChange={(e) => setReceiptEnd(e.target.value)}
+                                className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
+                            />
+                        </div>
+                    </div>
+                  )}
+               </div>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-30 text-slate-500 gap-4">
@@ -720,7 +857,7 @@ export default function AdminHistory({
             </span>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-xl border border-slate-100 bg-white">
+          <div className="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm bg-white">
             <table className="w-full text-left text-sm border-collapse">
               <thead className="bg-slate-50/80 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
                 <tr>
@@ -853,8 +990,8 @@ export default function AdminHistory({
                           <span
                             className={`px-3 py-1.5 rounded-3xl text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
                               isCompleted
-                                ? "bg-slate-100 text-slate-500"
-                                : "bg-emerald-50 text-emerald-600 shadow-xl border border-slate-100 shadow-emerald-100"
+                                ? "bg-slate-100 text-slate-600"
+                                : "bg-emerald-50 text-emerald-600 border border-emerald-100"
                             }`}
                           >
                             {isCompleted ? "Completado" : "En Sistema"}
@@ -887,7 +1024,7 @@ export default function AdminHistory({
                                 handleExit(session);
                               }}
                               disabled={isSubmittingExit === session.id}
-                              className="px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-slate-900 hover:text-white rounded-3xl text-xs font-bold transition-all shadow-xl border border-slate-100 hover:shadow-slate-200 disabled:opacity-50 flex items-center justify-center min-w-[100px] w-full"
+                              className="px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-slate-900 hover:text-white rounded-3xl text-xs font-bold transition-all shadow-sm border border-slate-100 disabled:opacity-50 flex items-center justify-center min-w-[100px] w-full"
                             >
                               {isSubmittingExit === session.id ? (
                                 <Spinner className="w-4 h-4" />
@@ -899,7 +1036,6 @@ export default function AdminHistory({
                         </td>
                       </tr>
 
-                      {/* Expanded details row */}
                       {expandedRow === session.id && (
                         <tr className="bg-indigo-50/30 border-b border-slate-100">
                           <td colSpan={10} className="p-4 px-6 relative">
@@ -1008,7 +1144,7 @@ export default function AdminHistory({
                                     e.stopPropagation();
                                     setSessionToDelete(session.id);
                                   }}
-                                  className="px-5 py-3 bg-white text-slate-500 border border-slate-200 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-3xl text-xs font-bold transition-all shadow-md border border-slate-100 hover:shadow-xl border border-slate-100 active:scale-95 flex items-center gap-3 w-full justify-center md:justify-end"
+                                  className="px-5 py-3 bg-white text-slate-500 border border-slate-200 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-3xl text-xs font-bold transition-all shadow-sm border border-slate-100 hover:shadow-md active:scale-95 flex items-center gap-3 w-full justify-center md:justify-end"
                                 >
                                   <Trash2 size={16} />
                                   Borrar Registro
@@ -1033,7 +1169,6 @@ export default function AdminHistory({
           </div>
         )}
 
-        {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
             <p className="text-sm text-slate-500">
@@ -1059,7 +1194,6 @@ export default function AdminHistory({
         )}
       </div>
 
-      {/* Modal Salida Forzada */}
       {forceExitConfig && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -1225,84 +1359,6 @@ export default function AdminHistory({
           parkingLot={parkingLot}
           onClose={() => setViewingReceipt(null)}
         />
-      )}
-
-      {/* Modal Exportar PDF */}
-      {isExportPdfModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
-                <FileText size={20} className="text-red-500" />
-                Exportar a PDF
-              </h3>
-              <button
-                onClick={() => setIsExportPdfModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-3xl hover:bg-slate-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-              <p className="text-sm text-slate-500">Configura los filtros para tu reporte en PDF.</p>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Fecha Desde</label>
-                  <input type="date" value={pdfFilterDateFrom} onChange={(e) => setPdfFilterDateFrom(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Fecha Hasta</label>
-                  <input type="date" value={pdfFilterDateTo} onChange={(e) => setPdfFilterDateTo(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Recibo Inicial (#)</label>
-                  <input type="number" placeholder="Ej. 100" value={pdfFilterReceiptStart} onChange={(e) => setPdfFilterReceiptStart(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Recibo Final (#)</label>
-                  <input type="number" placeholder="Ej. 200" value={pdfFilterReceiptEnd} onChange={(e) => setPdfFilterReceiptEnd(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tipo de Vehículo</label>
-                <select value={pdfFilterType} onChange={(e) => setPdfFilterType(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm bg-white">
-                  <option value="all">Todos</option>
-                  <option value="motos">Motos</option>
-                  <option value="carros">Carros</option>
-                  <option value="bicicletas">Bicicletas</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Operario</label>
-                <input type="text" placeholder="Nombre del operario..." value={pdfFilterEmployee} onChange={(e) => setPdfFilterEmployee(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none text-sm" />
-              </div>
-
-            </div>
-            <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
-              <button
-                onClick={() => setIsExportPdfModalOpen(false)}
-                className="px-5 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-3xl transition-colors"
-                disabled={isExporting}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={exportToPDF}
-                className="px-5 py-3 font-bold text-white bg-red-600 hover:bg-red-700 rounded-3xl transition-colors flex items-center justify-center min-w-[120px] gap-2"
-                disabled={isExporting}
-              >
-                {isExporting ? <Spinner className="w-4 h-4 text-white" /> : <FileText size={16} />}
-                {isExporting ? "Generando..." : "Generar PDF"}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </>
   );

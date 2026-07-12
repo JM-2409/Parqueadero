@@ -1,5 +1,4 @@
 "use client";
-import { DeleteButton } from "@/components/ui/DeleteButton";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
@@ -8,14 +7,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Car,
-  User,
-  Palette,
   Tag,
   FileText,
 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
-import * as XLSX from "xlsx";
 import ReceiptModal from "./ReceiptModal";
 
 const PAGE_SIZE = 20;
@@ -110,6 +105,7 @@ export default function EmployeeHistory({
 
   // Reset page when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchTerm]);
 
@@ -119,61 +115,6 @@ export default function EmployeeHistory({
       currency: "COP",
       minimumFractionDigits: 0,
     }).format(amount);
-  };
-
-  const exportToExcel = async () => {
-    setLoading(true);
-    let allSessions = [];
-    try {
-      const { data, error } = await supabase
-        .from("parking_sessions")
-        .select(`*, vehicles!inner (plate, type, brand, color, owner_name)`)
-        .eq("parking_lot_id", parkingLotId)
-        .order("entry_time", { ascending: false });
-
-      if (error) throw error;
-      allSessions = data || [];
-    } catch (err) {
-      console.error("Error fetching data for export", err);
-      setLoading(false);
-      return;
-    }
-
-    const exportData = allSessions.map((session) => {
-      const isCompleted = session.status === "completed";
-      const rules =
-        tariffs?.filter((t) => t.vehicle_type === session.vehicles?.type) || [];
-      const currentFee = !isCompleted
-        ? calculateFee(new Date(session.entry_time), new Date(), rules, {
-            entry_grace_period_mins: parkingLot.entry_grace_period_mins,
-            shift_grace_period_mins: parkingLot.shift_grace_period_mins,
-          })
-        : session.fee || session.total_charged || 0;
-
-      return {
-        Placa: session.vehicles?.plate || "",
-        Tipo: session.vehicles?.type || "",
-        Ingreso: new Date(session.entry_time).toLocaleString(),
-        Salida: isCompleted
-          ? new Date(session.exit_time).toLocaleString()
-          : "En Sistema",
-        "Atendido por (Ingreso)": session.entry_employee_name || "N/A",
-        "Atendido por (Salida)": session.exit_employee_name || "N/A",
-        Estado: isCompleted ? "Completado" : "En Sistema",
-        Cobro: currentFee || 0,
-      };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Historial");
-
-    // Generar el archivo
-    XLSX.writeFile(
-      workbook,
-      `Historial_${parkingLot.name.replace(/\s+/g, "_")}_${new Date().toLocaleDateString().replace(/\//g, "-")}.xlsx`,
-    );
-    setLoading(false);
   };
 
   return (
@@ -207,13 +148,6 @@ export default function EmployeeHistory({
               className="pl-10 pr-4 py-3 border border-slate-200 rounded-3xl focus:ring-2 focus:ring-slate-500 outline-none text-sm w-full sm:w-64"
             />
           </div>
-          <button
-            onClick={exportToExcel}
-            className="flex items-center justify-center gap-3 px-5 py-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-3xl transition-colors font-bold text-sm whitespace-nowrap"
-          >
-            <FileText size={16} />
-            Exportar
-          </button>
         </div>
       </div>
 
@@ -388,7 +322,7 @@ export default function EmployeeHistory({
                     </tr>
                     {/* Expanded details row */}
                     {expandedRow === session.id && (
-                      <tr className="bg-indigo-50/30 border-b border-slate-100">
+                      <tr className="bg-indigo-50/50 border-b border-slate-100">
                         <td
                           colSpan={showRevenue ? 8 : 7}
                           className="p-4 px-6 relative"
