@@ -1,5 +1,6 @@
 import { ReactNode, ButtonHTMLAttributes } from "react";
 import { Spinner } from "./Spinner";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -14,10 +15,14 @@ export function Button({
   variant = "primary",
   className = "",
   disabled,
+  title,
   ...props
 }: ButtonProps) {
+  const isOnline = useOnlineStatus();
+  const shouldBeDisabled = disabled || isLoading || !isOnline;
+
   const baseStyle =
-    "flex items-center justify-center gap-2 font-medium transition-all duration-300 rounded-xl disabled:opacity-70 disabled:cursor-not-allowed";
+    "flex items-center justify-center gap-2 font-medium transition-all duration-300 rounded-xl disabled:opacity-70 disabled:cursor-not-allowed relative group";
 
   const variants = {
     primary:
@@ -32,10 +37,14 @@ export function Button({
   return (
     <button
       className={`${baseStyle} ${variants[variant]} ${className}`}
-      disabled={disabled || isLoading}
+      disabled={shouldBeDisabled}
+      title={!isOnline ? "Requiere conexión a internet" : title}
       {...props}
     >
       {isLoading ? <Spinner size={20} /> : children}
+      {!isOnline && (
+        <div className="absolute inset-0 bg-slate-400/10 rounded-xl pointer-events-none" />
+      )}
     </button>
   );
 }

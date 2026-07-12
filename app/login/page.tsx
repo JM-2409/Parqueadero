@@ -9,8 +9,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getErrorMessage } from "@/lib/error";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 function LoginContent() {
+  const isOnline = useOnlineStatus();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -303,11 +305,12 @@ function LoginContent() {
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={isOnline ? { scale: 1.02 } : {}}
+            whileTap={isOnline ? { scale: 0.98 } : {}}
             type="submit"
-            disabled={loading}
-            className="w-full py-4 bg-slate-900 hover:bg-indigo-600 disabled:opacity-70 disabled:hover:bg-slate-900 text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 mt-8"
+            disabled={loading || !isOnline}
+            title={!isOnline ? "Requiere conexión a internet" : ""}
+            className="w-full py-4 bg-slate-900 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 mt-8 relative"
           >
             {loading ? (
               <Spinner size={22} className="text-white" />
@@ -315,6 +318,9 @@ function LoginContent() {
               <LogIn size={22} />
             )}
             {loading ? "Verificando..." : "Entrar al Sistema"}
+            {!isOnline && (
+              <div className="absolute inset-0 bg-slate-400/10 rounded-xl pointer-events-none" />
+            )}
           </motion.button>
         </form>
       </motion.div>
