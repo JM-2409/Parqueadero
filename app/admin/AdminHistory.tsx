@@ -27,6 +27,32 @@ import autoTable from "jspdf-autotable";
 
 const PAGE_SIZE = 20;
 
+interface Vehicle {
+  plate: string;
+  type: string;
+  brand?: string;
+  color?: string;
+  owner_name?: string;
+  custom_fields_data?: Record<string, any>;
+}
+
+interface ParkingSession {
+  id: string;
+  parking_lot_id: string;
+  vehicle_id: string;
+  status: string;
+  entry_time: string;
+  exit_time?: string;
+  fee?: number;
+  total_charged?: number;
+  receipt_number?: number;
+  duration_minutes?: number;
+  entry_employee_name?: string;
+  exit_employee_name?: string;
+  extra_data?: Record<string, any>;
+  vehicles: Vehicle;
+}
+
 export default function AdminHistory({
   parkingLot,
   initialFilterStatus = "all",
@@ -37,7 +63,7 @@ export default function AdminHistory({
   hideStatusTabs?: boolean;
 }) {
   const parkingLotId = parkingLot.id;
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<ParkingSession[]>([]);
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -99,8 +125,15 @@ export default function AdminHistory({
       `,
         { count: "exact" },
       )
-      .eq("parking_lot_id", parkingLotId)
-      .order("entry_time", { ascending: false });
+      .eq("parking_lot_id", parkingLotId);
+
+    if (filterStatus === "active") {
+        query = query.order("entry_time", { ascending: false });
+    } else {
+        query = query
+            .order("receipt_number", { ascending: false })
+            .order("entry_time", { ascending: false });
+    }
 
     if (searchTerm) {
       query = query.ilike("vehicles.plate", `%${searchTerm}%`);
@@ -126,13 +159,12 @@ export default function AdminHistory({
         }
 
         if (receiptFilterMode === "unique" && receiptUnique) {
-            query = query.eq("receipt_number", receiptUnique);
+            query = query.eq("receipt_number", Number(receiptUnique));
         }
-        // Note: range filtering on text receipt_number can be inaccurate lexicographically.
-        // For better results, we might need a numeric column or cast, but for now we apply what we can.
+
         if (receiptFilterMode === "range") {
-            if (receiptStart) query = query.gte("receipt_number", receiptStart);
-            if (receiptEnd) query = query.lte("receipt_number", receiptEnd);
+            if (receiptStart) query = query.gte("receipt_number", Number(receiptStart));
+            if (receiptEnd) query = query.lte("receipt_number", Number(receiptEnd));
         }
     }
 
@@ -177,7 +209,7 @@ export default function AdminHistory({
 
   useEffect(() => {
     const channel = supabase
-      .channel("public:parking_sessions:admin_history")
+      .channel(`parking_sessions_admin_${parkingLotId}`)
       .on(
         "postgres_changes",
         {
@@ -188,7 +220,7 @@ export default function AdminHistory({
         },
         () => {
           fetchData();
-        },
+        }
       )
       .subscribe();
 
@@ -265,7 +297,7 @@ export default function AdminHistory({
           .from("parking_lots")
           .update({ receipt_sequence: nextSeq })
           .eq("id", parkingLotId);
-        receiptNumber = nextSeq.toString();
+        receiptNumber = nextSeq;
       }
 
       const durationMinutes = Math.round(
@@ -401,8 +433,15 @@ export default function AdminHistory({
       let query = supabase
         .from("parking_sessions")
         .select(`*, vehicles!inner (*)`)
-        .eq("parking_lot_id", parkingLotId)
-        .order("entry_time", { ascending: false });
+        .eq("parking_lot_id", parkingLotId);
+
+      if (filterStatus === "active") {
+          query = query.order("entry_time", { ascending: false });
+      } else {
+          query = query
+              .order("receipt_number", { ascending: false })
+              .order("entry_time", { ascending: false });
+      }
 
       if (searchTerm) {
         query = query.ilike("vehicles.plate", `%${searchTerm}%`);
@@ -436,13 +475,13 @@ export default function AdminHistory({
 
       if (filterStatus !== "active") {
           if (receiptFilterMode === "unique" && receiptUnique) {
-              filteredData = filteredData.filter((row: any) => row.receipt_number === receiptUnique);
+              filteredData = filteredData.filter((row: ParkingSession) => row.receipt_number === Number(receiptUnique));
           } else if (receiptFilterMode === "range") {
               if (receiptStart) {
-                  filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) >= parseInt(receiptStart));
+                  filteredData = filteredData.filter((row: ParkingSession) => (row.receipt_number || 0) >= Number(receiptStart));
               }
               if (receiptEnd) {
-                  filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) <= parseInt(receiptEnd));
+                  filteredData = filteredData.filter((row: ParkingSession) => (row.receipt_number || 0) <= Number(receiptEnd));
               }
           }
       }
@@ -504,8 +543,15 @@ export default function AdminHistory({
           vehicles!inner (*)
         `,
         )
-        .eq("parking_lot_id", parkingLotId)
-        .order("entry_time", { ascending: false });
+        .eq("parking_lot_id", parkingLotId);
+
+      if (filterStatus === "active") {
+          query = query.order("entry_time", { ascending: false });
+      } else {
+          query = query
+              .order("receipt_number", { ascending: false })
+              .order("entry_time", { ascending: false });
+      }
 
       if (searchTerm) {
         query = query.ilike("vehicles.plate", `%${searchTerm}%`);
@@ -539,13 +585,13 @@ export default function AdminHistory({
 
       if (filterStatus !== "active") {
         if (receiptFilterMode === "unique" && receiptUnique) {
-            filteredData = filteredData.filter((row: any) => row.receipt_number === receiptUnique);
+            filteredData = filteredData.filter((row: ParkingSession) => row.receipt_number === Number(receiptUnique));
         } else if (receiptFilterMode === "range") {
             if (receiptStart) {
-                filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) >= parseInt(receiptStart));
+                filteredData = filteredData.filter((row: ParkingSession) => (row.receipt_number || 0) >= Number(receiptStart));
             }
             if (receiptEnd) {
-                filteredData = filteredData.filter((row: any) => parseInt(row.receipt_number) <= parseInt(receiptEnd));
+                filteredData = filteredData.filter((row: ParkingSession) => (row.receipt_number || 0) <= Number(receiptEnd));
             }
         }
       }
@@ -810,9 +856,14 @@ export default function AdminHistory({
                         <div className="relative">
                             <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <input
-                                type="text"
+                                type="number"
                                 placeholder="Ej. 1234"
                                 value={receiptUnique}
+                                onKeyDown={(e) => {
+                                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                    e.preventDefault();
+                                  }
+                                }}
                                 onChange={(e) => setReceiptUnique(e.target.value)}
                                 className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
                             />
@@ -825,9 +876,14 @@ export default function AdminHistory({
                         <div className="flex-1 space-y-1">
                             <label className="text-xs font-bold text-slate-500 uppercase ml-2">Recibo Desde</label>
                             <input
-                                type="text"
+                                type="number"
                                 placeholder="Desde..."
                                 value={receiptStart}
+                                onKeyDown={(e) => {
+                                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                    e.preventDefault();
+                                  }
+                                }}
                                 onChange={(e) => setReceiptStart(e.target.value)}
                                 className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
                             />
@@ -835,9 +891,14 @@ export default function AdminHistory({
                         <div className="flex-1 space-y-1">
                             <label className="text-xs font-bold text-slate-500 uppercase ml-2">Recibo Hasta</label>
                             <input
-                                type="text"
+                                type="number"
                                 placeholder="Hasta..."
                                 value={receiptEnd}
+                                onKeyDown={(e) => {
+                                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                    e.preventDefault();
+                                  }
+                                }}
                                 onChange={(e) => setReceiptEnd(e.target.value)}
                                 className="px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm w-full font-bold"
                             />

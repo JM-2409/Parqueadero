@@ -5,12 +5,40 @@ import { useState } from "react";
 import { sanitizeInput } from "@/lib/sanitize";
 import { getErrorMessage } from "@/lib/error";
 
+interface Vehicle {
+  plate: string;
+  type: string;
+  custom_fields_data?: Record<string, any>;
+}
+
+interface ParkingSession {
+  id: string;
+  parking_lot_id: string;
+  vehicle_id: string;
+  status: string;
+  entry_time: string;
+  exit_time?: string;
+  fee?: number;
+  total_charged?: number;
+  receipt_number?: number;
+  duration_minutes?: number;
+  entry_employee_name?: string;
+  exit_employee_name?: string;
+  extra_data?: Record<string, any>;
+  vehicles: Vehicle;
+}
+
 export default function ReceiptModal({
   session,
   appSettings,
   parkingLot,
   onClose,
-}: any) {
+}: {
+  session: ParkingSession;
+  appSettings: any;
+  parkingLot: any;
+  onClose: () => void;
+}) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<"idle" | "success" | "error">(
@@ -42,7 +70,7 @@ export default function ReceiptModal({
     try {
       // Create relative URL for the receipt-image generator API to pass SSRF check on backend
       const params = new URLSearchParams({
-        receiptNumber: session.receipt_number || "-",
+        receiptNumber: session.receipt_number?.toString() || "-",
         plate: session.vehicles?.plate || "-",
         type: session.vehicles?.type || "-",
         total: (session.total_charged || session.fee || 0).toString(),

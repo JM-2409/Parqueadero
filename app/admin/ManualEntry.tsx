@@ -318,7 +318,7 @@ export default function ManualEntry({
           .update({ receipt_sequence: nextSeq })
           .eq("id", parkingLotId);
 
-        receiptNumber = nextSeq.toString();
+        receiptNumber = nextSeq;
       }
 
       const sessionData: any = {
@@ -328,7 +328,7 @@ export default function ManualEntry({
         entry_time: entryTimestamp,
         entry_employee_name: "Admin (Manual)",
         extra_data: sanitizedExtraData,
-        receipt_number: receiptNumber,
+        receipt_number: Number(receiptNumber),
       };
 
       if (isCompleted) {
@@ -494,8 +494,13 @@ export default function ManualEntry({
                 Número de Recibo Físico (Opcional)
               </label>
               <input
-                type="text"
+                type="number"
                 value={manualReceiptNumber}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
                 onChange={(e) => setManualReceiptNumber(e.target.value)}
                 className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all placeholder-slate-300"
                 placeholder="Ej. 12345"
