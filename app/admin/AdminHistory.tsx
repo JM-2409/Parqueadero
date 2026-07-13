@@ -100,7 +100,7 @@ export default function AdminHistory({
         { count: "exact" },
       )
       .eq("parking_lot_id", parkingLotId)
-      .order("entry_time", { ascending: false });
+      .order("receipt_number", { ascending: false });
 
     if (searchTerm) {
       query = query.ilike("vehicles.plate", `%${searchTerm}%`);
@@ -402,7 +402,7 @@ export default function AdminHistory({
         .from("parking_sessions")
         .select(`*, vehicles!inner (*)`)
         .eq("parking_lot_id", parkingLotId)
-        .order("entry_time", { ascending: false });
+        .order("receipt_number", { ascending: false });
 
       if (searchTerm) {
         query = query.ilike("vehicles.plate", `%${searchTerm}%`);
@@ -505,7 +505,7 @@ export default function AdminHistory({
         `,
         )
         .eq("parking_lot_id", parkingLotId)
-        .order("entry_time", { ascending: false });
+        .order("receipt_number", { ascending: false });
 
       if (searchTerm) {
         query = query.ilike("vehicles.plate", `%${searchTerm}%`);

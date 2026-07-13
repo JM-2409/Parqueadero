@@ -114,6 +114,7 @@ export default function EmployeePage() {
   const [extraData, setExtraData] = useState<Record<string, string>>({});
   const [previousObservation, setPreviousObservation] = useState<{ text?: string, photoUrl?: string } | null>(null);
   const [usePreviousObservation, setUsePreviousObservation] = useState(false);
+  const [activeVehicleAlert, setActiveVehicleAlert] = useState<any>(null);
   const [blacklistAlert, setBlacklistAlert] = useState<{
     plate: string;
     reason: string;
@@ -270,7 +271,7 @@ export default function EmployeePage() {
       .select("*, vehicles(*)")
       .eq("parking_lot_id", parkingLotId)
       .eq("status", "active")
-      .order("entry_time", { ascending: false });
+      .order("receipt_number", { ascending: false });
     setActiveSessions(data || []);
   }, []);
 
@@ -580,6 +581,14 @@ export default function EmployeePage() {
             setUsePreviousObservation(false);
           }
 
+        // 5. Check if vehicle is already active in system
+        const activeSession = activeSessions.find(s => s.vehicles.plate === debouncedPlate.toUpperCase());
+        if (activeSession) {
+          setActiveVehicleAlert(activeSession);
+        } else {
+          setActiveVehicleAlert(null);
+        }
+
         if (foundData) {
           setExtraData(newExtraData);
           setIsNewVehicle(false);
@@ -592,6 +601,7 @@ export default function EmployeePage() {
         setExtraData({});
         setPreviousObservation(null);
         setUsePreviousObservation(false);
+        setActiveVehicleAlert(null);
       }
     };
     searchVehicle();
@@ -1414,19 +1424,35 @@ export default function EmployeePage() {
                             type="text"
                             value={plate || ""}
                             onChange={(e) => handleSearchPlate(e.target.value.toUpperCase())}
-                            className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-50  border border-slate-200  group-hover:border-slate-300  rounded-3xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white  outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-slate-900  transition-all shadow-inner placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal text-center"
+                            className={`w-full pl-14 pr-4 py-4 md:py-5 border group-hover:border-slate-300 rounded-3xl focus:ring-2 focus:outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest transition-all shadow-inner placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal text-center ${
+                              activeVehicleAlert
+                                ? "bg-red-50 border-red-500 text-red-900 focus:ring-red-500"
+                                : "bg-slate-50 border-slate-200 text-slate-900 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white"
+                            }`}
                             placeholder="ABC-123"
                             maxLength={7}
                             required
                           />
                         </div>
                       </div>
-                      {!isNewVehicle && plate.length >= 5 && (
+                      {activeVehicleAlert ? (
+                        <div className="mt-2 space-y-2">
+                          <p className="text-xs font-black text-red-600 flex items-center gap-1.5 px-1 bg-red-50 w-full py-2 px-3 rounded-2xl border border-red-200 animate-pulse">
+                            <AlertTriangle size={14} /> EL VEHÍCULO ESTÁ EN SISTEMA
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setViewingSession(activeVehicleAlert)}
+                            className="w-full py-2 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-2xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Search size={14} /> Ver detalles de la sesión
+                          </button>
+                        </div>
+                      ) : !isNewVehicle && plate.length >= 5 ? (
                         <p className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1.5 px-1 bg-emerald-50 w-fit py-1 px-2 rounded-3xl border border-emerald-100">
-                          <CheckCircle2 size={14} /> Vehículo registrado
-                          anteriormente
+                          <CheckCircle2 size={14} /> Vehículo registrado anteriormente
                         </p>
-                      )}
+                      ) : null}
                     </div>
 
                     <div>
@@ -1603,8 +1629,8 @@ export default function EmployeePage() {
 
                     <button
                       type="submit"
-                      disabled={isSubmittingEntry}
-                      className={`${styles.btnPrimary} mt-6 py-4 md:py-5 text-lg w-full active:scale-[0.98]`}
+                      disabled={isSubmittingEntry || !!activeVehicleAlert}
+                      className={`${styles.btnPrimary} mt-6 py-4 md:py-5 text-lg w-full active:scale-[0.98] ${activeVehicleAlert ? "opacity-50 grayscale cursor-not-allowed" : ""}`}
                     >
                       {isSubmittingEntry ? (
                         <Spinner size={24} className="text-white" />
