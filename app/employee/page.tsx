@@ -659,6 +659,10 @@ export default function EmployeePage() {
   };
 
   const processEntry = async () => {
+    if (!navigator.onLine) {
+      setError("Sin conexión a internet. Requiere conexión para registrar entrada.");
+      return;
+    }
     setIsSubmittingEntry(true);
     setShowConfirmEntry(false);
     setError("");
@@ -825,7 +829,7 @@ export default function EmployeePage() {
         .update({ receipt_sequence: nextSeq })
         .eq("id", parkingLot.id);
 
-      const receiptNumber = nextSeq.toString();
+      const receiptNumber = nextSeq;
 
       const { error: sessionError } = await supabase
         .from("parking_sessions")
@@ -876,6 +880,10 @@ export default function EmployeePage() {
   };
 
   const handleExit = async (sessionId: string) => {
+    if (!navigator.onLine) {
+      setError("Sin conexión a internet. Requiere conexión para registrar salida.");
+      return;
+    }
     if (
       !window.confirm(
         "¿Estás seguro de que deseas registrar la salida de este vehículo?",
@@ -947,7 +955,7 @@ export default function EmployeePage() {
         .from("parking_lots")
         .update({ receipt_sequence: nextSeq })
         .eq("id", parkingLot.id);
-      receiptNumber = nextSeq.toString();
+      receiptNumber = nextSeq;
     }
 
     const durationMinutes = Math.round(
@@ -994,7 +1002,7 @@ export default function EmployeePage() {
           const minutes = durationMinutes % 60;
 
           const params = new URLSearchParams({
-            receiptNumber: receiptNumber,
+            receiptNumber: receiptNumber.toString(),
             plate: sessionToExit.vehicles.plate,
             type: sessionToExit.vehicles.type,
             total: finalFee.toString(),

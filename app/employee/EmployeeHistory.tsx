@@ -15,6 +15,32 @@ import ReceiptModal from "./ReceiptModal";
 
 const PAGE_SIZE = 20;
 
+interface Vehicle {
+  plate: string;
+  type: string;
+  brand?: string;
+  color?: string;
+  owner_name?: string;
+  custom_fields_data?: Record<string, any>;
+}
+
+interface ParkingSession {
+  id: string;
+  parking_lot_id: string;
+  vehicle_id: string;
+  status: string;
+  entry_time: string;
+  exit_time?: string;
+  fee?: number;
+  total_charged?: number;
+  receipt_number?: number;
+  duration_minutes?: number;
+  entry_employee_name?: string;
+  exit_employee_name?: string;
+  extra_data?: Record<string, any>;
+  vehicles: Vehicle;
+}
+
 export default function EmployeeHistory({
   parkingLot,
   tariffs,
@@ -26,7 +52,7 @@ export default function EmployeeHistory({
 }) {
   const parkingLotId = parkingLot.id;
   const showRevenue = parkingLot.show_revenue;
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<ParkingSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -48,6 +74,7 @@ export default function EmployeeHistory({
         { count: "exact" },
       )
       .eq("parking_lot_id", parkingLotId)
+      .order("receipt_number", { ascending: false })
       .order("entry_time", { ascending: false });
 
     if (searchTerm) {
@@ -177,7 +204,7 @@ export default function EmployeeHistory({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {sessions.map((session) => {
+              {sessions.map((session: ParkingSession) => {
                 const isCompleted = session.status === "completed";
                 const rules =
                   tariffs?.filter(
