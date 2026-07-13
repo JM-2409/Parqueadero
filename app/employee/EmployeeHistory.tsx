@@ -48,7 +48,7 @@ export default function EmployeeHistory({
         { count: "exact" },
       )
       .eq("parking_lot_id", parkingLotId)
-      .order("receipt_number", { ascending: false });
+      .order("entry_time", { ascending: false });
 
     if (searchTerm) {
       // Search by plate

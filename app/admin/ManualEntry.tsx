@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Car, Clock, Calendar, CheckCircle2, X, AlertTriangle, Search } from "lucide-react";
+import { Car, Clock, Calendar, CheckCircle2, X } from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
@@ -30,16 +30,12 @@ export default function ManualEntry({
   const [isSpecialFee, setIsSpecialFee] = useState(false);
   const [totalFee, setTotalFee] = useState("");
   const [manualReceiptNumber, setManualReceiptNumber] = useState("");
-  const [debouncedReceipt, setDebouncedReceipt] = useState("");
-  const [isReceiptDuplicate, setIsReceiptDuplicate] = useState(false);
-  const [activeVehicleSession, setActiveVehicleSession] = useState<any>(null);
   const [extraData, setExtraData] = useState<Record<string, string>>({});
   const [tariffs, setTariffs] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [viewingActiveSession, setViewingActiveSession] = useState<any>(null);
 
   const formatTimeInput = (value: string) => {
     let val = value.replace(/\D/g, ""); // Solo números
@@ -58,23 +54,11 @@ export default function ManualEntry({
   useEffect(() => {
     const searchVehicle = async () => {
       if (debouncedPlate.length >= 5) {
-        // 1. Check if vehicle exists
         const { data } = await supabase
           .from("vehicles")
           .select("*")
           .eq("plate", debouncedPlate.toUpperCase())
           .maybeSingle();
-
-        // 2. Check if vehicle is active in system
-        const { data: activeSession } = await supabase
-            .from("parking_sessions")
-            .select("*, vehicles!inner(*)")
-            .eq("parking_lot_id", parkingLotId)
-            .eq("status", "active")
-            .eq("vehicles.plate", debouncedPlate.toUpperCase())
-            .maybeSingle();
-
-        setActiveVehicleSession(activeSession);
 
         if (data) {
           if (allowedVehicles.includes(data.type)) {
@@ -99,7 +83,6 @@ export default function ManualEntry({
         }
       } else {
         setExtraData({});
-        setActiveVehicleSession(null);
       }
     };
     searchVehicle();
@@ -115,28 +98,6 @@ export default function ManualEntry({
     };
     fetchTariffs();
   }, [parkingLotId]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedReceipt(manualReceiptNumber), 300);
-    return () => clearTimeout(timer);
-  }, [manualReceiptNumber]);
-
-  useEffect(() => {
-    const checkDuplicateReceipt = async () => {
-      if (debouncedReceipt.trim()) {
-        const { count } = await supabase
-          .from("parking_sessions")
-          .select("id", { count: "exact", head: true })
-          .eq("parking_lot_id", parkingLotId)
-          .eq("receipt_number", debouncedReceipt.trim());
-
-        setIsReceiptDuplicate((count || 0) > 0);
-      } else {
-        setIsReceiptDuplicate(false);
-      }
-    };
-    checkDuplicateReceipt();
-  }, [debouncedReceipt, parkingLotId]);
 
   useEffect(() => {
     if (
@@ -445,28 +406,10 @@ export default function ManualEntry({
                 type="text"
                 value={plate}
                 onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                className={`w-full text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:outline-none font-bold uppercase transition-all ${
-                  activeVehicleSession
-                  ? "bg-red-50 border border-red-500 text-red-900 focus:ring-red-500"
-                  : "bg-slate-50 border-0 text-slate-900 focus:ring-slate-500"
-                }`}
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all"
                 placeholder="ABC-123"
                 required
               />
-              {activeVehicleSession && (
-                <div className="mt-2 space-y-2">
-                  <p className="text-[10px] font-black text-red-600 ml-1 animate-pulse uppercase flex items-center gap-1">
-                    <Car size={12} /> El vehículo ya está en sistema
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setViewingActiveSession(activeVehicleSession)}
-                    className="w-full py-2 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-2xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
-                  >
-                    Ver detalles de la sesión
-                  </button>
-                </div>
-              )}
             </div>
 
             <div>
@@ -554,18 +497,9 @@ export default function ManualEntry({
                 type="text"
                 value={manualReceiptNumber}
                 onChange={(e) => setManualReceiptNumber(e.target.value)}
-                className={`w-full text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:outline-none font-bold uppercase transition-all placeholder-slate-300 ${
-                  isReceiptDuplicate
-                  ? "bg-red-50 border border-red-500 text-red-900 focus:ring-red-500"
-                  : "bg-slate-50 border-0 text-slate-900 focus:ring-slate-500"
-                }`}
+                className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl px-5 py-3 focus:ring-2 focus:ring-slate-500 outline-none font-bold uppercase transition-all placeholder-slate-300"
                 placeholder="Ej. 12345"
               />
-              {isReceiptDuplicate && (
-                <p className="text-[10px] font-black text-red-600 mt-2 ml-1 animate-pulse uppercase flex items-center gap-1">
-                  <X size={12} /> Recibo ya existe en el sistema
-                </p>
-              )}
               <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1">
                 Aplica tanto para vehículos activos como completados. Si se deja en blanco, se genera el consecutivo automáticamente.
               </p>
@@ -678,10 +612,8 @@ export default function ManualEntry({
         <div className="pt-4 border-t border-slate-100">
           <button
             type="submit"
-            disabled={loading || !!activeVehicleSession || isReceiptDuplicate}
-            className={`w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-slate-200 flex items-center justify-center gap-3 text-lg mx-auto ${
-              (!!activeVehicleSession || isReceiptDuplicate) ? "opacity-50 grayscale cursor-not-allowed" : ""
-            }`}
+            disabled={loading}
+            className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 disabled:bg-indigo-400 text-white rounded-3xl font-bold transition-all shadow-xl border border-slate-100 shadow-slate-200 flex items-center justify-center gap-3 text-lg mx-auto"
           >
             {loading ? (
               <Spinner size={24} className="text-white" />
@@ -694,38 +626,6 @@ export default function ManualEntry({
           </button>
         </div>
       </form>
-
-      {viewingActiveSession && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="bg-white border-b border-slate-100 p-4 flex justify-between items-center text-slate-900">
-                <h3 className="text-lg font-bold">Sesión Activa - {viewingActiveSession.vehicles.plate}</h3>
-                <button onClick={() => setViewingActiveSession(null)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Ticket</p>
-                      <p className="font-extrabold text-slate-900">{viewingActiveSession.receipt_number || "-"}</p>
-                   </div>
-                   <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Tipo</p>
-                      <p className="font-extrabold text-slate-900 capitalize">{viewingActiveSession.vehicles.type}</p>
-                   </div>
-                   <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 col-span-2">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Hora Ingreso</p>
-                      <p className="font-extrabold text-slate-900">{new Date(viewingActiveSession.entry_time).toLocaleString()}</p>
-                   </div>
-                </div>
-              </div>
-              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-                <button onClick={() => setViewingActiveSession(null)} className="px-6 py-2 bg-slate-900 text-white rounded-2xl font-bold">Cerrar</button>
-              </div>
-           </div>
-        </div>
-      )}
     </div>
   );
 }
