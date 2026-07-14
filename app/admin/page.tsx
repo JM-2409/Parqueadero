@@ -510,36 +510,65 @@ export default function AdminPage() {
     setError("");
     setSuccess("");
 
-    if (!newEmployee.username || !newEmployee.password) {
+    const trimmedUsername = newEmployee.username.trim();
+    if (!trimmedUsername || !newEmployee.password) {
       setError("Todos los campos son obligatorios");
       setIsCreatingEmployee(false);
       return;
     }
 
-    const sanitizedUsername = sanitizeInput(
-      newEmployee.username.toLowerCase().trim(),
-    );
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    try {
+      const sanitizedUsername = sanitizeInput(
+        trimmedUsername.toLowerCase(),
+      );
+      const email = `${sanitizedUsername}@parkingapp.local`;
 
-    const result = await createUser(
-      `${sanitizedUsername}@parkingapp.local`,
-      newEmployee.password,
-      "employee",
-      parkingLot.id,
-      newEmployee.customRoleId || undefined,
-      token,
-    );
+      // Validar que el email no exista en profiles
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email.trim())
+        .maybeSingle();
 
-    if (!result.success) {
-      setError(result.error || "Error al crear usuario");
-    } else {
+      if (existingProfile) {
+        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+        setIsCreatingEmployee(false);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const result = await createUser(
+        email.trim(),
+        newEmployee.password,
+        "employee",
+        parkingLot.id,
+        newEmployee.customRoleId || undefined,
+        token,
+      );
+
+      if (!result.success) throw new Error(result.error || "Error al crear usuario");
+
       setSuccess("Usuario creado exitosamente");
       setNewEmployee({ username: "", password: "", customRoleId: "" });
       await fetchEmployees(parkingLot.id);
       setTimeout(() => setSuccess(""), 3000);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err) || "Error al crear usuario";
+
+      if (message.includes("already registered") || message.includes("already exists")) {
+        setError("Este usuario ya existe en autenticación. Por favor, elige otro correo.");
+      } else if (message.includes("invalid email")) {
+        setError("El formato del email no es válido.");
+      } else if (message.includes("password")) {
+        setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
+      } else {
+        setError(`Error de red o servidor: ${message}`);
+      }
+    } finally {
+      setIsCreatingEmployee(false);
     }
-    setIsCreatingEmployee(false);
   };
 
   const toggleVehicleType = (type: string) => {

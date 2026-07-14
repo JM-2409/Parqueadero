@@ -66,7 +66,8 @@ export default function EmployeeManagement({
     setError("");
     setSuccess("");
 
-    if (!newEmployee.username || newEmployee.username.trim().length < 4) {
+    const trimmedUsername = newEmployee.username.trim();
+    if (!trimmedUsername || trimmedUsername.length < 4) {
       setError(
         "El nombre de usuario debe tener al menos 4 caracteres y no estar vacío.",
       );
@@ -75,7 +76,7 @@ export default function EmployeeManagement({
     }
 
 
-    if (!/^[a-zA-Z0-9_]+$/.test(newEmployee.username)) {
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
       setError(
         "El nombre de usuario solo puede contener letras, números y guiones bajos.",
       );
@@ -106,9 +107,23 @@ export default function EmployeeManagement({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      const email = `${newEmployee.username.trim()}@parkingapp.local`;
+      const email = `${trimmedUsername}@parkingapp.local`;
+
+      // Validar que el email no exista en profiles
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email.trim())
+        .maybeSingle();
+
+      if (existingProfile) {
+        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+        setIsCreatingEmployee(false);
+        return;
+      }
+
       const result = await createUser(
-        email,
+        email.trim(),
         newEmployee.password,
         "employee",
         parkingLotId,
@@ -131,13 +146,17 @@ export default function EmployeeManagement({
       if (data) setEmployees(data);
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: unknown) {
-      // Handle known Supabase Auth errors gracefully if possible
-      const message = getErrorMessage(err) || "Error al crear empleado";
-      setError(
-        message.includes("User already registered")
-          ? "Este usuario ya existe en el sistema."
-          : message,
-      );
+      const message = getErrorMessage(err) || "Error al crear usuario";
+
+      if (message.includes("already registered") || message.includes("already exists")) {
+        setError("Este usuario ya existe en autenticación. Por favor, elige otro correo.");
+      } else if (message.includes("invalid email")) {
+        setError("El formato del email no es válido.");
+      } else if (message.includes("password")) {
+        setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
+      } else {
+        setError(`Error de red o servidor: ${message}`);
+      }
     } finally {
       setIsCreatingEmployee(false);
     }
