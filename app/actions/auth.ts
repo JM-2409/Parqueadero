@@ -232,6 +232,73 @@ export async function deleteEmployee(userId: string, token: string) {
       return { success: false, error: "No tienes permisos para eliminar usuarios." };
     }
 
+    // Limpieza previa manual antes de la eliminación del usuario
+    // 1. Eliminar registros en admin_parking_lots donde admin_id === userId
+    try {
+      const { error } = await supabaseAdmin
+        .from("admin_parking_lots")
+        .delete()
+        .eq("admin_id", userId);
+      if (error) throw error;
+    } catch (error: unknown) {
+      console.error(`Error al limpiar admin_parking_lots para el usuario ${userId}:`, error);
+    }
+
+    // 2. Eliminar registros en device_approvals donde user_id === userId
+    try {
+      const { error } = await supabaseAdmin
+        .from("device_approvals")
+        .delete()
+        .eq("user_id", userId);
+      if (error) throw error;
+    } catch (error: unknown) {
+      console.error(`Error al limpiar device_approvals para el usuario ${userId}:`, error);
+    }
+
+    // 3. Actualizar cash_closures haciendo un update a { closed_by: null } donde closed_by === userId
+    try {
+      const { error } = await supabaseAdmin
+        .from("cash_closures")
+        .update({ closed_by: null })
+        .eq("closed_by", userId);
+      if (error) throw error;
+    } catch (error: unknown) {
+      console.error(`Error al limpiar cash_closures para el usuario ${userId}:`, error);
+    }
+
+    // 4. Actualizar cash_withdrawals haciendo un update a { withdrawn_by: null } donde withdrawn_by === userId
+    try {
+      const { error } = await supabaseAdmin
+        .from("cash_withdrawals")
+        .update({ withdrawn_by: null })
+        .eq("withdrawn_by", userId);
+      if (error) throw error;
+    } catch (error: unknown) {
+      console.error(`Error al limpiar cash_withdrawals para el usuario ${userId}:`, error);
+    }
+
+    // 5. Actualizar blacklisted_vehicles haciendo un update a { created_by: null } donde created_by === userId
+    try {
+      const { error } = await supabaseAdmin
+        .from("blacklisted_vehicles")
+        .update({ created_by: null })
+        .eq("created_by", userId);
+      if (error) throw error;
+    } catch (error: unknown) {
+      console.error(`Error al limpiar blacklisted_vehicles para el usuario ${userId}:`, error);
+    }
+
+    // 6. Actualizar vehicle_inspections haciendo un update a { employee_id: null } donde employee_id === userId
+    try {
+      const { error } = await supabaseAdmin
+        .from("vehicle_inspections")
+        .update({ employee_id: null })
+        .eq("employee_id", userId);
+      if (error) throw error;
+    } catch (error: unknown) {
+      console.error(`Error al limpiar vehicle_inspections para el usuario ${userId}:`, error);
+    }
+
     // Regla 4: Ejecución usando supabaseAdmin (Service Role Key)
     const { error: deleteError } =
       await supabaseAdmin.auth.admin.deleteUser(userId);
