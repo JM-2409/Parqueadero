@@ -210,18 +210,21 @@ export async function deleteEmployee(userId: string, token: string) {
       return { success: false, error: "El usuario objetivo no existe." };
     }
 
-    // Authorization logic
+    // MEJORA 1: JERARQUÍA ESTRICTA PARA ELIMINAR USUARIOS
+    // Regla 1: Validar que si el que elimina es admin, pertenezca al mismo parking_lot_id
     if (profile.role === "admin") {
-      if (profile.parking_lot_id !== targetProfile.parking_lot_id) {
+      if (!profile.parking_lot_id || profile.parking_lot_id !== targetProfile.parking_lot_id) {
         return {
           success: false,
           error: "No tienes permisos sobre este usuario.",
         };
       }
+      // Regla 2: Un admin SOLO puede eliminar a un employee
       if (targetProfile.role !== "employee") {
         return { success: false, error: "Los administradores solo pueden eliminar empleados." };
       }
     } else if (profile.role === "superadmin") {
+      // Regla 3: Un superadmin SOLO puede eliminar a un admin
       if (targetProfile.role !== "admin") {
         return { success: false, error: "Los superadministradores solo pueden eliminar administradores." };
       }
@@ -229,14 +232,18 @@ export async function deleteEmployee(userId: string, token: string) {
       return { success: false, error: "No tienes permisos para eliminar usuarios." };
     }
 
+    // Regla 4: Ejecución usando supabaseAdmin (Service Role Key)
     const { error: deleteError } =
       await supabaseAdmin.auth.admin.deleteUser(userId);
     if (deleteError) throw deleteError;
 
-    // The user deletion in auth should cascade delete the profile via Supabase constraints
-    // If not we can explicitly delete it here, but typically it cascades.
-    await supabaseAdmin.from("profiles").delete().eq("id", userId);
+    const { error: profileDeleteError } = await supabaseAdmin
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+    if (profileDeleteError) throw profileDeleteError;
 
+    // Retorna { success: true } si todo sale bien
     return { success: true };
   } catch (error: unknown) {
     return { success: false, error: getErrorMessage(error) };

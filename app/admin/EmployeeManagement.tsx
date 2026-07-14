@@ -75,7 +75,6 @@ export default function EmployeeManagement({
       return;
     }
 
-
     if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
       setError(
         "El nombre de usuario solo puede contener letras, números y guiones bajos.",
@@ -104,23 +103,24 @@ export default function EmployeeManagement({
       return;
     }
 
+    const email = `${trimmedUsername}@parkingapp.local`;
+
+    // Validar que el email no exista en profiles
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email.trim())
+      .maybeSingle();
+
+    if (existingProfile) {
+      setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+      setIsCreatingEmployee(false);
+      return;
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      const email = `${trimmedUsername}@parkingapp.local`;
-
-      // Validar que el email no exista en profiles
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", email.trim())
-        .maybeSingle();
-
-      if (existingProfile) {
-        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
-        setIsCreatingEmployee(false);
-        return;
-      }
 
       const result = await createUser(
         email.trim(),
@@ -155,7 +155,7 @@ export default function EmployeeManagement({
       } else if (message.includes("password")) {
         setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
       } else {
-        setError(`Error de red o servidor: ${message}`);
+        setError(`Error de servidor: ${message}`);
       }
     } finally {
       setIsCreatingEmployee(false);
