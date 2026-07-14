@@ -5,15 +5,15 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  skipWaiting: true,
   cacheOnFrontEndNav: false,
   aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   sw: "sw.js",
   fallbacks: {
-    offline: "/offline",
+    document: "/offline",
   },
   workboxOptions: {
+    skipWaiting: true,
     exclude: [
       ({ url }: { url: URL }) => {
         if (!url || !url.pathname) return false;

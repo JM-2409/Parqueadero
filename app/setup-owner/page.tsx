@@ -34,25 +34,25 @@ export default function SetupOwnerPage() {
       return;
     }
 
+    // Support legacy email logins and new username logins
+    const loginEmail = trimmedUsername.includes("@")
+      ? trimmedUsername.toLowerCase()
+      : `${trimmedUsername.toLowerCase()}@parkingapp.local`;
+
+    // Validar que el email no exista en profiles
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", loginEmail.trim())
+      .maybeSingle();
+
+    if (existingProfile) {
+      setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Support legacy email logins and new username logins
-      const loginEmail = trimmedUsername.includes("@")
-        ? trimmedUsername.toLowerCase()
-        : `${trimmedUsername.toLowerCase()}@parkingapp.local`;
-
-      // Validar que el email no exista en profiles
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", loginEmail.trim())
-        .maybeSingle();
-
-      if (existingProfile) {
-        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
-        setLoading(false);
-        return;
-      }
-
       // Create superadmin user
       const result = await createUser(loginEmail.trim(), password, "superadmin", null);
 
@@ -71,7 +71,7 @@ export default function SetupOwnerPage() {
       } else if (message.includes("password")) {
         setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
       } else {
-        setError(`Error de red o servidor: ${message}`);
+        setError(`Error de servidor: ${message}`);
       }
     } finally {
       setLoading(false);

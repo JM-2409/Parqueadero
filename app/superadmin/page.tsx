@@ -470,22 +470,22 @@ export default function SuperAdminPage() {
       return;
     }
 
+    const email = `${sanitizeInput(trimmedUsername).toLowerCase()}@parkingapp.local`;
+
+    // Validar que el email no exista en profiles
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email.trim())
+      .maybeSingle();
+
+    if (existingProfile) {
+      setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+      setIsCreatingAdmin(false);
+      return;
+    }
+
     try {
-      const email = `${sanitizeInput(trimmedUsername).toLowerCase()}@parkingapp.local`;
-
-      // Validar que el email no exista en profiles
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", email.trim())
-        .maybeSingle();
-
-      if (existingProfile) {
-        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
-        setIsCreatingAdmin(false);
-        return;
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
@@ -514,7 +514,7 @@ export default function SuperAdminPage() {
       } else if (message.includes("password")) {
         setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
       } else {
-        setError(`Error de red o servidor: ${message}`);
+        setError(`Error de servidor: ${message}`);
       }
     } finally {
       setIsCreatingAdmin(false);
