@@ -463,33 +463,62 @@ export default function SuperAdminPage() {
     setError("");
     setSuccess("");
 
-    if (!newAdmin.username || !newAdmin.password || !newAdmin.parkingLotId) {
+    const trimmedUsername = newAdmin.username.trim();
+    if (!trimmedUsername || !newAdmin.password || !newAdmin.parkingLotId) {
       setError("Todos los campos del administrador son obligatorios");
       setIsCreatingAdmin(false);
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    try {
+      const email = `${sanitizeInput(trimmedUsername).toLowerCase()}@parkingapp.local`;
 
-    const result = await createUser(
-      `${sanitizeInput(newAdmin.username).toLowerCase().trim()}@parkingapp.local`,
-      newAdmin.password,
-      "admin",
-      newAdmin.parkingLotId,
-      undefined,
-      token,
-    );
+      // Validar que el email no exista en profiles
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email.trim())
+        .maybeSingle();
 
-    if (!result.success) {
-      setError(result.error || "Error al crear administrador");
-    } else {
+      if (existingProfile) {
+        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+        setIsCreatingAdmin(false);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const result = await createUser(
+        email.trim(),
+        newAdmin.password,
+        "admin",
+        newAdmin.parkingLotId,
+        undefined,
+        token,
+      );
+
+      if (!result.success) throw new Error(result.error || "Error al crear administrador");
+
       setSuccess("Administrador creado exitosamente");
       setNewAdmin({ username: "", password: "", parkingLotId: "" });
       fetchAdmins();
       setTimeout(() => setSuccess(""), 3000);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err) || "Error al crear usuario";
+
+      if (message.includes("already registered") || message.includes("already exists")) {
+        setError("Este usuario ya existe en autenticación. Por favor, elige otro correo.");
+      } else if (message.includes("invalid email")) {
+        setError("El formato del email no es válido.");
+      } else if (message.includes("password")) {
+        setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
+      } else {
+        setError(`Error de red o servidor: ${message}`);
+      }
+    } finally {
+      setIsCreatingAdmin(false);
     }
-    setIsCreatingAdmin(false);
   };
 
   const handleUpdateSubscription = async (

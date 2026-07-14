@@ -218,22 +218,15 @@ export async function deleteEmployee(userId: string, token: string) {
           error: "No tienes permisos sobre este usuario.",
         };
       }
-      if (
-        targetProfile.role === "admin" ||
-        targetProfile.role === "superadmin"
-      ) {
-        return {
-          success: false,
-          error: "No puedes eliminar a un usuario con rol igual o superior.",
-        };
+      if (targetProfile.role !== "employee") {
+        return { success: false, error: "Los administradores solo pueden eliminar empleados." };
       }
     } else if (profile.role === "superadmin") {
-      if (targetProfile.role === "superadmin") {
-        return {
-          success: false,
-          error: "No puedes eliminar a un superadministrador.",
-        };
+      if (targetProfile.role !== "admin") {
+        return { success: false, error: "Los superadministradores solo pueden eliminar administradores." };
       }
+    } else {
+      return { success: false, error: "No tienes permisos para eliminar usuarios." };
     }
 
     const { error: deleteError } =

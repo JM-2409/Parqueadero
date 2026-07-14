@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { createUser } from "@/app/actions/auth";
+import { supabase } from "@/lib/supabase";
+import { getErrorMessage } from "@/lib/error";
 import { ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Spinner } from "@/components/ui/Spinner";
@@ -19,7 +21,8 @@ export default function SetupOwnerPage() {
     setLoading(true);
     setError("");
 
-    if (!username || !password) {
+    const trimmedUsername = username.trim();
+    if (!trimmedUsername || !password) {
       setError("Por favor, completa todos los campos.");
       setLoading(false);
       return;
@@ -31,20 +34,48 @@ export default function SetupOwnerPage() {
       return;
     }
 
-    // Support legacy email logins and new username logins
-    const loginEmail = username.includes("@")
-      ? username.trim().toLowerCase()
-      : `${username.toLowerCase().trim()}@parkingapp.local`;
+    try {
+      // Support legacy email logins and new username logins
+      const loginEmail = trimmedUsername.includes("@")
+        ? trimmedUsername.toLowerCase()
+        : `${trimmedUsername.toLowerCase()}@parkingapp.local`;
 
-    // Create superadmin user
-    const result = await createUser(loginEmail, password, "superadmin", null);
+      // Validar que el email no exista en profiles
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", loginEmail.trim())
+        .maybeSingle();
 
-    if (!result.success) {
-      setError(result.error || "Error al crear el usuario Dueño.");
-    } else {
-      setSuccess(true);
+      if (existingProfile) {
+        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+        setLoading(false);
+        return;
+      }
+
+      // Create superadmin user
+      const result = await createUser(loginEmail.trim(), password, "superadmin", null);
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al crear el usuario Dueño.");
+      } else {
+        setSuccess(true);
+      }
+    } catch (err: unknown) {
+      const message = getErrorMessage(err) || "Error al crear usuario";
+
+      if (message.includes("already registered") || message.includes("already exists")) {
+        setError("Este usuario ya existe en autenticación. Por favor, elige otro correo.");
+      } else if (message.includes("invalid email")) {
+        setError("El formato del email no es válido.");
+      } else if (message.includes("password")) {
+        setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
+      } else {
+        setError(`Error de red o servidor: ${message}`);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
