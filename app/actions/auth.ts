@@ -241,7 +241,7 @@ export async function deleteEmployee(userId: string, token: string) {
         .eq("admin_id", userId);
       if (error) throw error;
     } catch (error: unknown) {
-      console.error(`Error al limpiar admin_parking_lots para el usuario ${userId}:`, error);
+      console.error("Error al limpiar admin_parking_lots para el usuario:", error);
     }
 
     // 2. Eliminar registros en device_approvals donde user_id === userId
@@ -252,7 +252,7 @@ export async function deleteEmployee(userId: string, token: string) {
         .eq("user_id", userId);
       if (error) throw error;
     } catch (error: unknown) {
-      console.error(`Error al limpiar device_approvals para el usuario ${userId}:`, error);
+      console.error("Error al limpiar device_approvals para el usuario:", error);
     }
 
     // 3. Actualizar cash_closures haciendo un update a { closed_by: null } donde closed_by === userId
@@ -263,7 +263,7 @@ export async function deleteEmployee(userId: string, token: string) {
         .eq("closed_by", userId);
       if (error) throw error;
     } catch (error: unknown) {
-      console.error(`Error al limpiar cash_closures para el usuario ${userId}:`, error);
+      console.error("Error al limpiar cash_closures para el usuario:", error);
     }
 
     // 4. Actualizar cash_withdrawals haciendo un update a { withdrawn_by: null } donde withdrawn_by === userId
@@ -274,7 +274,7 @@ export async function deleteEmployee(userId: string, token: string) {
         .eq("withdrawn_by", userId);
       if (error) throw error;
     } catch (error: unknown) {
-      console.error(`Error al limpiar cash_withdrawals para el usuario ${userId}:`, error);
+      console.error("Error al limpiar cash_withdrawals para el usuario:", error);
     }
 
     // 5. Actualizar blacklisted_vehicles haciendo un update a { created_by: null } donde created_by === userId
@@ -285,7 +285,7 @@ export async function deleteEmployee(userId: string, token: string) {
         .eq("created_by", userId);
       if (error) throw error;
     } catch (error: unknown) {
-      console.error(`Error al limpiar blacklisted_vehicles para el usuario ${userId}:`, error);
+      console.error("Error al limpiar blacklisted_vehicles para el usuario:", error);
     }
 
     // 6. Actualizar vehicle_inspections haciendo un update a { employee_id: null } donde employee_id === userId
@@ -296,7 +296,7 @@ export async function deleteEmployee(userId: string, token: string) {
         .eq("employee_id", userId);
       if (error) throw error;
     } catch (error: unknown) {
-      console.error(`Error al limpiar vehicle_inspections para el usuario ${userId}:`, error);
+      console.error("Error al limpiar vehicle_inspections para el usuario:", error);
     }
 
     // Regla 4: Ejecución usando supabaseAdmin (Service Role Key)
