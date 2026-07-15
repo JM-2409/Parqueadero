@@ -32,6 +32,7 @@ export default function CashClosuresHistory({
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawReason, setWithdrawReason] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [currentWithdrawals, setCurrentWithdrawals] = useState<any[]>([]);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -44,9 +45,47 @@ export default function CashClosuresHistory({
       .order("closed_at", { ascending: false })
       .limit(50);
 
-    if (data) setClosures(data);
+    if (data) {
+      setClosures(data);
+
+      const lastClosureDate = data[0]?.closed_at || new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+      const { data: withdrawalsData } = await supabase
+        .from("cash_withdrawals")
+        .select("*")
+        .eq("parking_lot_id", parkingLotId)
+        .gt("withdrawn_at", lastClosureDate)
+        .order("withdrawn_at", { ascending: false });
+
+      if (withdrawalsData) {
+        setCurrentWithdrawals(withdrawalsData);
+      }
+    }
     setLoading(false);
   }, [parkingLotId]);
+
+  const handleDeleteWithdrawal = async (id: string) => {
+    if (!confirm("¿Está seguro que desea revertir este retiro? El dinero volverá a sumarse a la caja.")) return;
+
+    try {
+      const { error } = await supabase
+        .from("cash_withdrawals")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setSuccess("Retiro revertido exitosamente.");
+      setTimeout(() => setSuccess(""), 3000);
+
+      if (onRegisterClosed) {
+        onRegisterClosed(); // to refresh shift totals
+      }
+      fetchClosures();
+    } catch (err: unknown) {
+      console.error("Error al revertir retiro", err);
+      setError("No se pudo revertir el retiro: " + getErrorMessage(err));
+    }
+  };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -290,6 +329,61 @@ export default function CashClosuresHistory({
         </div>
       )}
 
+      {currentWithdrawals.length > 0 && (
+        <div className="mt-8 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-800">Retiros del Turno Actual</h2>
+          </div>
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                  <tr>
+                    <th className="px-6 py-4">Hora</th>
+                    <th className="px-6 py-4">Motivo</th>
+                    <th className="px-6 py-4">Monto</th>
+                    <th className="px-6 py-4 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {currentWithdrawals.map((withdrawal) => (
+                    <tr key={withdrawal.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <p className="text-slate-900 font-bold flex items-center gap-1">
+                          <Clock size={13} className="text-slate-400" />
+                          {new Date(withdrawal.withdrawn_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-slate-900">{withdrawal.reason}</p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <p className="font-bold text-red-500 text-base">
+                          {new Intl.NumberFormat("es-CO", {
+                            style: "currency",
+                            currency: "COP",
+                            minimumFractionDigits: 0,
+                          }).format(withdrawal.amount)}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <button
+                          onClick={() => handleDeleteWithdrawal(withdrawal.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                          title="Revertir retiro"
+                        >
+                          <X size={20} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showWithdrawModal && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -320,7 +414,8 @@ export default function CashClosuresHistory({
                     value={withdrawAmount}
                     onChange={handleWithdrawAmountChange}
                     placeholder="0"
-                    className={`${styles.inputField} pl-10`}
+                    className={`${styles.inputField}`}
+                    style={{ paddingLeft: "2.5rem" }}
                     required
                   />
                 </div>
