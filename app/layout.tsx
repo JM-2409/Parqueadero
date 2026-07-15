@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css"; // Global styles
 import { ConnectionBanner } from "@/components/ui/ConnectionBanner";
+import { VersionIndicator } from "@/components/ui/VersionIndicator";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
       >
         <ConnectionBanner />
         {children}
+        <VersionIndicator />
       </body>
     </html>
   );

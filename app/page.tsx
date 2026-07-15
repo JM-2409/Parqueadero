@@ -15,6 +15,7 @@ import {
   Zap,
   BarChart3,
   Smartphone,
+  MessageCircle,
 } from "lucide-react";
 
 export default function Home() {
@@ -61,6 +62,16 @@ export default function Home() {
             </a>
           </nav>
           <div className="hidden md:flex items-center gap-4">
+            <a
+              href="https://wa.me/573014310093?text=Hola%20NexoPark%2C%20me%20interesa%20conocer%20m%C3%A1s%20sobre%20sus%20planes"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-full transition-all flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5"
+              title="Contactar por WhatsApp"
+            >
+              <MessageCircle size={18} />
+              WhatsApp
+            </a>
             <Link
               href="/login"
               className="px-6 py-2.5 bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold rounded-full transition-all flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5"
@@ -301,24 +312,21 @@ export default function Home() {
               <div className="bg-slate-800 rounded-3xl p-8 border border-slate-700 flex flex-col">
                 <h3 className="text-2xl font-bold mb-2">Básico</h3>
                 <p className="text-slate-400 mb-6">
-                  Para pequeños emprendimientos.
+                  Hasta 50 espacios
                 </p>
                 <div className="mb-8">
-                  <span className="text-5xl font-extrabold">$50k</span>
+                  <span className="text-5xl font-extrabold">$15,000</span>
                   <span className="text-slate-400">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1 text-slate-300">
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-emerald-400" size={20} /> 1
-                    Parqueadero
+                    <CheckCircle2 className="text-emerald-400" size={20} /> 3 operarios
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-emerald-400" size={20} />{" "}
-                    Usuarios Ilimitados
+                    <CheckCircle2 className="text-emerald-400" size={20} /> Recibos por WhatsApp
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-emerald-400" size={20} />{" "}
-                    Tarifas Estándar
+                    <CheckCircle2 className="text-emerald-400" size={20} /> 1 parqueadero
                   </li>
                 </ul>
                 <a
@@ -329,35 +337,40 @@ export default function Home() {
                 </a>
               </div>
 
-              {/* Pro */}
+              {/* Profesional */}
               <div className="bg-indigo-600 rounded-3xl p-8 border border-indigo-500 shadow-2xl shadow-indigo-900/50 flex flex-col transform md:-translate-y-4 relative">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-indigo-900 px-4 py-1 rounded-full text-sm font-bold tracking-widest uppercase">
                   Popular
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Premium</h3>
+                <h3 className="text-2xl font-bold mb-2">Profesional</h3>
                 <p className="text-indigo-200 mb-6">
                   Para negocios en crecimiento.
                 </p>
                 <div className="mb-8">
-                  <span className="text-5xl font-extrabold">$120k</span>
+                  <span className="text-5xl font-extrabold">$25,000</span>
                   <span className="text-indigo-200">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1 text-white">
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-white" size={20} /> 1
-                    Parqueadero Completo
+                    <CheckCircle2 className="text-white" size={20} /> Hasta 100 espacios
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-white" size={20} /> Roles
-                    Avanzados
+                    <CheckCircle2 className="text-white" size={20} /> 2 parqueaderos
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-white" size={20} /> Abonados
-                    Mensuales
+                    <CheckCircle2 className="text-white" size={20} /> 10 operarios
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-white" size={20} /> Soporte
-                    Prioritario
+                    <CheckCircle2 className="text-white" size={20} /> Tarifas modulares V2
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="text-white" size={20} /> Abonados mensuales
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="text-white" size={20} /> Lista negra
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="text-white" size={20} /> Campos personalizados
                   </li>
                 </ul>
                 <a
@@ -370,24 +383,30 @@ export default function Home() {
 
               {/* Enterprise */}
               <div className="bg-slate-800 rounded-3xl p-8 border border-slate-700 flex flex-col">
-                <h3 className="text-2xl font-bold mb-2">Multi-Sede</h3>
-                <p className="text-slate-400 mb-6">Redes de parqueaderos.</p>
+                <h3 className="text-2xl font-bold mb-2">Empresarial</h3>
+                <p className="text-slate-400 mb-6">Para grandes operadores</p>
                 <div className="mb-8">
-                  <span className="text-5xl font-extrabold">$250k</span>
+                  <span className="text-5xl font-extrabold">$45,000</span>
                   <span className="text-slate-400">/mes</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1 text-slate-300">
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-emerald-400" size={20} />{" "}
-                    Hasta 5 Sedes
+                    <CheckCircle2 className="text-emerald-400" size={20} /> Hasta 300 espacios
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-emerald-400" size={20} />{" "}
-                    Control Centralizado
+                    <CheckCircle2 className="text-emerald-400" size={20} /> 5 parqueaderos
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle2 className="text-emerald-400" size={20} />{" "}
-                    Todas las funciones
+                    <CheckCircle2 className="text-emerald-400" size={20} /> 50 operarios
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="text-emerald-400" size={20} /> Parqueaderos privados
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="text-emerald-400" size={20} /> Integración con APIs
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="text-emerald-400" size={20} /> Soporte 24/7
                   </li>
                 </ul>
                 <a
@@ -422,6 +441,17 @@ export default function Home() {
                     <div className="flex items-center gap-3">
                       <ShieldCheck className="text-indigo-300" />
                       <span>Datos Seguros</span>
+                    </div>
+                    <div className="flex items-center gap-3 pt-2">
+                      <a
+                        href="https://wa.me/573014310093?text=Hola%20NexoPark%2C%20me%20interesa%20conocer%20m%C3%A1s%20sobre%20sus%20planes"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-white hover:text-green-300 transition"
+                      >
+                        <MessageCircle className="text-green-400" size={20} />
+                        <span>WhatsApp: +57 301 431 0093</span>
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -485,18 +515,49 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Car className="text-indigo-600" size={24} />
-            <span className="text-xl font-extrabold text-slate-900 tracking-tight">
-              {appName}
-            </span>
+      <footer className="bg-slate-900 text-slate-400 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h4 className="text-white font-bold mb-4">NexoPark</h4>
+              <p className="text-sm">Sistema de gestión de parqueaderos moderno y seguro.</p>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Contacto</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="https://wa.me/573014310093" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+                    WhatsApp: +57 301 431 0093
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:soporte@nexopark.co" className="hover:text-white transition">
+                    Email: soporte@nexopark.co
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Producto</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#features" className="hover:text-white transition">Características</a></li>
+                <li><a href="#pricing" className="hover:text-white transition">Precios</a></li>
+                <li><a href="#contact" className="hover:text-white transition">Contacto</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/privacy" className="hover:text-white transition">Privacidad</a></li>
+                <li><a href="/terms" className="hover:text-white transition">Términos</a></li>
+                <li><a href="/license" className="hover:text-white transition">Licencia</a></li>
+              </ul>
+            </div>
           </div>
-          <p className="text-slate-500 font-medium text-sm">
-            &copy; {new Date().getFullYear()} {appName}. Todos los derechos
-            reservados.
-          </p>
+          <div className="border-t border-slate-800 pt-8 flex justify-between items-center">
+            <p className="text-sm">© 2026 NexoPark. Todos los derechos reservados.</p>
+            <p className="text-sm">NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}</p>
+          </div>
         </div>
       </footer>
     </div>
