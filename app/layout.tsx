@@ -15,7 +15,6 @@ const appName = process.env.NEXT_PUBLIC_APP_NAME || "Sistema de Parqueaderos";
 export const metadata: Metadata = {
   title: `${appName} - Gestión Inteligente de Parqueaderos`,
   description: "Sistema avanzado de gestión y facturación de parqueaderos",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

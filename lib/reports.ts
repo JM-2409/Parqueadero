@@ -15,6 +15,7 @@ export const downloadClosureReport = async (closure: any, parkingLotName?: strin
       .from("parking_sessions")
       .select("*, vehicles(plate, type)")
       .eq("parking_lot_id", parkingLotId)
+      .eq("status", "completed")
       .not("exit_time", "is", null)
       .gt("exit_time", openedAt)
       .lte("exit_time", closedAt)
@@ -81,7 +82,7 @@ export const downloadClosureReport = async (closure: any, parkingLotName?: strin
     summaryData.push(["Retiros de Efectivo (-)", "-" + new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(withdrawalsTotal)]);
 
     const finalBalance = vehicleRevenue + monthlyTotal + baseAmount - withdrawalsTotal;
-    summaryData.push(["SALDO TOTAL EN CAJA", new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(closure.total_revenue || closure.total_amount || finalBalance)]);
+    summaryData.push(["TOTAL A ENTREGAR EN CAJA", new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(closure.total_revenue || closure.total_amount || finalBalance)]);
 
     autoTable(doc, {
       startY: 55,
@@ -92,7 +93,7 @@ export const downloadClosureReport = async (closure: any, parkingLotName?: strin
       columnStyles: { 1: { halign: "right", fontStyle: "bold" } }
     });
 
-    let currentY = (doc as any).lastAutoTable.cursor.y + 15;
+    let currentY = (doc as any).lastAutoTable.finalY + 15;
 
     // Withdrawals Detail
     if (withdrawals && withdrawals.length > 0) {
@@ -113,7 +114,7 @@ export const downloadClosureReport = async (closure: any, parkingLotName?: strin
         headStyles: { fillColor: [239, 68, 68] }, // red-500
         columnStyles: { 2: { halign: "right" } }
       });
-      currentY = (doc as any).lastAutoTable.cursor.y + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
     }
 
     // Monthly Subscribers Detail
@@ -136,7 +137,7 @@ export const downloadClosureReport = async (closure: any, parkingLotName?: strin
         headStyles: { fillColor: [16, 185, 129] }, // emerald-500
         columnStyles: { 3: { halign: "right" } }
       });
-      currentY = (doc as any).lastAutoTable.cursor.y + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
     }
 
     // Parking Sessions Detail
