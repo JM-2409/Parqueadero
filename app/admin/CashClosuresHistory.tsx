@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Clock, Calendar, DollarSign, X, HandCoins, Download, FileText } from "lucide-react";
+import { Clock, Calendar, DollarSign, X, HandCoins, Download, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import styles from "./admin.module.css";
 import { downloadClosureReport } from "@/lib/reports";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
@@ -25,6 +25,7 @@ export default function CashClosuresHistory({
   const [closures, setClosures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClosingRegister, setIsClosingRegister] = useState(false);
+  const [isWithdrawalsOpen, setIsWithdrawalsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
   // Withdrawal Modal state
@@ -331,13 +332,19 @@ export default function CashClosuresHistory({
 
       {currentWithdrawals.length > 0 && (
         <div className="mt-8 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-slate-800">Retiros del Turno Actual</h2>
-          </div>
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+          <button
+            onClick={() => setIsWithdrawalsOpen(!isWithdrawalsOpen)}
+            className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-3xl border border-slate-200 transition-colors mb-4"
+          >
+            <h2 className="text-lg font-bold text-slate-800">Ver Retiros del Turno Actual ({currentWithdrawals.length})</h2>
+            {isWithdrawalsOpen ? <ChevronUp size={20} className="text-slate-600" /> : <ChevronDown size={20} className="text-slate-600" />}
+          </button>
+
+          {isWithdrawalsOpen && (
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden animate-in slide-in-from-top-2 fade-in duration-200">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="px-6 py-4">Hora</th>
                     <th className="px-6 py-4">Motivo</th>
@@ -381,6 +388,7 @@ export default function CashClosuresHistory({
               </table>
             </div>
           </div>
+          )}
         </div>
       )}
 
