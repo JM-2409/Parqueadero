@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
+import { deleteParkingSession } from "@/app/actions/sessions";
 import ReceiptModal from "../employee/ReceiptModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -334,17 +335,24 @@ export default function AdminHistory({
     if (!sessionToDelete) return;
 
     try {
-      const { error } = await supabase
-        .from("parking_sessions")
-        .delete()
-        .eq("id", sessionToDelete);
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession?.access_token) {
+        alert("Sesión expirada. Por favor inicie sesión nuevamente.");
+        return;
+      }
 
-      if (error) throw error;
+      const result = await deleteParkingSession(sessionToDelete, authSession.access_token);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       setSessionToDelete(null);
       fetchData();
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
-      alert("Hubo un error al eliminar el registro.");
+      const errorMessage = e instanceof Error ? e.message : "Hubo un error al eliminar el registro.";
+      alert(errorMessage);
     }
   };
 
