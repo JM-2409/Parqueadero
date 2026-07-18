@@ -55,21 +55,38 @@ export async function GET(request: Request) {
       }
     }
 
-    // Procesar borrado de imágenes en lotes para evitar solicitudes de red excesivas
+    // Procesar borrado de imágenes en lotes en paralelo para evitar retrasos secuenciales por I/O
     if (allFilenamesToDelete.length > 0) {
       const BATCH_SIZE = 100;
+      const batches: string[][] = [];
       for (let i = 0; i < allFilenamesToDelete.length; i += BATCH_SIZE) {
-        const batch = allFilenamesToDelete.slice(i, i + BATCH_SIZE);
-        try {
-          const { error } = await supabaseAdmin.storage.from('revistas').remove(batch);
-          if (!error) {
-            deletedImagesCount += batch.length;
-          } else {
-            console.error(`Fallo al borrar imágenes en Supabase para el lote (offset ${i}):`, error);
-          }
-        } catch(e) {
-          console.error(`Fallo al borrar imágenes en Supabase para el lote (offset ${i}):`, e);
-        }
+        batches.push(allFilenamesToDelete.slice(i, i + BATCH_SIZE));
+      }
+
+      // Concurrency limit to prevent overwhelming Supabase
+      const CONCURRENCY_LIMIT = 5;
+      for (let i = 0; i < batches.length; i += CONCURRENCY_LIMIT) {
+        const batchSlice = batches.slice(i, i + CONCURRENCY_LIMIT);
+
+        const results = await Promise.all(
+          batchSlice.map(async (batch, index) => {
+            const absoluteIndex = i + index;
+            try {
+              const { error } = await supabaseAdmin.storage.from('revistas').remove(batch);
+              if (!error) {
+                return batch.length;
+              } else {
+                console.error(`Fallo al borrar imágenes en Supabase para el lote (index ${absoluteIndex}):`, error);
+                return 0;
+              }
+            } catch(e) {
+              console.error(`Fallo al borrar imágenes en Supabase para el lote (index ${absoluteIndex}):`, e);
+              return 0;
+            }
+          })
+        );
+
+        deletedImagesCount += results.reduce((sum, count) => sum + count, 0);
       }
     }
 
