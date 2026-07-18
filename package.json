@@ -51,7 +51,7 @@
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-v8": "^4.1.10",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.5",
     "eslint-config-next": "16.0.8",
     "firebase-tools": "^15.0.0",
     "jsdom": "^29.1.1",

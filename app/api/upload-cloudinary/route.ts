@@ -57,7 +57,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Formato de imagen inválido' }, { status: 400 });
     }
 
-    const type = matches[1];
+    const type = matches[1].toLowerCase();
+
+    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!ALLOWED_MIME_TYPES.includes(type)) {
+      return NextResponse.json({ error: 'Tipo de archivo no permitido' }, { status: 400 });
+    }
+
     const buffer = Buffer.from(matches[2], 'base64');
     const extension = type.split('/')[1] || 'jpg';
     
