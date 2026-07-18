@@ -270,6 +270,7 @@ export default function EmployeePage() {
       .select("*, vehicles(*)")
       .eq("parking_lot_id", parkingLotId)
       .eq("status", "active")
+      .order("receipt_number", { ascending: false })
       .order("entry_time", { ascending: false });
     setActiveSessions(data || []);
   }, []);
@@ -823,13 +824,27 @@ export default function EmployeePage() {
         .single();
 
       const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+      const receiptNumber = nextSeq;
+
+      // Check if receipt number already exists
+      const { data: existingSession } = await supabase
+        .from("parking_sessions")
+        .select("id")
+        .eq("parking_lot_id", parkingLot.id)
+        .eq("receipt_number", receiptNumber)
+        .maybeSingle();
+
+      if (existingSession) {
+        playBeep("error");
+        setError("El número de ticket ya está registrado");
+        setIsSubmittingEntry(false);
+        return;
+      }
 
       await supabase
         .from("parking_lots")
         .update({ receipt_sequence: nextSeq })
         .eq("id", parkingLot.id);
-
-      const receiptNumber = nextSeq;
 
       const { error: sessionError } = await supabase
         .from("parking_sessions")
