@@ -64,10 +64,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tipo de archivo no permitido' }, { status: 400 });
     }
 
+    const EXTENSION_MAP: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif'
+    };
+
+    const extension = EXTENSION_MAP[type];
+    if (!extension) {
+      return NextResponse.json({ error: 'Extensión no permitida' }, { status: 400 });
+    }
+
     const buffer = Buffer.from(matches[2], 'base64');
-    const extension = type.split('/')[1] || 'jpg';
     
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
+    const filename = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('revistas')
