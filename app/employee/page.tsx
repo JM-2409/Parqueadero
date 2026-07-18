@@ -786,7 +786,7 @@ export default function EmployeePage() {
       if (prefShowNotes) {
         if (photoFile) {
           const fileExt = photoFile.name.split(".").pop() || "jpeg";
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
           const filePath = `${parkingLot.id}/${fileName}`;
 
           try {
