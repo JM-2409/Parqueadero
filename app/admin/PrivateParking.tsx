@@ -482,39 +482,56 @@ export default function PrivateParking({
 
           // Batch delete old history records for these plates
           if (platesToDelete.length > 0) {
+              const deletePromises = [];
               for (let i = 0; i < platesToDelete.length; i += 500) {
                   const chunk = platesToDelete.slice(i, i + 500);
-                  const { error: delError } = await supabase
-                      .from("private_parking_history")
-                      .delete()
-                      .eq("parking_lot_id", parkingLotId)
-                      .in("plate", chunk);
-                  if (delError) throw delError;
+                  deletePromises.push(
+                      supabase
+                          .from("private_parking_history")
+                          .delete()
+                          .eq("parking_lot_id", parkingLotId)
+                          .in("plate", chunk)
+                          .then(({ error: delError }) => {
+                              if (delError) throw delError;
+                          })
+                  );
               }
+              await Promise.all(deletePromises);
           }
 
           // Batch insert new history records
           if (historyRecordsToInsert.length > 0) {
+              const insertPromises = [];
               for (let i = 0; i < historyRecordsToInsert.length; i += 500) {
                   const chunk = historyRecordsToInsert.slice(i, i + 500);
-                  const { error: insError } = await supabase
-                      .from("private_parking_history")
-                      .insert(chunk);
-                  if (insError) throw insError;
+                  insertPromises.push(
+                      supabase
+                          .from("private_parking_history")
+                          .insert(chunk)
+                          .then(({ error: insError }) => {
+                              if (insError) throw insError;
+                          })
+                  );
               }
+              await Promise.all(insertPromises);
           }
       }
 
       // Delete in batches of 500
+      const spaceDeletePromises = [];
       for (let i = 0; i < selectedSpaces.length; i += 500) {
         const chunk = selectedSpaces.slice(i, i + 500);
-        const { error } = await supabase
-          .from("private_parking_spaces")
-          .delete()
-          .in("id", chunk);
-
-        if (error) throw error;
+        spaceDeletePromises.push(
+            supabase
+              .from("private_parking_spaces")
+              .delete()
+              .in("id", chunk)
+              .then(({ error }) => {
+                  if (error) throw error;
+              })
+        );
       }
+      await Promise.all(spaceDeletePromises);
 
       setSuccess(`Se eliminaron ${selectedSpaces.length} espacios exitosamente.`);
       setSelectedSpaces([]);
@@ -832,34 +849,49 @@ export default function PrivateParking({
             // Since we aren't enforcing a strict unique constraint on plate in history globally,
             // we can safely insert new records without deleting previous ones. This preserves
             // the full historical record over time while moving them to history in batch.
+            const historyInsertPromises = [];
             for (let i = 0; i < historyRecordsToInsert.length; i += 500) {
                const chunk = historyRecordsToInsert.slice(i, i + 500);
-               const { error: histErr } = await supabase.from("private_parking_history").insert(chunk);
-               if (histErr) throw histErr;
+               historyInsertPromises.push(
+                   supabase.from("private_parking_history").insert(chunk).then(({ error: histErr }) => {
+                       if (histErr) throw histErr;
+                   })
+               );
             }
+            await Promise.all(historyInsertPromises);
           }
 
           const chunkSize = 500;
 
           // Process Inserts
+          const insertPromises = [];
           for (let i = 0; i < recordsToInsert.length; i += chunkSize) {
             const chunk = recordsToInsert.slice(i, i + chunkSize);
-            const { error: insertError } = await supabase
-              .from("private_parking_spaces")
-              .insert(chunk);
-
-            if (insertError) throw insertError;
+            insertPromises.push(
+                supabase
+                  .from("private_parking_spaces")
+                  .insert(chunk)
+                  .then(({ error: insertError }) => {
+                      if (insertError) throw insertError;
+                  })
+            );
           }
+          await Promise.all(insertPromises);
 
           // Process Updates (upsert works fine when all records have an id)
+          const updatePromises = [];
           for (let i = 0; i < recordsToUpdate.length; i += chunkSize) {
             const chunk = recordsToUpdate.slice(i, i + chunkSize);
-            const { error: updateError } = await supabase
-              .from("private_parking_spaces")
-              .upsert(chunk);
-
-            if (updateError) throw updateError;
+            updatePromises.push(
+                supabase
+                  .from("private_parking_spaces")
+                  .upsert(chunk)
+                  .then(({ error: updateError }) => {
+                      if (updateError) throw updateError;
+                  })
+            );
           }
+          await Promise.all(updatePromises);
 
           setSuccess(
             `Se importaron ${spacesToUpsert.length} parqueaderos correctamente.`,
