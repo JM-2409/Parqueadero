@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import Cropper from "react-easy-crop";
+import Cropper, { Area } from "react-easy-crop";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 
@@ -12,13 +12,14 @@ interface ImageCropperProps {
 export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-  const onCropCompleteHandler = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+  const onCropCompleteHandler = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const createCroppedImage = async () => {
+    if (!croppedAreaPixels) return;
     try {
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
       onCropComplete(croppedImage);
