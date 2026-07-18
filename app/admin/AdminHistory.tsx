@@ -128,13 +128,9 @@ export default function AdminHistory({
       )
       .eq("parking_lot_id", parkingLotId);
 
-    if (filterStatus === "active") {
-        query = query.order("entry_time", { ascending: false });
-    } else {
-        query = query
-            .order("receipt_number", { ascending: false })
-            .order("entry_time", { ascending: false });
-    }
+    query = query
+        .order("receipt_number", { ascending: false })
+        .order("entry_time", { ascending: false });
 
     if (searchTerm) {
       query = query.ilike("vehicles.plate", `%${searchTerm}%`);
@@ -443,13 +439,9 @@ export default function AdminHistory({
         .select(`*, vehicles!inner (*)`)
         .eq("parking_lot_id", parkingLotId);
 
-      if (filterStatus === "active") {
-          query = query.order("entry_time", { ascending: false });
-      } else {
-          query = query
-              .order("receipt_number", { ascending: false })
-              .order("entry_time", { ascending: false });
-      }
+      query = query
+        .order("receipt_number", { ascending: false })
+        .order("entry_time", { ascending: false });
 
       if (searchTerm) {
         query = query.ilike("vehicles.plate", `%${searchTerm}%`);
@@ -553,13 +545,9 @@ export default function AdminHistory({
         )
         .eq("parking_lot_id", parkingLotId);
 
-      if (filterStatus === "active") {
-          query = query.order("entry_time", { ascending: false });
-      } else {
-          query = query
-              .order("receipt_number", { ascending: false })
-              .order("entry_time", { ascending: false });
-      }
+      query = query
+        .order("receipt_number", { ascending: false })
+        .order("entry_time", { ascending: false });
 
       if (searchTerm) {
         query = query.ilike("vehicles.plate", `%${searchTerm}%`);

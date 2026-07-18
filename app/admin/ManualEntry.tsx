@@ -275,26 +275,40 @@ export default function ManualEntry({
 
       // Determinar número de recibo para todas las sesiones (activas o completadas)
       let receiptNumber = manualReceiptNumber.trim();
+      let isManualReceipt = false;
 
       if (receiptNumber) {
-        // El usuario ingresó un recibo manualmente.
-        // Intentamos extraer la parte numérica para actualizar la secuencia de la base de datos
-        // y asegurar que el SIGUIENTE auto-generado sea el que sigue después de este.
+        isManualReceipt = true;
+      } else {
+        // No hay recibo manual, autogeneramos el consecutivo para revisar
+        const { data: lotData } = await supabase
+          .from("parking_lots")
+          .select("receipt_sequence")
+          .eq("id", parkingLotId)
+          .single();
+        receiptNumber = String((lotData?.receipt_sequence || 0) + 1);
+      }
+
+      // Validar que el número de recibo no exista ya en la base de datos
+      const { data: existingSessionByReceipt } = await supabase
+        .from("parking_sessions")
+        .select("id")
+        .eq("parking_lot_id", parkingLotId)
+        .eq("receipt_number", Number(receiptNumber))
+        .maybeSingle();
+
+      if (existingSessionByReceipt) {
+        setError("El número de ticket ya está registrado");
+        setLoading(false);
+        return;
+      }
+
+      // Si pasa la validación y es manual, actualizamos la secuencia si aplica
+      if (isManualReceipt) {
         const numericPart = receiptNumber.replace(/\D/g, "");
         if (numericPart) {
           const parsedNumber = parseInt(numericPart, 10);
           if (!isNaN(parsedNumber)) {
-            // Obtenemos la secuencia actual primero
-            const { data: lotData } = await supabase
-              .from("parking_lots")
-              .select("receipt_sequence")
-              .eq("id", parkingLotId)
-              .single();
-
-            const currentSeq = lotData?.receipt_sequence || 0;
-
-            // Forzamos la actualización de la secuencia al número ingresado
-            // para asegurar que el sistema continúe a partir de aquí.
             const { error: updateError } = await supabase
               .from("parking_lots")
               .update({ receipt_sequence: parsedNumber })
@@ -306,19 +320,11 @@ export default function ManualEntry({
           }
         }
       } else {
-        // No hay recibo manual, autogeneramos el consecutivo.
-        const { data: lotData } = await supabase
-          .from("parking_lots")
-          .select("receipt_sequence")
-          .eq("id", parkingLotId)
-          .single();
-        const nextSeq = (lotData?.receipt_sequence || 0) + 1;
+        // Si no fue manual, entonces actualizamos la secuencia con el número generado
         await supabase
           .from("parking_lots")
-          .update({ receipt_sequence: nextSeq })
+          .update({ receipt_sequence: Number(receiptNumber) })
           .eq("id", parkingLotId);
-
-        receiptNumber = nextSeq;
       }
 
       const sessionData: any = {
