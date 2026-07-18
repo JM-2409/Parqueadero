@@ -146,7 +146,7 @@ export async function POST(req: Request) {
             .createBucket("receipts", { public: true })
             .catch(() => {});
 
-          const fileName = `receipt-${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
+          const fileName = `receipt-${crypto.randomUUID()}.png`;
 
           // 3. Pasamos el arrayBuffer limpio a Supabase
           const { data: uploadData, error: uploadError } =
