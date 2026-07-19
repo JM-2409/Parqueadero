@@ -27,6 +27,7 @@ import { useRef } from "react";
 import EmployeeHistory from "./EmployeeHistory";
 import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
+import Image from "next/image";
 import InspectionsTab from "./InspectionsTab";
 import { calculateFee } from "@/lib/pricing";
 
@@ -1614,10 +1615,12 @@ export default function EmployeePage() {
                             </div>
                             {photoDataUrl && (
                               <div className="mt-2 relative rounded-3xl overflow-hidden border border-slate-200 max-h-48 flex justify-center bg-slate-50">
-                                <img
+                                <Image
                                   src={photoDataUrl}
                                   alt="Observación"
-                                  className="object-contain h-full"
+                                  width={400}
+                                  height={300}
+                                  className="w-auto h-full max-h-48 object-contain"
                                 />
                                 <button
                                   type="button"
@@ -1939,10 +1942,11 @@ export default function EmployeePage() {
                   <div className="flex flex-col w-full text-center sm:text-left print:text-center">
                     <div className="hidden print:flex flex-col items-center justify-center mb-4">
                       {parkingLot?.logo_url || appSettings?.logo_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={parkingLot?.logo_url || appSettings?.logo_url}
                           alt="Logo"
+                          width={80}
+                          height={80}
                           className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-2 border-2 border-slate-100 shadow-xl"
                         />
                       ) : (
@@ -2023,12 +2027,13 @@ export default function EmployeePage() {
                                     href={v as string}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block max-h-48 overflow-hidden rounded-3xl border border-indigo-200 bg-white"
+                                    className="block relative h-48 w-full max-h-48 overflow-hidden rounded-3xl border border-indigo-200 bg-white"
                                   >
-                                    <img
+                                    <Image
                                       src={v as string}
                                       alt="Observación"
-                                      className="w-full object-cover"
+                                      fill
+                                      className="object-cover"
                                     />
                                   </a>
                                 </div>
