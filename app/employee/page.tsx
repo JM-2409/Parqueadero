@@ -785,7 +785,22 @@ export default function EmployeePage() {
       // Handle photo upload or reused photo
       if (prefShowNotes) {
         if (photoFile) {
-          const fileExt = photoFile.name.split(".").pop() || "jpeg";
+          const mimeType = (photoFile.type || "image/jpeg").toLowerCase();
+          const EXTENSION_MAP: Record<string, string> = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/gif": "gif",
+          };
+
+          if (!EXTENSION_MAP[mimeType] || mimeType === "image/svg+xml" || mimeType === "text/html") {
+            playBeep("error");
+            setError("Formato de imagen no seguro o inválido. Use JPG, PNG, WEBP o GIF.");
+            setIsSubmittingEntry(false);
+            return;
+          }
+
+          const fileExt = EXTENSION_MAP[mimeType];
           const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
           const filePath = `${parkingLot.id}/${fileName}`;
 
