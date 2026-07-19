@@ -11,6 +11,15 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getErrorMessage } from "@/lib/error";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
+interface ParkingLotData {
+  id?: number | string;
+  is_suspended?: boolean;
+  features?: {
+    require_device_approval?: boolean;
+    [key: string]: unknown;
+  };
+}
+
 function LoginContent() {
   const isOnline = useOnlineStatus();
   const [username, setUsername] = useState("");
@@ -126,7 +135,7 @@ function LoginContent() {
       if (
         profileData &&
         profileData.parking_lots &&
-        (profileData.parking_lots as any).is_suspended
+        (profileData.parking_lots as ParkingLotData).is_suspended
       ) {
         await supabase.auth.signOut();
         setError(
@@ -138,7 +147,7 @@ function LoginContent() {
 
       if (profileData && (profileData.role === "admin" || profileData.role === "employee")) {
         // Verificar si el parqueadero tiene habilitada la configuración de seguridad de dispositivos
-        const requireDeviceApproval = (profileData.parking_lots as any)?.features?.require_device_approval === true;
+        const requireDeviceApproval = (profileData.parking_lots as ParkingLotData)?.features?.require_device_approval === true;
 
         if (requireDeviceApproval) {
           // Device approval flow for non-superadmins
