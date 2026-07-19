@@ -209,7 +209,9 @@ export default function CashClosuresHistory({
 
       // Auto-download report after closure
       if (newClosure) {
-        downloadClosureReport(newClosure, parkingLotName);
+        downloadClosureReport(newClosure, parkingLotName).catch((err: unknown) => {
+          setError(getErrorMessage(err));
+        });
       }
 
       setTimeout(() => setSuccess(""), 3000);
@@ -228,9 +230,14 @@ export default function CashClosuresHistory({
   };
 
   const handleDownloadReport = async (closure: any) => {
-    setIsExporting(closure.id);
-    await downloadClosureReport(closure, parkingLotName);
-    setIsExporting(null);
+    try {
+      setIsExporting(closure.id);
+      await downloadClosureReport(closure, parkingLotName);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   if (loading) {

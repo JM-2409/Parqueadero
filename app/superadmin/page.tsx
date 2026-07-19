@@ -190,9 +190,14 @@ export default function SuperAdminPage() {
   }, []);
 
   const handleDownloadReport = async (closure: any) => {
-    setIsExporting(closure.id);
-    await downloadClosureReport(closure);
-    setIsExporting(null);
+    try {
+      setIsExporting(closure.id);
+      await downloadClosureReport(closure);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   const fetchParkingLots = useCallback(async () => {

@@ -203,7 +203,9 @@ export default function EmployeePage() {
 
       // Auto-download report
       if (newClosure) {
-        downloadClosureReport(newClosure, parkingLot?.name);
+        downloadClosureReport(newClosure, parkingLot?.name).catch((err: unknown) => {
+          setError(getErrorMessage(err));
+        });
       }
 
       setTimeout(() => setSuccess(""), 3000);
