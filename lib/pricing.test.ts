@@ -12,14 +12,14 @@ describe("calculateFee", () => {
   });
 
   test("should return 0 when rules is null", () => {
-    // @ts-ignore
-    const result = calculateFee(entryTime, exitTime, null);
+    // Intentionally passing null to test error handling
+    const result = calculateFee(entryTime, exitTime, null as unknown as TariffRule[]);
     expect(result).toBe(0);
   });
 
   test("should return 0 when rules is undefined", () => {
-    // @ts-ignore
-    const result = calculateFee(entryTime, exitTime, undefined);
+    // Intentionally passing undefined to test error handling
+    const result = calculateFee(entryTime, exitTime, undefined as unknown as TariffRule[]);
     expect(result).toBe(0);
   });
 
