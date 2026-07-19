@@ -175,6 +175,6 @@ export const downloadClosureReport = async (closure: any, parkingLotName?: strin
 
   } catch (err) {
     console.error("Error generating report", err);
-    alert("No se pudo generar el reporte: " + getErrorMessage(err));
+    throw new Error("No se pudo generar el reporte: " + getErrorMessage(err));
   }
 };
