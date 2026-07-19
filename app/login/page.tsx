@@ -27,21 +27,19 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  useEffect(() => {
+  const [error, setError] = useState(() => {
     const errParam = searchParams.get("error");
     if (errParam === "suspended") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setError("La plataforma ha sido suspendida para este parqueadero.");
-    } else if (errParam === "expired") {
-      setError(
-        "Tu suscripción ha expirado. Por favor, contacta a ventas o actualiza tu suscripción.",
-      );
+      return "La plataforma ha sido suspendida para este parqueadero.";
     }
-  }, [searchParams]);
+    if (errParam === "expired") {
+      return "Tu suscripción ha expirado. Por favor, contacta a ventas o actualiza tu suscripción.";
+    }
+    return "";
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
