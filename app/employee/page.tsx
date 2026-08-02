@@ -36,6 +36,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { getErrorMessage } from "@/lib/error";
 import { downloadClosureReport } from "@/lib/reports";
+import { OccupancyGauge } from "@/components/ui/OccupancyGauge";
+import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 
 // Validación segura de preferencias en localStorage
 const ALLOWED_PREF_KEYS = [
@@ -69,6 +71,7 @@ const setSecurePref = (key: string, value: boolean): void => {
 
 export default function EmployeePage() {
   const router = useRouter();
+  const offline = useOfflineQueue();
   const [activeTab, setActiveTab] = useState("operation"); // operation, history, private, inspections
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -1378,9 +1381,58 @@ export default function EmployeePage() {
           {success && <SuccessMessage message={success} />}
 
           {/* TAB: OPERATION */}
-          {activeTab === "operation" && (
-            <div className="flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Resumen Rápido */}
+          {activeTab === "operation" && (() => {
+            const carrosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "carros" || s.vehicles?.type?.toLowerCase() === "carro").length;
+            const motosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "motos" || s.vehicles?.type?.toLowerCase() === "moto").length;
+            const bicisCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "bicicletas" || s.vehicles?.type?.toLowerCase() === "bicicleta").length;
+            const totalCap = parkingLot?.capacity || 100;
+
+            const occupancyData = {
+              carros: { occupied: carrosCount, capacity: Math.round(totalCap * 0.5) },
+              motos: { occupied: motosCount, capacity: Math.round(totalCap * 0.35) },
+              bicicletas: { occupied: bicisCount, capacity: Math.round(totalCap * 0.15) },
+            };
+
+            return (
+              <div className="flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Offline & Queue Status Banner */}
+                {(!offline.isOnline || offline.pendingCount > 0) && (
+                  <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+                    !offline.isOnline
+                      ? "bg-amber-50 border-amber-200 text-amber-800"
+                      : "bg-blue-50 border-blue-200 text-blue-800"
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full animate-ping bg-amber-500 shrink-0" />
+                      <div>
+                        <p className="font-bold text-sm">
+                          {!offline.isOnline
+                            ? "Modo Sin Conexión (Offline)"
+                            : `Conexión Restablecida: ${offline.pendingCount} registro(s) pendiente(s)`}
+                        </p>
+                        <p className="text-xs opacity-90">
+                          {!offline.isOnline
+                            ? "Las entradas/salidas se guardarán localmente y se sincronizarán al recuperar señal."
+                            : "Haz clic en sincronizar para subir los registros a la base de datos."}
+                        </p>
+                      </div>
+                    </div>
+                    {offline.isOnline && offline.pendingCount > 0 && (
+                      <button
+                        onClick={offline.triggerSync}
+                        disabled={offline.isSyncing}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shrink-0"
+                      >
+                        {offline.isSyncing ? "Sincronizando..." : "Sincronizar Ahora"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Occupancy Gauge Header */}
+                <OccupancyGauge data={occupancyData} />
+
+                {/* Resumen Rápido */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
                 <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center justify-between">
                   <div>
@@ -1895,8 +1947,8 @@ export default function EmployeePage() {
                   )}
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB: HISTORY */}
           {activeTab === "history" && parkingLot && (

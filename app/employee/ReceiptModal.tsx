@@ -1,9 +1,10 @@
 "use client";
 
-import { Receipt, Printer, X, Car, Send } from "lucide-react";
+import { Receipt, Printer, X, Car, Send, QrCode } from "lucide-react";
 import { useState } from "react";
 import { sanitizeInput } from "@/lib/sanitize";
 import { getErrorMessage } from "@/lib/error";
+import { printThermalReceipt } from "@/lib/thermal-printer";
 
 interface Vehicle {
   plate: string;
@@ -301,21 +302,49 @@ export default function ReceiptModal({
             )}
           </div>
 
-          <div className="flex flex-wrap gap-3 mt-2 pt-4 border-t border-slate-200">
-            <button
-              onClick={handlePrint}
-              className="flex-auto md:flex-1 py-3 px-5 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 text-sm md:text-base"
-            >
-              <Printer size={18} />
-              Imprimir
-            </button>
-            <button
-              onClick={onClose}
-              className="flex-auto py-3 px-5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-3xl font-bold transition-colors w-full md:w-auto md:flex-1 text-sm md:text-base"
-            >
-              Cerrar
-            </button>
-          </div>
+  const handleThermalPrint = () => {
+    printThermalReceipt({
+      receiptNumber: session.receipt_number?.toString() || "-",
+      parkingLotName: parkingLot?.name || appSettings?.app_name || "Parqueadero",
+      nit: parkingLot?.nit,
+      address: parkingLot?.address,
+      phone: parkingLot?.phone_contact,
+      plate: session.vehicles?.plate || "-",
+      vehicleType: session.vehicles?.type || "-",
+      entryTime: session.entry_time,
+      exitTime: session.exit_time,
+      durationMinutes,
+      fee: session.fee,
+      totalCharged: session.total_charged,
+      employeeName: session.exit_employee_name || session.entry_employee_name,
+    });
+  };
+
+  return (
+    <div className="flex flex-wrap gap-3 mt-2 pt-4 border-t border-slate-200">
+      <button
+        onClick={handlePrint}
+        className="flex-1 min-w-[120px] py-3 px-4 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-2 text-sm"
+      >
+        <Printer size={18} />
+        Imprimir
+      </button>
+      <button
+        onClick={handleThermalPrint}
+        className="flex-1 min-w-[140px] py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-2 text-sm shadow-md"
+        title="Imprimir ticket optimizado para impresoras térmicas de 58mm/80mm"
+      >
+        <Printer size={18} />
+        Ticket Térmico POS
+      </button>
+      <button
+        onClick={onClose}
+        className="flex-1 min-w-[100px] py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-3xl font-bold transition-colors text-sm"
+      >
+        Cerrar
+      </button>
+    </div>
+  );
         </div>
       </div>
     </div>
