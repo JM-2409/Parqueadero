@@ -96,6 +96,7 @@ export default function AdminPage() {
 
   const [loading, setLoading] = useState(true);
   const [pendingDevicesCount, setPendingDevicesCount] = useState(0);
+  const [showDeviceAlert, setShowDeviceAlert] = useState(false);
   const [parkingLot, setParkingLot] = useState<any>(null);
   const [todayStats, setTodayStats] = useState({ vehicles: 0, revenue: 0 });
   const [employees, setEmployees] = useState<any[]>([]);
@@ -388,6 +389,7 @@ export default function AdminPage() {
     checkUser();
   }, [checkUser]);
 
+  // Realtime: sesiones de parqueo (estadísticas del día)
   useEffect(() => {
     if (!parkingLot?.id) return;
 
@@ -411,6 +413,52 @@ export default function AdminPage() {
       supabase.removeChannel(channel);
     };
   }, [parkingLot?.id, fetchTodayStats]);
+
+  // ──────────────────────────────────────────────────────
+  // Realtime: dispositivos pendientes de aprobación
+  // Cuando un empleado inicia sesión en un dispositivo nuevo,
+  // el admin recibe una notificación inmediata sin refrescar.
+  // ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!parkingLot?.id) return;
+
+    const deviceChannel = supabase
+      .channel(`device_approvals:admin:${parkingLot.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "device_approvals",
+          filter: `parking_lot_id=eq.${parkingLot.id}`,
+        },
+        (payload) => {
+          // Solo nos interesan los nuevos dispositivos en estado pendiente
+          if (payload.new && (payload.new as any).status === "pending") {
+            setPendingDevicesCount((prev) => prev + 1);
+            setShowDeviceAlert(true);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "device_approvals",
+          filter: `parking_lot_id=eq.${parkingLot.id}`,
+        },
+        () => {
+          // Refrescar el conteo cuando cambia el estado de algún dispositivo
+          fetchPendingDevicesCount(parkingLot.id);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(deviceChannel);
+    };
+  }, [parkingLot?.id, fetchPendingDevicesCount]);
 
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -686,13 +734,71 @@ export default function AdminPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 ">
-        Cargando panel...
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-4" style={{ background: "var(--np-bg-primary)" }}>
+        <div className="animate-pulse-glow p-5 rounded-2xl" style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)" }}>
+          <Settings size={36} style={{ color: "#818cf8" }} />
+        </div>
+        <div className="text-center">
+          <p className="font-bold text-lg" style={{ color: "#f1f5f9" }}>Cargando panel de administración</p>
+          <p className="text-sm mt-1" style={{ color: "#64748b" }}>Un momento por favor...</p>
+        </div>
+        <Spinner size={24} className="text-indigo-500" />
       </div>
     );
 
   return (
     <div className={styles.container}>
+
+      {/* ── Banner de alerta: nuevo dispositivo pendiente (Realtime) ── */}
+      <AnimatePresence>
+        {showDeviceAlert && pendingDevicesCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -60 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-2rem)] max-w-md"
+          >
+            <div
+              className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl"
+              style={{
+                background: "rgba(13,20,36,0.97)",
+                border: "1px solid rgba(245,158,11,0.4)",
+                backdropFilter: "blur(20px)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(245,158,11,0.15)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)" }}>
+                  <Bell size={18} style={{ color: "#fbbf24" }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: "#f1f5f9" }}>
+                    {pendingDevicesCount} dispositivo{pendingDevicesCount !== 1 ? "s" : ""} pendiente{pendingDevicesCount !== 1 ? "s" : ""}
+                  </p>
+                  <p className="text-xs" style={{ color: "#94a3b8" }}>Un empleado solicita acceso desde un equipo nuevo</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => { handleTabChange("devices"); setShowDeviceAlert(false); }}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                  style={{ background: "linear-gradient(135deg,#f59e0b,#f97316)", color: "#fff" }}
+                >
+                  Revisar
+                </button>
+                <button
+                  onClick={() => setShowDeviceAlert(false)}
+                  className="p-1.5 rounded-xl transition-colors"
+                  style={{ color: "#64748b" }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Mobile Top Header */}
       <div className={styles.mobileHeader}>
         <div className={styles.mobileHeaderTitle}>
