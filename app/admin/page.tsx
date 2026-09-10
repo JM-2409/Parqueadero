@@ -70,6 +70,16 @@ import {
   ArrowDown
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/error";
+import BuildingModulesConfig from "./BuildingModulesConfig";
+import ResidentsDirectory from "./ResidentsDirectory";
+import PedestrianVisitors from "./PedestrianVisitors";
+import MovingPermits from "./MovingPermits";
+import PackageRegistry from "./PackageRegistry";
+import WhatsAppCenter from "./WhatsAppCenter";
+import {
+  Footprints, Truck, Package, MessageCircle as WaIcon, Building2
+} from "lucide-react";
+
 
 function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -104,6 +114,17 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+
+  // Módulos activos del conjunto residencial
+  const [buildingModules, setBuildingModules] = useState({
+    residents_directory: false,
+    pedestrian_visitors: false,
+    moving_permits: false,
+    package_registry: false,
+    whatsapp_packages: false,
+    extended_tariff_hours: false,
+  });
 
   // Settings states
   const [capacity, setCapacity] = useState("");
