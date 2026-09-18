@@ -400,11 +400,23 @@ export default function AdminPage() {
       fetchParkingLot(profile.parking_lot_id);
       fetchEmployees(profile.parking_lot_id);
       fetchPendingDevicesCount(profile.parking_lot_id);
+      setAdminEmail(profile.email || "");
+
+      // Cargar módulos activos del conjunto
+      supabase
+        .from("building_modules")
+        .select("*")
+        .eq("parking_lot_id", profile.parking_lot_id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setBuildingModules(data);
+        });
     } catch (err) {
       console.error("Error checking user:", err);
       router.push("/login");
     }
   }, [router, fetchParkingLot, fetchEmployees, fetchPendingDevicesCount]);
+
 
   useEffect(() => {
     checkUser();
@@ -1054,7 +1066,79 @@ export default function AdminPage() {
               Configuración
             </span>
           </button>
+
+          {/* ── Módulos Residenciales (condicionales) ── */}
+          {(buildingModules.residents_directory ||
+            buildingModules.pedestrian_visitors ||
+            buildingModules.moving_permits ||
+            buildingModules.package_registry) && (
+            <div className="px-3 pt-3 pb-1">
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#334155" }}>
+                Conjunto
+              </p>
+            </div>
+          )}
+
+          {buildingModules.residents_directory && (
+            <button
+              onClick={() => { handleTabChange("residents"); setIsMobileMenuOpen(false); }}
+              className={`${styles.navItem} ${activeTab === "residents" ? styles.navItemActive : ""}`}
+            >
+              <Users size={20} />
+              <span className="font-bold whitespace-nowrap text-left">Residentes</span>
+            </button>
+          )}
+
+          {buildingModules.pedestrian_visitors && (
+            <button
+              onClick={() => { handleTabChange("pedestrian"); setIsMobileMenuOpen(false); }}
+              className={`${styles.navItem} ${activeTab === "pedestrian" ? styles.navItemActive : ""}`}
+            >
+              <Footprints size={20} />
+              <span className="font-bold whitespace-nowrap text-left">Visitantes</span>
+            </button>
+          )}
+
+          {buildingModules.moving_permits && (
+            <button
+              onClick={() => { handleTabChange("moving"); setIsMobileMenuOpen(false); }}
+              className={`${styles.navItem} ${activeTab === "moving" ? styles.navItemActive : ""}`}
+            >
+              <Truck size={20} />
+              <span className="font-bold whitespace-nowrap text-left">Trasteos</span>
+            </button>
+          )}
+
+          {buildingModules.package_registry && (
+            <button
+              onClick={() => { handleTabChange("packages"); setIsMobileMenuOpen(false); }}
+              className={`${styles.navItem} ${activeTab === "packages" ? styles.navItemActive : ""}`}
+            >
+              <Package size={20} />
+              <span className="font-bold whitespace-nowrap text-left">Paquetes</span>
+            </button>
+          )}
+
+          {(buildingModules.whatsapp_packages) && (
+            <button
+              onClick={() => { handleTabChange("whatsapp_center"); setIsMobileMenuOpen(false); }}
+              className={`${styles.navItem} ${activeTab === "whatsapp_center" ? styles.navItemActive : ""}`}
+            >
+              <WaIcon size={20} />
+              <span className="font-bold whitespace-nowrap text-left">Mensajes</span>
+            </button>
+          )}
+
+          {/* Tab para gestionar módulos */}
+          <button
+            onClick={() => { handleTabChange("building_modules"); setIsMobileMenuOpen(false); }}
+            className={`${styles.navItem} ${activeTab === "building_modules" ? styles.navItemActive : ""}`}
+          >
+            <Building2 size={20} />
+            <span className="font-bold whitespace-nowrap text-left">Módulos</span>
+          </button>
         </nav>
+
         <div className={styles.logoutContainer}>
           <Link
             href="/"
@@ -2043,6 +2127,78 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+
+          {/* ══════════════════════════════════════════════════
+              MÓDULOS RESIDENCIALES
+          ══════════════════════════════════════════════════ */}
+
+          {/* TAB: MÓDULOS DEL CONJUNTO */}
+          {activeTab === "building_modules" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="rounded-3xl p-6"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <BuildingModulesConfig
+                  parkingLotId={parkingLot.id}
+                  onModulesChange={(m: any) => setBuildingModules(m)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* TAB: DIRECTORIO DE RESIDENTES */}
+          {activeTab === "residents" && parkingLot && buildingModules.residents_directory && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="rounded-3xl p-6"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <ResidentsDirectory parkingLotId={parkingLot.id} />
+              </div>
+            </div>
+          )}
+
+          {/* TAB: VISITANTES PEATONALES */}
+          {activeTab === "pedestrian" && parkingLot && buildingModules.pedestrian_visitors && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="rounded-3xl p-6"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <PedestrianVisitors parkingLotId={parkingLot.id} employeeName={adminEmail} />
+              </div>
+            </div>
+          )}
+
+          {/* TAB: PERMISOS DE TRASTEO */}
+          {activeTab === "moving" && parkingLot && buildingModules.moving_permits && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="rounded-3xl p-6"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <MovingPermits parkingLotId={parkingLot.id} employeeName={adminEmail} isAdmin={true} />
+              </div>
+            </div>
+          )}
+
+          {/* TAB: REGISTRO DE PAQUETES */}
+          {activeTab === "packages" && parkingLot && buildingModules.package_registry && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="rounded-3xl p-6"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <PackageRegistry
+                  parkingLotId={parkingLot.id}
+                  employeeName={adminEmail}
+                  whatsappEnabled={buildingModules.whatsapp_packages}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CENTRO WHATSAPP */}
+          {activeTab === "whatsapp_center" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="rounded-3xl p-6"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <WhatsAppCenter parkingLotId={parkingLot.id} />
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

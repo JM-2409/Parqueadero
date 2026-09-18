@@ -211,7 +211,7 @@ export default function Home() {
               }}
             >
               <Zap size={14} style={{ color: "#fbbf24" }} />
-              La Nueva Generación en Gestión de Parqueaderos
+              Plataforma de Gestión Administrativa para Conjuntos Residenciales
             </motion.div>
 
             {/* Título */}
@@ -222,9 +222,9 @@ export default function Home() {
               className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6 max-w-4xl leading-[1.05]"
               style={{ color: "#f1f5f9" }}
             >
-              Revoluciona el Control{" "}
+              Administra tu Conjunto{" "}
               <span style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                de tu Parqueadero
+                de Forma Inteligente
               </span>
             </motion.h1>
 
@@ -236,8 +236,7 @@ export default function Home() {
               className="text-lg sm:text-xl mb-10 max-w-2xl leading-relaxed"
               style={{ color: "#94a3b8" }}
             >
-              Una plataforma moderna, rápida y segura para administrar ingresos, salidas,
-              tarifas y reportes. Todo desde la nube, accesible donde estés.
+              Una plataforma moderna, segura y completamente configurable para administrar tu conjunto residencial: parqueadero, visitantes, paquetes, trasteos, residentes y mucho más.
             </motion.p>
 
             {/* CTAs */}
