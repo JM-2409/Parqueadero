@@ -1191,6 +1191,17 @@ export default function EmployeePage() {
     );
   }
 
+  const carrosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "carros" || s.vehicles?.type?.toLowerCase() === "carro").length;
+  const motosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "motos" || s.vehicles?.type?.toLowerCase() === "moto").length;
+  const bicisCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "bicicletas" || s.vehicles?.type?.toLowerCase() === "bicicleta").length;
+  const totalCap = parkingLot?.capacity || 100;
+
+  const occupancyData = {
+    carros: { occupied: carrosCount, capacity: Math.round(totalCap * 0.5) },
+    motos: { occupied: motosCount, capacity: Math.round(totalCap * 0.35) },
+    bicicletas: { occupied: bicisCount, capacity: Math.round(totalCap * 0.15) },
+  };
+
   return (
     <div className="h-screen bg-slate-50  flex flex-col md:flex-row w-full overflow-hidden font-sans">
       {/* Mobile Top Header */}
@@ -1381,19 +1392,7 @@ export default function EmployeePage() {
           {success && <SuccessMessage message={success} />}
 
           {/* TAB: OPERATION */}
-          {activeTab === "operation" && (() => {
-            const carrosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "carros" || s.vehicles?.type?.toLowerCase() === "carro").length;
-            const motosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "motos" || s.vehicles?.type?.toLowerCase() === "moto").length;
-            const bicisCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "bicicletas" || s.vehicles?.type?.toLowerCase() === "bicicleta").length;
-            const totalCap = parkingLot?.capacity || 100;
-
-            const occupancyData = {
-              carros: { occupied: carrosCount, capacity: Math.round(totalCap * 0.5) },
-              motos: { occupied: motosCount, capacity: Math.round(totalCap * 0.35) },
-              bicicletas: { occupied: bicisCount, capacity: Math.round(totalCap * 0.15) },
-            };
-
-            return (
+          {activeTab === "operation" && (
               <div className="flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Offline & Queue Status Banner */}
                 {(!offline.isOnline || offline.pendingCount > 0) && (
@@ -1947,8 +1946,7 @@ export default function EmployeePage() {
                   )}
                 </div>
               </div>
-            );
-          })()}
+            )}
 
           {/* TAB: HISTORY */}
           {activeTab === "history" && parkingLot && (
