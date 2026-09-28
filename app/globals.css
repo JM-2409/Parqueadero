@@ -1,55 +1,49 @@
 @import "tailwindcss";
 
 /* ============================================================
-   NEXOPARK - SISTEMA GLOBAL DE DISEÑO PREMIUM (ESTÁTICO UNIFICADO)
+   NEXOPARK - SISTEMA GLOBAL DE DISEÑO LUMINOSO Y MODERNO
    ============================================================ */
 
 /* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
-/* ---- VARIABLES CSS GLOBALES (TEMA ESTÁTICO DE ALTO CONTRASTE) ---- */
+/* ---- VARIABLES CSS GLOBALES (TEMA CLARO / ILUMINADO Y SÚPER LEGIBLE) ---- */
 :root {
-  /* Paleta principal estática en tonos pizarra/gris oscuro de alta elegancia */
-  --np-bg-primary: #090d16;
-  --np-bg-secondary: #111827;
-  --np-bg-card: #1f2937;
-  --np-bg-card-hover: #374151;
-  --np-border: #374151;
-  --np-border-hover: #4b5563;
+  /* Paleta principal limpia en blanco y gris claro con alto contraste */
+  --np-bg-primary: #f8fafc;
+  --np-bg-secondary: #ffffff;
+  --np-bg-card: #ffffff;
+  --np-bg-card-hover: #f1f5f9;
+  --np-border: #cbd5e1;
+  --np-border-hover: #94a3b8;
 
-  /* Acentos con contraste claro y profesional */
-  --np-indigo: #6366f1;
-  --np-indigo-light: #818cf8;
-  --np-violet: #8b5cf6;
-  --np-cyan: #06b6d4;
-  --np-emerald: #10b981;
-  --np-amber: #f59e0b;
-  --np-rose: #f43f5e;
+  /* Acentos vibrantes y profesionales sobre blanco */
+  --np-indigo: #4338ca;
+  --np-indigo-light: #4f46e5;
+  --np-violet: #6d28d9;
+  --np-cyan: #0284c7;
+  --np-emerald: #047857;
+  --np-amber: #b45309;
+  --np-rose: #be123c;
 
-  /* Gradientes sobrios */
-  --np-grad-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --np-grad-secondary: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-  --np-grad-success: linear-gradient(135deg, #059669 0%, #0284c7 100%);
-  --np-grad-danger: linear-gradient(135deg, #e11d48 0%, #ea580c 100%);
+  /* Sombras sobrias */
+  --np-glow-indigo: 0 4px 12px rgba(67, 56, 202, 0.12);
+  --np-glow-emerald: 0 4px 12px rgba(4, 120, 87, 0.12);
+  --np-glow-rose: 0 4px 12px rgba(190, 18, 60, 0.12);
 
-  /* Sombras y enfoques sobrios */
-  --np-glow-indigo: 0 4px 20px rgba(79, 70, 229, 0.25);
-  --np-glow-emerald: 0 4px 20px rgba(5, 150, 105, 0.25);
-  --np-glow-rose: 0 4px 20px rgba(225, 29, 72, 0.25);
-
-  /* Texto de Altísimo Contraste */
-  --np-text-primary: #f9fafb;     /* Blanco puro / casi puro */
-  --np-text-secondary: #e5e7eb;   /* Gris muy claro */
-  --np-text-muted: #9ca3af;       /* Gris medio legible */
+  /* Texto de Máximo Contraste (Negro / Gris Muy Oscuro) */
+  --np-text-primary: #0f172a;     /* Casi negro */
+  --np-text-secondary: #334155;   /* Gris oscuro */
+  --np-text-muted: #64748b;       /* Gris neutro legible */
 
   /* Transiciones */
   --np-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --np-transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Forzar esquema de color oscuro estático independientemente del SO/móvil */
+/* Forzar esquema de color claro independientemente del SO/móvil */
 :root {
-  color-scheme: dark !important;
+  color-scheme: light !important;
 }
 
 /* ---- RESET Y BASE ---- */
@@ -60,7 +54,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  color-scheme: dark !important;
+  color-scheme: light !important;
   background-color: var(--np-bg-primary) !important;
   color: var(--np-text-primary) !important;
 }
@@ -75,70 +69,66 @@ body {
   overflow-x: hidden;
 }
 
-/* Forzar contraste correcto en elementos de formulario estándar */
+/* Forzar contraste en elementos de formulario */
 input, select, textarea, button {
-  color-scheme: dark !important;
+  color-scheme: light !important;
 }
 
-/* ---- SCROLLBAR PERSONALIZADO ---- */
+/* ---- SCROLLBAR ---- */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--np-bg-secondary);
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: #cbd5e1;
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: #94a3b8;
 }
 
-/* ---- TARJETAS Y CONTENEDORES ESTÁTICOS ---- */
+/* ---- TARJETAS Y CONTENEDORES LUMINOSOS ---- */
 .glass {
-  background: var(--np-bg-card);
-  border: 1px solid var(--np-border);
-  color: var(--np-text-primary);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
 }
 
 .glass-hover:hover {
-  background: var(--np-bg-card-hover);
-  border-color: var(--np-border-hover);
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .glass-card {
-  background: #111827;
-  border: 1px solid #374151;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 16px;
-  color: #f9fafb;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: var(--np-transition);
 }
 
 .glass-card:hover {
-  background: #1f2937;
-  border-color: #4b5563;
+  background: #ffffff;
+  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* ---- GRADIENTE DE TEXTO LEGIBLE ---- */
+/* ---- GRADIENTES / ACENTOS DE TEXTO ---- */
 .text-gradient {
-  background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #312e81;
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #0369a1;
 }
 
-/* ---- BOTONES DE ALTO CONTRASTE ---- */
+/* ---- BOTONES PRINCIPALES ---- */
 .btn-primary-glow {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background: #4338ca;
   color: #ffffff !important;
   border: none;
   border-radius: 12px;
@@ -150,11 +140,11 @@ input, select, textarea, button {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 2px 8px rgba(67, 56, 202, 0.3);
 }
 
 .btn-primary-glow:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  background: #3730a3;
   transform: translateY(-1px);
 }
 
@@ -165,7 +155,7 @@ input, select, textarea, button {
   box-shadow: none;
 }
 
-/* ---- INPUTS Y CAMPOS DE TEXTO (SÚPER VISIBLES Y SIN FONDO BLANCO) ---- */
+/* ---- INPUTS Y CAMPOS DE TEXTO (TEXTO NEGRO SOBRE FONDO BLANCO) ---- */
 .input-dark,
 input[type="text"],
 input[type="email"],
@@ -178,10 +168,10 @@ input[type="time"],
 input[type="datetime-local"],
 select,
 textarea {
-  background-color: #1f2937 !important;
-  border: 1px solid #4b5563 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #94a3b8 !important;
   border-radius: 10px !important;
-  color: #f9fafb !important;
+  color: #0f172a !important;
   padding: 0.75rem 1rem !important;
   width: 100%;
   outline: none;
@@ -193,7 +183,7 @@ textarea {
 .input-dark::placeholder,
 input::placeholder,
 textarea::placeholder {
-  color: #9ca3af !important;
+  color: #64748b !important;
   opacity: 1;
 }
 
@@ -201,35 +191,35 @@ textarea::placeholder {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #818cf8 !important;
-  background-color: #111827 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+  border-color: #4338ca !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15) !important;
 }
 
-/* ---- FONDO ESTÁTICO (SIN ANIMACIONES DESLUMBRANTES) ---- */
 .bg-orbs {
   display: none;
 }
 
-/* ---- SIDEBAR ESTÁTICO ---- */
+/* ---- SIDEBAR ---- */
 .sidebar-dark {
-  background-color: #111827;
-  border-right: 1px solid #374151;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
 }
 
 /* ---- TARJETAS ESTADÍSTICAS ---- */
 .stat-card {
-  background: #111827;
-  border: 1px solid #374151;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 1.5rem;
-  color: #f9fafb;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: var(--np-transition);
 }
 
 .stat-card:hover {
-  background: #1f2937;
-  border-color: #4b5563;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* ---- BADGES / ETIQUETAS DE ALTA LEGIBILIDAD ---- */
@@ -246,86 +236,86 @@ textarea:focus {
 }
 
 .badge-indigo {
-  background: #312e81;
-  color: #e0e7ff;
-  border: 1px solid #4338ca;
+  background: #e0e7ff;
+  color: #312e81;
+  border: 1px solid #c7d2fe;
 }
 
 .badge-emerald {
-  background: #064e3b;
-  color: #d1fae5;
-  border: 1px solid #047857;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .badge-rose {
-  background: #881337;
-  color: #ffe4e6;
-  border: 1px solid #be123c;
+  background: #ffe4e6;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
 }
 
 .badge-amber {
-  background: #78350f;
-  color: #fef3c7;
-  border: 1px solid #b45309;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
 }
 
-/* ---- TABLAS DE ALTO CONTRASTE ---- */
+/* ---- TABLAS ---- */
 .table-dark th {
-  background: #1f2937;
-  color: #f3f4f6;
+  background: #f1f5f9;
+  color: #1e293b;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.875rem 1rem;
-  border-bottom: 1px solid #374151;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table-dark td {
   padding: 1rem;
-  border-bottom: 1px solid #1f2937;
-  color: #f9fafb;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
   vertical-align: middle;
 }
 
 .table-dark tr:hover td {
-  background: #1f2937;
+  background: #f8fafc;
 }
 
 /* ---- BANNERS Y ALERTAS ---- */
 .alert-info {
-  background: #0c4a6e;
-  border: 1px solid #0284c7;
-  color: #e0f2fe;
+  background: #e0f2fe;
+  border: 1px solid #7dd3fc;
+  color: #0369a1;
   border-radius: 12px;
   padding: 1rem 1.25rem;
 }
 
 .alert-success {
-  background: #064e3b;
-  border: 1px solid #059669;
-  color: #d1fae5;
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
   border-radius: 12px;
   padding: 1rem 1.25rem;
 }
 
 .alert-error {
-  background: #881337;
-  border: 1px solid #e11d48;
-  color: #ffe4e6;
+  background: #ffe4e6;
+  border: 1px solid #fca5a5;
+  color: #9f1239;
   border-radius: 12px;
   padding: 1rem 1.25rem;
 }
 
 .alert-warning {
-  background: #78350f;
-  border: 1px solid #d97706;
-  color: #fef3c7;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
   border-radius: 12px;
   padding: 1rem 1.25rem;
 }
 
-/* ---- IMPRESIÓN IMPERMEABLE ---- */
+/* ---- IMPRESIÓN ---- */
 @media print {
   body:has(#printable-receipt) * {
     visibility: hidden;
