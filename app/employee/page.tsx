@@ -1095,14 +1095,14 @@ export default function EmployeePage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-slate-50  flex flex-col md:flex-row">
-        <div className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 min-h-screen animate-pulse"></div>
+      <div className="min-h-screen bg-[#070b14] flex flex-col md:flex-row text-slate-100">
+        <div className="hidden md:flex flex-col w-64 bg-[#0d1424] border-r border-slate-800 min-h-screen animate-pulse"></div>
         <div className="flex-1 p-8 grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 bg-white  p-6 rounded-3xl h-96 animate-pulse"></div>
+          <div className="lg:col-span-1 bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-96 animate-pulse"></div>
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white  p-6 rounded-3xl h-32 animate-pulse"></div>
-            <div className="bg-white  p-6 rounded-3xl h-32 animate-pulse"></div>
-            <div className="bg-white  p-6 rounded-3xl h-32 animate-pulse"></div>
+            <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-32 animate-pulse"></div>
+            <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-32 animate-pulse"></div>
+            <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-32 animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -1111,15 +1111,15 @@ export default function EmployeePage() {
   // SHIFT MODAL
   if (!isShiftSet) {
     return (
-      <div className="fixed inset-0 bg-white border-r border-slate-200/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div className="bg-white  rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
-          <div className="w-16 h-16 bg-indigo-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="fixed inset-0 bg-[#070b14]/90 flex items-center justify-center p-4 z-50 backdrop-blur-md">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="w-16 h-16 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <User size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-center text-slate-900  mb-2">
+          <h2 className="text-2xl font-black text-center text-white mb-2">
             Inicio de Turno
           </h2>
-          <p className="text-center text-slate-500 mb-6">
+          <p className="text-center text-slate-400 mb-6 text-sm">
             Por favor, ingresa tu nombre para registrar quién está operando el
             sistema.
           </p>
@@ -1130,12 +1130,12 @@ export default function EmployeePage() {
               value={shiftName || ""}
               onChange={(e) => setShiftName(e.target.value)}
               placeholder="Ej. Juan Pérez"
-              className="w-full p-4 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg text-center mb-4"
+              className="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-lg text-center text-white placeholder-slate-500 mb-4 font-semibold"
               required
             />
             <button
               type="submit"
-              className={`${styles.btnPrimary} py-4 text-lg w-full`}
+              className={`${styles.btnPrimary} py-4 text-lg w-full shadow-lg shadow-indigo-600/30`}
             >
               Comenzar Turno
             </button>
@@ -1148,31 +1148,31 @@ export default function EmployeePage() {
   // BLACKLIST MODAL
   if (blacklistAlert) {
     return (
-      <div className="fixed inset-0 bg-red-900/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm animate-in fade-in duration-300">
-        <div className="bg-white  rounded-3xl p-8 md:p-10 max-w-lg w-full shadow-[0_0_50px_rgba(239,68,68,0.5)] animate-in zoom-in-95 duration-300 transform transition-all border-4 border-red-500">
-          <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="fixed inset-0 bg-red-950/90 flex items-center justify-center p-4 z-50 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="bg-slate-900 rounded-3xl p-8 md:p-10 max-w-lg w-full shadow-[0_0_50px_rgba(239,68,68,0.4)] animate-in zoom-in-95 duration-300 transform transition-all border-2 border-red-500">
+          <div className="w-20 h-20 bg-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/40">
             <X size={48} strokeWidth={3} />
           </div>
-          <h2 className="text-3xl font-black text-center text-slate-900  mb-2 uppercase tracking-tight">
+          <h2 className="text-3xl font-black text-center text-white mb-2 uppercase tracking-tight">
             ¡ALERTA ROJA!
           </h2>
-          <h3 className="text-xl font-bold text-center text-red-600 mb-6 uppercase">
+          <h3 className="text-lg font-bold text-center text-red-400 mb-6 uppercase">
             Entrada Restringida Módulo De Seguridad
           </h3>
 
-          <div className="bg-slate-50  p-6 rounded-3xl border border-slate-200  mb-8">
-            <p className="text-center text-slate-600  mb-2 font-bold">
+          <div className="bg-slate-800/80 p-6 rounded-2xl border border-slate-700/80 mb-8">
+            <p className="text-center text-slate-300 mb-2 font-semibold text-sm">
               El vehículo con placa:
             </p>
             <div className="text-center mb-4">
-              <span className="inline-block px-5 py-3 bg-white border-r border-slate-200 text-slate-900 font-mono text-3xl font-bold tracking-widest rounded-3xl">
+              <span className="inline-block px-5 py-3 bg-slate-900 border border-slate-700 text-amber-400 font-mono text-3xl font-black tracking-widest rounded-2xl shadow-inner">
                 {blacklistAlert.plate}
               </span>
             </div>
-            <p className="text-center text-slate-600  font-bold">
+            <p className="text-center text-slate-300 font-semibold text-sm">
               Motivo del veto:
             </p>
-            <p className="text-center text-red-600 font-bold text-lg mt-1">
+            <p className="text-center text-red-400 font-bold text-base mt-1">
               {blacklistAlert.reason}
             </p>
           </div>
@@ -1182,7 +1182,7 @@ export default function EmployeePage() {
               setBlacklistAlert(null);
               setPlate("");
             }}
-            className="w-full py-5 bg-red-600 hover:bg-red-700 text-white rounded-3xl font-bold text-lg uppercase tracking-wider transition-colors shadow-md border border-slate-100 shadow-red-200 focus:outline-none focus:ring-4 focus:ring-red-500/50"
+            className="w-full py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-bold text-base uppercase tracking-wider transition-colors shadow-lg shadow-red-600/30 focus:outline-none focus:ring-4 focus:ring-red-500/50"
           >
             Entendido, Rechazar Ingreso
           </button>
@@ -1192,11 +1192,11 @@ export default function EmployeePage() {
   }
 
   return (
-    <div className="h-screen bg-slate-50  flex flex-col md:flex-row w-full overflow-hidden font-sans">
+    <div className="h-screen bg-[#070b14] text-slate-100 flex flex-col md:flex-row w-full overflow-hidden font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-slate-800 text-white p-4 flex justify-between items-center shadow-md border-b border-slate-700 z-30 shrink-0">
+      <div className="md:hidden bg-[#0d1424] text-white p-4 flex justify-between items-center shadow-md border-b border-slate-800 z-30 shrink-0">
         <div className="flex items-center gap-3 font-bold text-lg">
-          <Car size={24} className="text-white" />
+          <Car size={24} className="text-indigo-400" />
           <span className="truncate max-w-[200px] font-extrabold text-white">
             {parkingLot?.name}
           </span>
@@ -1204,7 +1204,7 @@ export default function EmployeePage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-3 bg-slate-700 hover:bg-slate-600 rounded-3xl transition-colors active:scale-95"
+            className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl transition-colors active:scale-95 border border-slate-700"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -1214,23 +1214,23 @@ export default function EmployeePage() {
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-white border-r border-slate-200/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 md:hidden transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} md:translate-x-0 fixed md:relative top-0 left-0 z-50 transition-transform duration-300 w-72 bg-white border-r border-slate-200 text-slate-500 flex-shrink-0 flex flex-col h-full`}
+        className={`${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} md:translate-x-0 fixed md:relative top-0 left-0 z-50 transition-transform duration-300 w-72 bg-[#0d1424]/95 border-r border-slate-800/80 text-slate-300 flex-shrink-0 flex flex-col h-full`}
       >
-        <div className="p-6 flex items-center justify-between gap-3 border-b border-slate-200">
-          <div className="flex items-center gap-3 font-bold text-xl text-slate-900">
-            <Car size={28} className="text-slate-800" />
+        <div className="p-6 flex items-center justify-between gap-3 border-b border-slate-800">
+          <div className="flex items-center gap-3 font-extrabold text-xl text-white">
+            <Car size={28} className="text-indigo-400" />
             <span>Operación</span>
           </div>
           <div className="flex items-center gap-3">
             <button
-              className="md:hidden text-slate-400 hover:text-slate-900"
+              className="md:hidden text-slate-400 hover:text-white"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <X size={24} />
@@ -1238,9 +1238,9 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        <div className="p-4 border-b border-slate-200">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-extrabold">
+        <div className="p-4 border-b border-slate-800">
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wider font-extrabold">
               Turno Actual
             </p>
             <button
@@ -1250,27 +1250,27 @@ export default function EmployeePage() {
                 setIsShiftSet(false);
                 setShiftName("");
               }}
-              className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded transition-colors"
+              className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-700 transition-colors"
             >
               Cambiar
             </button>
           </div>
-          <div className="flex items-center gap-3 text-slate-900 bg-slate-100 border border-slate-200 p-3 rounded-3xl shadow-sm">
-            <User size={16} className="text-slate-600 shrink-0" />
-            <span className="font-bold truncate text-slate-800">{shiftName}</span>
+          <div className="flex items-center gap-3 text-white bg-slate-800/80 border border-slate-700/80 p-3 rounded-2xl shadow-sm">
+            <User size={16} className="text-indigo-400 shrink-0" />
+            <span className="font-bold truncate text-slate-100">{shiftName}</span>
           </div>
         </div>
 
-        <nav className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
+        <nav className="p-4 flex flex-col gap-2.5 flex-1 overflow-y-auto">
           <button
             onClick={() => {
               setActiveTab("operation");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "operation" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "operation" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
           >
             <LogIn size={20} />
-            <span className="font-bold whitespace-nowrap">
+            <span className="whitespace-nowrap">
               Ingreso / Salida
             </span>
           </button>
@@ -1279,20 +1279,20 @@ export default function EmployeePage() {
               setActiveTab("history");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "history" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "history" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
           >
             <History size={20} />
-            <span className="font-bold whitespace-nowrap">Historial</span>
+            <span className="whitespace-nowrap">Historial</span>
           </button>
           <button
             onClick={() => {
               setActiveTab("private");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "private" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "private" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
           >
             <Home size={20} className="flex-shrink-0" />
-            <span className="font-bold whitespace-nowrap">Parq. Privados</span>
+            <span className="whitespace-nowrap">Parq. Privados</span>
           </button>
 
           <button
@@ -1300,17 +1300,17 @@ export default function EmployeePage() {
               setActiveTab("inspections");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-5 py-3 rounded-3xl transition-colors ${activeTab === "inspections" ? "bg-slate-800 text-white" : "hover:bg-slate-100 hover:text-slate-900"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "inspections" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
           >
             <Camera size={20} className="flex-shrink-0" />
-            <span className="font-bold whitespace-nowrap">Revista</span>
+            <span className="whitespace-nowrap">Revista</span>
           </button>
         </nav>
 
-        <div className="p-4 mt-auto border-t border-slate-200">
-          <div className="mb-4 px-2">
-            <p className="text-xs text-slate-500 mb-1">Ocupación</p>
-            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+        <div className="p-4 mt-auto border-t border-slate-800">
+          <div className="mb-4 px-1">
+            <p className="text-xs text-slate-400 mb-1 font-semibold">Ocupación</p>
+            <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
               <div
                 className={`h-2.5 rounded-full transition-all duration-500 ${
                   activeSessions.length >= (parkingLot?.capacity || 1)
@@ -1324,16 +1324,16 @@ export default function EmployeePage() {
                 }}
               ></div>
             </div>
-            <p className="text-xs text-right mt-1">
+            <p className="text-xs text-right mt-1 text-slate-300 font-bold">
               {activeSessions.length} / {parkingLot?.capacity || 0}
             </p>
           </div>
 
           {parkingLot?.show_revenue && (
-            <div className="mb-6 px-2">
-              <p className="text-xs text-slate-500 mb-1">Recaudo del Turno</p>
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-3 flex flex-col items-center justify-center">
-                <span className="text-xl font-bold text-emerald-400 block mb-2">
+            <div className="mb-4 px-1">
+              <p className="text-xs text-slate-400 mb-1 font-semibold">Recaudo del Turno</p>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 flex flex-col items-center justify-center">
+                <span className="text-xl font-black text-emerald-400 block mb-2">
                   {new Intl.NumberFormat("es-CO", {
                     style: "currency",
                     currency: "COP",
@@ -1343,7 +1343,7 @@ export default function EmployeePage() {
                 <button
                   onClick={handleCloseRegister}
                   disabled={isClosingRegister || accumulatedRevenue === 0}
-                  className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-3xl text-xs font-bold transition-colors truncate shadow-sm"
+                  className="w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-colors truncate shadow-md"
                 >
                   {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
                 </button>
@@ -1353,23 +1353,23 @@ export default function EmployeePage() {
 
           <button
             onClick={() => setShowPreferences(true)}
-            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-slate-500 hover:bg-slate-100 transition-colors w-full mb-2"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors w-full mb-1 text-sm font-semibold"
           >
-            <Menu size={20} />
-            <span className="font-bold">Preferencias</span>
+            <Menu size={18} />
+            <span>Preferencias</span>
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-5 py-3 rounded-3xl text-red-400 hover:bg-red-400/10 transition-colors w-full"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-red-400 hover:bg-red-500/10 transition-colors w-full text-sm font-semibold"
           >
-            <LogOut size={20} />
-            <span className="font-bold">Cerrar Sesión</span>
+            <LogOut size={18} />
+            <span>Cerrar Sesión</span>
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50  relative">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#070b14] relative">
         <div className="max-w-7xl mx-auto w-full p-4 lg:p-8 xl:p-12 pb-24 md:pb-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
@@ -1434,44 +1434,44 @@ export default function EmployeePage() {
 
                 {/* Resumen Rápido */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center justify-between">
+                <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-bold text-slate-500 mb-1">
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">
                       Vehículos Parqueados
                     </p>
-                    <p className="text-3xl font-black text-slate-900 ">
+                    <p className="text-3xl font-black text-white">
                       {activeSessions.length}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-slate-100 text-slate-800 rounded-3xl flex items-center justify-center border border-indigo-100">
+                  <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20">
                     <Car size={24} />
                   </div>
                 </div>
 
-                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center justify-between">
+                <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-bold text-slate-500 mb-1">
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">
                       Suscripciones Activas
                     </p>
-                    <p className="text-3xl font-black text-emerald-600">
+                    <p className="text-3xl font-black text-emerald-400">
                       {subscribers.length}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center border border-emerald-100">
+                  <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center border border-emerald-500/20">
                     <CheckCircle2 size={24} />
                   </div>
                 </div>
 
-                <div className="bg-white  p-6 rounded-3xl shadow-md border border-slate-100  flex items-center justify-between">
+                <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-bold text-slate-500 mb-1">
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">
                       Vehículos Vetados
                     </p>
-                    <p className="text-3xl font-black text-red-600">
+                    <p className="text-3xl font-black text-rose-400">
                       {blacklistedCount}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center border border-red-100">
+                  <div className="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-2xl flex items-center justify-center border border-rose-500/20">
                     <AlertTriangle size={24} />
                   </div>
                 </div>
@@ -1479,26 +1479,26 @@ export default function EmployeePage() {
 
               <div className="flex flex-col xl:flex-row gap-6 lg:gap-8">
                 {/* Entry Form */}
-                <div className="xl:w-[380px] shrink-0 bg-white  p-6 lg:p-8 rounded-3xl shadow-md border border-slate-100  h-fit">
+                <div className="xl:w-[380px] shrink-0 bg-slate-900/80 p-6 lg:p-8 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl h-fit">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3.5 bg-slate-100 text-slate-800 rounded-3xl ring-1 ring-indigo-100">
+                    <div className="p-3.5 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
                       <LogIn size={24} />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900  tracking-tight">
+                    <h2 className="text-2xl font-black text-white tracking-tight">
                       Nuevo Ingreso
                     </h2>
                   </div>
 
                   <form onSubmit={handleEntrySubmit} className="space-y-5">
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-2">
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-2">
                         Placa *
                       </label>
                       <div className="relative flex items-center gap-3">
                         <div className="relative flex-1 group">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <div className="w-8 h-6 bg-yellow-400 rounded-sm flex items-center justify-center shadow-md border border-slate-100 border border-yellow-500">
-                              <span className="text-[10px] font-black text-slate-900  tracking-tighter">
+                            <div className="w-8 h-6 bg-amber-400 rounded-sm flex items-center justify-center shadow-md border border-amber-500">
+                              <span className="text-[10px] font-black text-slate-950 tracking-tighter">
                                 COL
                               </span>
                             </div>
@@ -1507,7 +1507,7 @@ export default function EmployeePage() {
                             type="text"
                             value={plate || ""}
                             onChange={(e) => handleSearchPlate(e.target.value.toUpperCase())}
-                            className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-50  border border-slate-200  group-hover:border-slate-300  rounded-3xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white  outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-slate-900  transition-all shadow-inner placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal text-center"
+                            className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-800/90 border border-slate-700 group-hover:border-slate-600 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-amber-300 transition-all shadow-inner placeholder:text-slate-600 placeholder:font-normal placeholder:tracking-normal text-center"
                             placeholder="ABC-123"
                             maxLength={7}
                             required
@@ -1515,15 +1515,14 @@ export default function EmployeePage() {
                         </div>
                       </div>
                       {!isNewVehicle && plate.length >= 5 && (
-                        <p className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1.5 px-1 bg-emerald-50 w-fit py-1 px-2 rounded-3xl border border-emerald-100">
-                          <CheckCircle2 size={14} /> Vehículo registrado
-                          anteriormente
+                        <p className="text-xs font-bold text-emerald-400 mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl w-fit">
+                          <CheckCircle2 size={14} /> Vehículo registrado anteriormente
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-slate-700  mb-2">
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-2">
                         Tipo de Vehículo *
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -1532,10 +1531,10 @@ export default function EmployeePage() {
                             key={v}
                             type="button"
                             onClick={() => setType(v)}
-                            className={`p-4 md:p-5 rounded-3xl border flex flex-col items-center justify-center gap-3 transition-all active:scale-95 ${
+                            className={`p-4 md:p-5 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all active:scale-95 font-bold ${
                               type === v
-                                ? "bg-slate-100 border-indigo-500 text-slate-700 shadow-md border border-slate-100 scale-[1.02]"
-                                : "bg-white  border-slate-200  text-slate-500 hover:border-slate-300  hover:bg-slate-50 "
+                                ? "bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-lg scale-[1.02]"
+                                : "bg-slate-800/60 border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800"
                             }`}
                           >
                             {v.toLowerCase() === "carros" ? (
@@ -1557,7 +1556,7 @@ export default function EmployeePage() {
                     {parkingLot?.custom_fields?.map(
                       (field: any, idx: number) => (
                         <div key={idx}>
-                          <label className="block text-sm font-bold text-slate-700  mb-1">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-1">
                             {field.name} {field.required && "*"}
                           </label>
                           <input
@@ -1572,7 +1571,7 @@ export default function EmployeePage() {
                                 [field.name]: val,
                               });
                             }}
-                            className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="w-full p-3.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-semibold"
                             placeholder={`Ingresar ${field.name.toLowerCase()}`}
                             required={field.required}
                           />
@@ -1583,14 +1582,14 @@ export default function EmployeePage() {
                     {prefShowNotes && (
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-sm font-bold text-slate-700">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300">
                             Observaciones{" "}
                             {prefRequirePhoto
                               ? "(Obligatorio con foto)"
                               : "(Opcional)"}
                           </label>
                           {previousObservation && (
-                            <label className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer bg-indigo-50 px-2 py-1 rounded-xl">
+                            <label className="flex items-center gap-2 text-xs text-indigo-400 font-bold cursor-pointer bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-xl">
                               <input
                                 type="checkbox"
                                 checked={usePreviousObservation}
@@ -1616,7 +1615,7 @@ export default function EmployeePage() {
                                     }
                                   }
                                 }}
-                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-indigo-300"
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-700"
                               />
                               Usar novedad anterior
                             </label>
@@ -1630,7 +1629,7 @@ export default function EmployeePage() {
                               ["Observaciones"]: e.target.value,
                             })
                           }
-                          className="w-full p-3 border border-slate-200  rounded-3xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-3"
+                          className="w-full p-3.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-3 text-sm font-semibold"
                           placeholder="Daños, rayones o notas importantes..."
                           rows={2}
                           required={prefRequirePhoto && !usePreviousObservation}
@@ -1659,7 +1658,7 @@ export default function EmployeePage() {
                               <button
                                 type="button"
                                 onClick={() => photoInputRef.current?.click()}
-                                className="flex-1 py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl font-bold transition-colors flex items-center justify-center gap-3 border border-slate-200"
+                                className="flex-1 py-3 px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl font-bold transition-colors flex items-center justify-center gap-3 border border-slate-700 shadow-md"
                               >
                                 <Camera size={20} />
                                 {photoDataUrl
@@ -1668,7 +1667,7 @@ export default function EmployeePage() {
                               </button>
                             </div>
                             {photoDataUrl && (
-                              <div className="mt-2 relative rounded-3xl overflow-hidden border border-slate-200 max-h-48 flex justify-center bg-slate-50">
+                              <div className="mt-2 relative rounded-2xl overflow-hidden border border-slate-700 max-h-48 flex justify-center bg-slate-950">
                                 <Image
                                   src={photoDataUrl}
                                   alt="Observación"
@@ -1684,7 +1683,7 @@ export default function EmployeePage() {
                                     if (photoInputRef.current)
                                       photoInputRef.current.value = "";
                                   }}
-                                  className="absolute top-3 right-2 p-1.5 bg-red-500 text-slate-900 rounded-full hover:bg-red-600 transition-colors shadow-md border border-slate-100"
+                                  className="absolute top-3 right-2 p-1.5 bg-rose-600 text-white rounded-full hover:bg-rose-500 transition-colors shadow-md"
                                   title="Eliminar foto"
                                 >
                                   <X size={14} />
@@ -1699,7 +1698,7 @@ export default function EmployeePage() {
                     <button
                       type="submit"
                       disabled={isSubmittingEntry}
-                      className={`${styles.btnPrimary} mt-6 py-4 md:py-5 text-lg w-full active:scale-[0.98]`}
+                      className={`${styles.btnPrimary} mt-6 py-4 md:py-5 text-lg w-full active:scale-[0.98] shadow-lg shadow-indigo-600/30`}
                     >
                       {isSubmittingEntry ? (
                         <Spinner size={24} className="text-white" />
@@ -1712,15 +1711,15 @@ export default function EmployeePage() {
                 </div>
 
                 {/* Active Sessions */}
-                <div className="flex-1 bg-white  p-6 lg:p-8 rounded-3xl shadow-md border border-slate-100  min-w-0">
+                <div className="flex-1 bg-slate-900/80 p-6 lg:p-8 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-4">
-                      <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-3xl ring-1 ring-emerald-100">
+                      <div className="p-3.5 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">
                         <Car size={24} />
                       </div>
-                      <h2 className="text-2xl font-bold text-slate-900  tracking-tight flex items-center gap-3">
+                      <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
                         Parqueadero
-                        <span className="bg-slate-100 text-slate-600  text-sm font-bold px-2.5 py-0.5 rounded-full">
+                        <span className="bg-slate-800 border border-slate-700 text-slate-200 text-xs font-extrabold px-3 py-1 rounded-full">
                           {activeSessions.length}
                         </span>
                       </h2>
@@ -1732,15 +1731,15 @@ export default function EmployeePage() {
                             placeholder="Buscar placa activa..."
                             value={activeSearchQuery}
                             onChange={(e) => setActiveSearchQuery(e.target.value.toUpperCase())}
-                            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
+                            className="w-full pl-9 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
                         />
                     </div>
                   </div>
 
                   {filteredActiveSessions.length === 0 ? (
-                    <div className="text-center py-16 border-2 border-dashed border-slate-200  rounded-3xl bg-slate-50 ">
-                      <Car size={48} className="mx-auto text-slate-500 mb-4" />
-                      <p className="text-slate-500 font-bold">
+                    <div className="text-center py-16 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
+                      <Car size={48} className="mx-auto text-slate-600 mb-4" />
+                      <p className="text-slate-400 font-bold">
                         {activeSearchQuery ? "No se encontraron vehículos con esa placa." : "No hay vehículos en el parqueadero."}
                       </p>
                     </div>
@@ -1749,7 +1748,7 @@ export default function EmployeePage() {
                       {filteredActiveSessions.map((session) => (
                         <div
                           key={session.id}
-                          className={`border border-slate-200  p-4 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-slate-50  ${viewingSession?.id === session.id ? "border-indigo-400 shadow-md border border-slate-100 ring-1 ring-indigo-400" : "hover:border-indigo-300 hover:shadow-md border border-slate-100"}`}
+                          className={`border p-4.5 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-slate-800/60 ${viewingSession?.id === session.id ? "border-indigo-500 shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500/50 bg-slate-800/90" : "border-slate-700/80 hover:border-slate-600 hover:bg-slate-800/80"}`}
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div
@@ -1762,25 +1761,25 @@ export default function EmployeePage() {
                                 )
                               }
                             >
-                              <div className="w-20 h-16 bg-white  rounded-3xl flex items-center justify-center font-mono font-bold text-lg text-slate-800  border-2 border-slate-200  shadow-md border border-slate-100 shrink-0 group-hover:border-indigo-300 transition-colors">
+                              <div className="w-20 h-16 bg-slate-900 rounded-2xl flex items-center justify-center font-mono font-black text-lg text-amber-300 border border-slate-700 shadow-md shrink-0 group-hover:border-indigo-500 transition-colors">
                                 {session.vehicles.plate}
                               </div>
                               <div>
                                 <div className="flex items-center gap-3">
-                                  <p className="font-extrabold text-slate-900  capitalize">
+                                  <p className="font-black text-white capitalize text-base">
                                     {session.vehicles.type}
                                   </p>
                                   {subscribers.some(
                                     (sub) =>
                                       sub.plate === session.vehicles.plate,
                                   ) && (
-                                    <span className="bg-indigo-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                    <span className="bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                                       Abonado
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
-                                  <Clock size={14} />
+                                <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1.5">
+                                  <Clock size={14} className="text-indigo-400" />
                                   <span>
                                     {new Date(
                                       session.entry_time,
@@ -1793,7 +1792,7 @@ export default function EmployeePage() {
                                     })}
                                   </span>
                                   <span
-                                    className={`ml-2 text-xs font-bold transition-colors ${viewingSession?.id === session.id ? "text-slate-800" : "text-slate-400 group-hover:text-indigo-500"}`}
+                                    className={`ml-2 text-xs font-bold transition-colors ${viewingSession?.id === session.id ? "text-indigo-300" : "text-slate-400 group-hover:text-indigo-400"}`}
                                   >
                                     {viewingSession?.id === session.id
                                       ? "(Ocultar detalles)"
@@ -1803,17 +1802,17 @@ export default function EmployeePage() {
                               </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0 border-t sm:border-0 pt-4 sm:pt-0 border-slate-100 ">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0 border-t sm:border-0 pt-4 sm:pt-0 border-slate-700/60">
                               <div className="flex items-center gap-3">
-                                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider hidden sm:block">
+                                <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider hidden sm:block">
                                   Cobro:
                                 </span>
-                                <div className="bg-slate-50  border border-slate-200  rounded-3xl py-3 px-3 flex items-center shadow-md border border-slate-100 w-full sm:w-auto overflow-hidden">
-                                  <span className="text-slate-400 font-bold mr-1.5">
+                                <div className="bg-slate-900 border border-slate-700 rounded-2xl py-2.5 px-4 flex items-center shadow-inner w-full sm:w-auto overflow-hidden">
+                                  <span className="text-slate-400 font-bold mr-1.5 text-sm">
                                     $
                                   </span>
                                   <span
-                                    className={`text-base font-black truncate tracking-tight ${subscribers.some((sub) => sub.plate === session.vehicles.plate) ? "text-emerald-500" : "text-slate-700 "}`}
+                                    className={`text-lg font-black truncate tracking-tight ${subscribers.some((sub) => sub.plate === session.vehicles.plate) ? "text-emerald-400" : "text-white"}`}
                                   >
                                     {(subscribers.some(
                                       (sub) =>
@@ -1845,7 +1844,7 @@ export default function EmployeePage() {
                                   handleExit(session.id);
                                 }}
                                 disabled={isSubmittingExit === session.id}
-                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-400`}
+                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-700 shadow-lg shadow-indigo-600/20`}
                               >
                                 {isSubmittingExit === session.id ? (
                                   <>
@@ -1864,21 +1863,21 @@ export default function EmployeePage() {
 
                           {/* Dropdown Extra Data / Entry Summary */}
                           {viewingSession?.id === session.id && (
-                            <div className="mt-2 text-sm border-t border-slate-200  pt-3 flex flex-col gap-3 animate-in fade-in slide-in-from-top-3">
+                            <div className="mt-2 text-sm border-t border-slate-700/80 pt-3 flex flex-col gap-3 animate-in fade-in slide-in-from-top-3">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="flex justify-between items-center bg-white  p-3 rounded-3xl border border-slate-100 ">
-                                  <span className="text-slate-500">
+                                <div className="flex justify-between items-center bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80">
+                                  <span className="text-slate-400 font-medium">
                                     Registrado por:
                                   </span>
-                                  <span className="font-bold text-slate-800 ">
+                                  <span className="font-bold text-white">
                                     {session.entry_employee_name || "N/A"}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center bg-white  p-3 rounded-3xl border border-slate-100 ">
-                                  <span className="text-slate-500">
+                                <div className="flex justify-between items-center bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80">
+                                  <span className="text-slate-400 font-medium">
                                     Hora Entrada:
                                   </span>
-                                  <span className="font-bold text-slate-800 text-right">
+                                  <span className="font-bold text-white text-right">
                                     {new Date(
                                       session.entry_time,
                                     ).toLocaleString("es-CO", {
@@ -1890,8 +1889,8 @@ export default function EmployeePage() {
                                     })}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center bg-white  p-3 rounded-3xl border border-slate-100 ">
-                                  <span className="text-slate-500">
+                                <div className="flex justify-between items-center bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80">
+                                  <span className="text-slate-400 font-medium">
                                     Tiquete de Ingreso:
                                   </span>
                                   <button
@@ -1899,10 +1898,10 @@ export default function EmployeePage() {
                                       e.stopPropagation();
                                       setViewingSession(session);
                                     }}
-                                    className="text-indigo-600 font-bold hover:underline text-sm flex items-center gap-1"
+                                    className="text-indigo-400 font-bold hover:underline text-sm flex items-center gap-1.5"
                                     title="Imprimir Tiquete de Ingreso"
                                   >
-                                    <Printer size={14} />
+                                    <Printer size={15} />
                                     <span>Ver / Imprimir</span>
                                   </button>
                                 </div>
@@ -1915,8 +1914,8 @@ export default function EmployeePage() {
                                 (session.extra_data &&
                                   Object.keys(session.extra_data).length >
                                     0)) && (
-                                <div className="bg-white  p-3 rounded-3xl border border-slate-100  mt-2">
-                                  <span className="text-slate-500 block mb-2 font-bold">
+                                <div className="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80 mt-2">
+                                  <span className="text-slate-400 block mb-2 font-bold text-xs uppercase tracking-wider">
                                     Datos Extra:
                                   </span>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1926,12 +1925,12 @@ export default function EmployeePage() {
                                     }).map(([k, v]) => (
                                       <div
                                         key={k}
-                                        className="text-xs bg-slate-50  p-3 rounded border border-slate-100 "
+                                        className="text-xs bg-slate-800/80 p-3 rounded-xl border border-slate-700/80"
                                       >
-                                        <span className="font-bold block text-slate-500 uppercase mb-[2px] text-[10px] tracking-wide">
+                                        <span className="font-extrabold block text-slate-400 uppercase mb-[2px] text-[10px] tracking-wide">
                                           {k}
                                         </span>
-                                        <span className="text-slate-900  font-bold">
+                                        <span className="text-white font-bold">
                                           {v as string}
                                         </span>
                                       </div>

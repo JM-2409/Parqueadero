@@ -135,59 +135,59 @@ export default function ReceiptModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
+    <div className="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 backdrop-blur-md print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
       <div
         id="printable-receipt"
-        className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-full print:p-0 flex flex-col max-h-[90vh] md:max-h-none print:h-auto print:max-h-none print:block print:m-0"
+        className="bg-slate-900 text-slate-100 border border-slate-800 rounded-3xl w-full max-w-sm shadow-2xl relative print:shadow-none print:max-w-none print:w-full print:p-0 print:bg-white print:text-black print:border-none flex flex-col max-h-[90vh] md:max-h-none print:h-auto print:max-h-none print:block print:m-0"
         style={{ pageBreakInside: "avoid" }}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 print:hidden z-10 bg-white/80 rounded-full p-1"
+          className="absolute top-4 right-4 text-slate-400 hover:text-white print:hidden z-10 bg-slate-800/80 hover:bg-slate-700 rounded-full p-1.5 transition-colors"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
         <div className="p-6 md:p-8 overflow-y-auto print:overflow-visible">
-          <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-6">
+          <div className="text-center mb-6 border-b border-dashed border-slate-700 print:border-slate-300 pb-6">
             {parkingLot?.logo_url || appSettings?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={parkingLot?.logo_url || appSettings?.logo_url}
                 alt="Logo"
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 shadow-xl"
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-2 border-slate-700 print:border-slate-200 shadow-xl"
               />
             ) : (
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border border-slate-100">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border border-indigo-400">
                 <Car size={32} />
               </div>
             )}
 
-            <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wider">
+            <h2 className="text-lg md:text-xl font-black text-white print:text-black uppercase tracking-wider">
               {appSettings?.app_name || parkingLot?.name || "Parqueadero"}
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-400 print:text-slate-600 mt-1">
               NIT: {parkingLot?.nit}
             </p>
-            <p className="text-sm text-slate-500">{parkingLot?.address}</p>
+            <p className="text-sm text-slate-400 print:text-slate-600">{parkingLot?.address}</p>
           </div>
 
           <div className="space-y-4 mb-6 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-slate-500">Recibo No.</span>
-              <span className="font-mono font-bold text-slate-900">
+              <span className="text-slate-400 print:text-slate-600">Recibo No.</span>
+              <span className="font-mono font-bold text-white print:text-black">
                 {session.receipt_number}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-500">Placa</span>
-              <span className="font-mono font-bold text-lg text-slate-900 bg-slate-100 px-2 py-1 rounded">
+              <span className="text-slate-400 print:text-slate-600">Placa</span>
+              <span className="font-mono font-bold text-lg text-indigo-300 print:text-black bg-slate-800 print:bg-slate-100 px-3 py-1 rounded-xl border border-slate-700 print:border-slate-300">
                 {session.vehicles.plate}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-500">Tipo</span>
-              <span className="font-bold text-slate-900 capitalize">
+              <span className="text-slate-400 print:text-slate-600">Tipo</span>
+              <span className="font-bold text-white print:text-black capitalize">
                 {session.vehicles.type}
               </span>
             </div>
@@ -197,7 +197,7 @@ export default function ReceiptModal({
               (session.vehicles?.custom_fields_data &&
                 Object.keys(session.vehicles.custom_fields_data).length >
                   0)) && (
-              <div className="border-t border-slate-100 pt-4 mt-4 space-y-2">
+              <div className="border-t border-slate-800 print:border-slate-200 pt-4 mt-4 space-y-2">
                 <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2 block">
                   Datos Adicionales
                 </span>
@@ -208,14 +208,14 @@ export default function ReceiptModal({
                   if (key === "observation_photo_url") {
                     return (
                       <div key={key} className="flex flex-col gap-3 mt-2">
-                        <span className="text-slate-500 capitalize">
+                        <span className="text-slate-400 print:text-slate-600 capitalize">
                           Foto de Observación
                         </span>
                         <a
                           href={value as string}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block max-h-48 overflow-hidden rounded-3xl border border-slate-200"
+                          className="block max-h-48 overflow-hidden rounded-2xl border border-slate-700 print:border-slate-200"
                         >
                           <img
                             src={value as string}
@@ -231,10 +231,10 @@ export default function ReceiptModal({
                       key={key}
                       className="flex justify-between items-start gap-4"
                     >
-                      <span className="text-slate-500 capitalize min-w-[80px]">
+                      <span className="text-slate-400 print:text-slate-600 capitalize min-w-[80px]">
                         {sanitizeInput(key)}
                       </span>
-                      <span className="font-bold text-slate-900 text-right break-words">
+                      <span className="font-bold text-slate-200 print:text-black text-right break-words">
                         {sanitizeInput(value as string)}
                       </span>
                     </div>
@@ -243,46 +243,46 @@ export default function ReceiptModal({
               </div>
             )}
 
-            <div className="border-t border-slate-100 pt-4 mt-4 space-y-2">
+            <div className="border-t border-slate-800 print:border-slate-200 pt-4 mt-4 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Ingreso</span>
-                <span className="font-bold text-slate-900">
+                <span className="text-slate-400 print:text-slate-600">Ingreso</span>
+                <span className="font-bold text-slate-200 print:text-black">
                   {entryTime.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Salida</span>
-                <span className="font-bold text-slate-900">
+                <span className="text-slate-400 print:text-slate-600">Salida</span>
+                <span className="font-bold text-slate-200 print:text-black">
                   {exitTime.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Tiempo Total</span>
-                <span className="font-bold text-slate-900">
+                <span className="text-slate-400 print:text-slate-600">Tiempo Total</span>
+                <span className="font-bold text-slate-200 print:text-black">
                   {hours}h {minutes}m
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-3xl mt-6 mb-6">
+          <div className="bg-slate-800/80 print:bg-slate-100 p-4 rounded-2xl mt-6 mb-6 border border-slate-700/60 print:border-slate-300">
             <div className="flex justify-between items-center">
-              <span className="font-bold text-slate-700">TOTAL A PAGAR</span>
-              <span className="text-2xl font-bold text-emerald-600">
+              <span className="font-bold text-slate-300 print:text-black">TOTAL A PAGAR</span>
+              <span className="text-2xl font-black text-emerald-400 print:text-emerald-700">
                 ${session.total_charged?.toLocaleString()}
               </span>
             </div>
           </div>
 
-          <div className="text-center text-xs text-slate-400 mb-8">
+          <div className="text-center text-xs text-slate-400 print:text-slate-500 mb-8">
             <p>¡Gracias por su visita!</p>
             <p>Conserve este recibo para cualquier reclamo.</p>
           </div>
         </div>
 
-        <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 md:rounded-b-2xl flex flex-col gap-3 shrink-0 print:hidden">
+        <div className="p-4 md:p-6 border-t border-slate-800 bg-slate-900/90 md:rounded-b-2xl flex flex-col gap-3 shrink-0 print:hidden">
           <div className="flex flex-col gap-3">
-            <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <label className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
               Enviar SMS / WhatsApp
             </label>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -291,12 +291,12 @@ export default function ReceiptModal({
                 placeholder="Nº WhatsApp (ej. 3001234567)"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="flex-1 w-full px-3 py-3 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
+                className="flex-1 w-full px-4 py-3 bg-slate-800 border border-slate-700 text-white placeholder-slate-400 rounded-2xl outline-none focus:ring-2 focus:ring-[#25D366] text-sm font-semibold"
               />
               <button
                 onClick={handleSendWhatsAppAPI}
                 disabled={isSending}
-                className="w-full sm:w-auto px-5 py-3 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-[#25D366]/50 text-white rounded-3xl transition-colors flex items-center justify-center gap-3 shrink-0"
+                className="w-full sm:w-auto px-5 py-3 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-[#25D366]/50 text-white rounded-2xl font-bold transition-colors flex items-center justify-center gap-3 shrink-0 shadow-md"
                 title="Enviar por WhatsApp"
               >
                 {isSending ? (
@@ -308,29 +308,29 @@ export default function ReceiptModal({
             </div>
 
             {sendResult === "success" && (
-              <p className="text-xs text-emerald-600 font-bold">
+              <p className="text-xs text-emerald-400 font-bold">
                 ¡Mensaje enviado exitosamente!
               </p>
             )}
 
             {sendResult === "error" && (
-              <p className="text-[10px] text-red-500 leading-tight">
+              <p className="text-[10px] text-red-400 leading-tight">
                 {errorMessage}
               </p>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-3 mt-2 pt-4 border-t border-slate-200">
+          <div className="flex flex-wrap gap-3 mt-2 pt-4 border-t border-slate-800">
             <button
               onClick={handlePrint}
-              className="flex-1 min-w-[120px] py-3 px-4 bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-2 text-sm"
+              className="flex-1 min-w-[120px] py-3 px-4 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white rounded-2xl font-bold transition-colors flex items-center justify-center gap-2 text-sm shadow-md"
             >
               <Printer size={18} />
               Imprimir
             </button>
             <button
               onClick={handleThermalPrint}
-              className="flex-1 min-w-[140px] py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-bold transition-colors flex items-center justify-center gap-2 text-sm shadow-md"
+              className="flex-1 min-w-[140px] py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold transition-colors flex items-center justify-center gap-2 text-sm shadow-lg shadow-indigo-600/30"
               title="Imprimir ticket optimizado para impresoras térmicas de 58mm/80mm"
             >
               <Printer size={18} />
@@ -338,7 +338,7 @@ export default function ReceiptModal({
             </button>
             <button
               onClick={onClose}
-              className="flex-1 min-w-[100px] py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-3xl font-bold transition-colors text-sm"
+              className="flex-1 min-w-[100px] py-3 px-4 bg-slate-800/60 border border-slate-700/80 hover:bg-slate-700 text-slate-300 rounded-2xl font-bold transition-colors text-sm"
             >
               Cerrar
             </button>
