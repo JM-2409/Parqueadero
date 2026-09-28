@@ -62,7 +62,6 @@ const getSecurePref = (key: string, defaultValue: boolean): boolean => {
 const setSecurePref = (key: string, value: boolean): void => {
   if (typeof window === "undefined" || !ALLOWED_PREF_KEYS.includes(key)) return;
   try {
-    // Garantizamos que solo se guarden "true" o "false"
     localStorage.setItem(key, value ? "true" : "false");
   } catch (e) {
     console.error("Error setting preference", e);
@@ -72,7 +71,7 @@ const setSecurePref = (key: string, value: boolean): void => {
 export default function EmployeePage() {
   const router = useRouter();
   const offline = useOfflineQueue();
-  const [activeTab, setActiveTab] = useState("operation"); // operation, history, private, inspections
+  const [activeTab, setActiveTab] = useState("operation");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Shift state
@@ -163,7 +162,6 @@ export default function EmployeePage() {
     }
   }, []);
 
-
   const handleCloseRegister = async () => {
     if (
       !window.confirm(
@@ -204,7 +202,6 @@ export default function EmployeePage() {
       playBeep("success");
       setSuccess("Caja cerrada exitosamente.");
 
-      // Auto-download report
       if (newClosure) {
         downloadClosureReport(newClosure, parkingLot?.name).catch((err: unknown) => {
           setError(getErrorMessage(err));
@@ -212,8 +209,6 @@ export default function EmployeePage() {
       }
 
       setTimeout(() => setSuccess(""), 3000);
-
-      // re-fetch revenue to reset to $0
       await fetchRevenue(parkingLot.id);
     } catch (err: unknown) {
       console.error("Error cerrado caja", err);
@@ -237,7 +232,6 @@ export default function EmployeePage() {
           setType(data.allowed_vehicles[0]);
         }
 
-        // Override local preferences with Admin global settings
         if (data.settings) {
           if (typeof data.settings.autoPrint === "boolean")
             setPrefAutoPrint(data.settings.autoPrint);
@@ -422,14 +416,12 @@ export default function EmployeePage() {
   }, []);
 
   useEffect(() => {
-    // Check for saved shift
     const savedShift = sessionStorage.getItem("shiftName");
     if (savedShift && !isShiftSet) {
       setShiftName(savedShift);
       setIsShiftSet(true);
     }
 
-    // Load Prefs with safe getters
     setPrefAutoPrint(getSecurePref("pref_autoPrint", false));
     setPrefSound(getSecurePref("pref_sound", true));
     setPrefConfirmEntry(getSecurePref("pref_confirmEntry", true));
@@ -449,7 +441,7 @@ export default function EmployeePage() {
           event: "*",
           schema: "public",
           table: "parking_sessions",
-          filter: `parking_lot_id=eq.${parkingLot.id}`,
+          filter: `parking_lot_id=${parkingLot.id}`,
         },
         () => {
           fetchActiveSessions(parkingLot.id);
@@ -474,7 +466,6 @@ export default function EmployeePage() {
         let foundData = null;
         let newExtraData: Record<string, string> = {};
 
-        // 1. Search in global vehicles
         const { data: vehicleData } = await supabase
           .from("vehicles")
           .select("*")
@@ -494,9 +485,7 @@ export default function EmployeePage() {
             newExtraData["Propietario"] = vehicleData.owner_name;
         }
 
-        // 2. Search in active private parking spaces
         if (parkingLot?.id) {
-          // Determinamos el campo principal
           const mainField = parkingLot.private_custom_fields?.find((f: any) => f.is_main)?.name;
 
           const { data: privateSpaces } = await supabase
@@ -510,7 +499,6 @@ export default function EmployeePage() {
               if (mainField && cf[mainField] && cf[mainField].toUpperCase() === debouncedPlate.toUpperCase()) {
                   return true;
               }
-              // Fallback
               const plateKey = Object.keys(cf).find(k => k.toLowerCase() === 'placa');
               if (plateKey && cf[plateKey]?.toUpperCase() === debouncedPlate.toUpperCase()) {
                 return true;
@@ -522,10 +510,7 @@ export default function EmployeePage() {
               foundData = matchedSpace;
               const cf = matchedSpace.custom_fields_data || {};
 
-              // Merge matching keys (like Celular -> Celular, etc)
-              // We just merge everything into extraData. The input form will map by exact name.
               Object.keys(cf).forEach(key => {
-                 // Ignore Placa or Main field as it's already in the main input
                  if (key.toLowerCase() !== 'placa' && key !== mainField && !newExtraData[key]) {
                      newExtraData[key] = cf[key];
                  }
@@ -533,7 +518,6 @@ export default function EmployeePage() {
             }
           }
 
-          // 3. Search in private parking history
           let historyQuery = supabase
             .from("private_parking_history")
             .select("custom_fields_data, plate")
@@ -561,31 +545,30 @@ export default function EmployeePage() {
           }
         }
 
-          // 4. Search in regular parking history for previous observations
-          const { data: previousSession } = await supabase
-            .from("parking_sessions")
-            .select("extra_data, vehicles!inner(plate)")
-            .eq("parking_lot_id", parkingLot.id)
-            .eq("vehicles.plate", debouncedPlate.toUpperCase())
-            .not("exit_time", "is", null)
-            .order("entry_time", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        const { data: previousSession } = await supabase
+          .from("parking_sessions")
+          .select("extra_data, vehicles!inner(plate)")
+          .eq("parking_lot_id", parkingLot.id)
+          .eq("vehicles.plate", debouncedPlate.toUpperCase())
+          .not("exit_time", "is", null)
+          .order("entry_time", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-          if (previousSession && previousSession.extra_data) {
-            const obs = previousSession.extra_data["Observaciones"];
-            const photoUrl = previousSession.extra_data["observation_photo_url"];
-            if (obs || photoUrl) {
-              setPreviousObservation({ text: obs, photoUrl: photoUrl });
-              setUsePreviousObservation(false);
-            } else {
-              setPreviousObservation(null);
-              setUsePreviousObservation(false);
-            }
+        if (previousSession && previousSession.extra_data) {
+          const obs = previousSession.extra_data["Observaciones"];
+          const photoUrl = previousSession.extra_data["observation_photo_url"];
+          if (obs || photoUrl) {
+            setPreviousObservation({ text: obs, photoUrl: photoUrl });
+            setUsePreviousObservation(false);
           } else {
             setPreviousObservation(null);
             setUsePreviousObservation(false);
           }
+        } else {
+          setPreviousObservation(null);
+          setUsePreviousObservation(false);
+        }
 
         if (foundData) {
           setExtraData(newExtraData);
@@ -645,7 +628,6 @@ export default function EmployeePage() {
       return;
     }
 
-    // Check capacity
     if (activeSessions.length >= parkingLot.capacity) {
       playBeep("error");
       setError("El parqueadero está lleno. Por favor, solicite a la administración realizar un ingreso de emergencia si es necesario.");
@@ -675,7 +657,6 @@ export default function EmployeePage() {
     setError("");
     setSuccess("");
 
-    // Check blacklist
     const { data: blacklistedItem } = await supabase
       .from("blacklisted_vehicles")
       .select("reason")
@@ -692,7 +673,6 @@ export default function EmployeePage() {
       return;
     }
 
-    // Validate custom fields
     if (parkingLot?.custom_fields) {
       for (const field of parkingLot.custom_fields) {
         if (field.required && !extraData[field.name]) {
@@ -743,7 +723,6 @@ export default function EmployeePage() {
       if (existingVehicle) {
         vehicleId = existingVehicle.id;
 
-        // Merge existing custom fields with new data
         const mergedCustomFields = {
           ...(existingVehicle.custom_fields_data || {}),
           ...extraData,
@@ -778,7 +757,6 @@ export default function EmployeePage() {
     }
 
     if (vehicleId) {
-      // Sanitize extraData
       const sanitizedExtraData: Record<string, any> = {};
       Object.keys(extraData).forEach((key) => {
         if (typeof extraData[key] === "string") {
@@ -788,7 +766,6 @@ export default function EmployeePage() {
         }
       });
 
-      // Handle photo upload or reused photo
       if (prefShowNotes) {
         if (photoFile) {
           const mimeType = (photoFile.type || "image/jpeg").toLowerCase();
@@ -832,12 +809,10 @@ export default function EmployeePage() {
             console.error("Failed to process photo buffer", err);
           }
         } else if (usePreviousObservation && previousObservation?.photoUrl) {
-          // Reusing the photo url
           sanitizedExtraData["observation_photo_url"] = previousObservation.photoUrl;
         }
       }
 
-      // Generate receipt number on entry
       const { data: lotData } = await supabase
         .from("parking_lots")
         .select("receipt_sequence")
@@ -847,7 +822,6 @@ export default function EmployeePage() {
       const nextSeq = (lotData?.receipt_sequence || 0) + 1;
       const receiptNumber = nextSeq;
 
-      // Check if receipt number already exists
       const { data: existingSession } = await supabase
         .from("parking_sessions")
         .select("id")
@@ -887,11 +861,9 @@ export default function EmployeePage() {
         playBeep("success");
         setSuccess("Ingreso registrado exitosamente");
 
-        // Handle AutoPrint
         if (prefAutoPrint) {
-          // Open receipt automatically pointing to the created session
           setViewingSession({
-            id: "mocked-id", // Ideally get the inserted ID, but we just re-fetch
+            id: "mocked-id",
             entry_employee_name: shiftName,
             status: "active",
             entry_time: new Date().toISOString(),
@@ -957,7 +929,6 @@ export default function EmployeePage() {
       (t) => t.vehicle_type === sessionToExit.vehicles.type,
     );
 
-    // Check if the user is an active monthly subscriber
     const { data: subscriber } = await supabase
       .from("monthly_subscribers")
       .select("id")
@@ -968,7 +939,6 @@ export default function EmployeePage() {
       .lte("start_date", new Date().toISOString().split("T")[0])
       .maybeSingle();
 
-    // Fee is strictly calculated
     let finalFee = 0;
     if (!subscriber) {
       finalFee = calculateFee(entryTime, exitTime, rules, {
@@ -977,7 +947,6 @@ export default function EmployeePage() {
       });
     }
 
-    // Preserve existing receipt number, or generate if missing (for backwards compatibility)
     let receiptNumber = sessionToExit.receipt_number;
 
     if (!receiptNumber) {
@@ -1022,14 +991,12 @@ export default function EmployeePage() {
       await fetchActiveSessions(parkingLot.id);
       setSelectedSession(updatedSession);
 
-      // Auto-send whatsapp if configured
       if (
         parkingLot?.features?.whatsapp_receipts &&
         parkingLot?.settings?.auto_send_whatsapp &&
         sessionToExit.extra_data &&
         (sessionToExit.extra_data.whatsapp || sessionToExit.extra_data.telefono || sessionToExit.extra_data.celular)
       ) {
-        // Extract phone number from extra_data
         const phoneNumber = sessionToExit.extra_data.whatsapp || sessionToExit.extra_data.telefono || sessionToExit.extra_data.celular;
 
         try {
@@ -1051,7 +1018,6 @@ export default function EmployeePage() {
 
           const imageUrl = `${baseUrl}/api/receipt-image?${params.toString()}`;
 
-          // Send background request to api/whatsapp
           fetch('/api/whatsapp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1061,7 +1027,6 @@ export default function EmployeePage() {
               text: `¡Gracias por su visita!`
             })
           }).catch(err => {
-            // Log but don't disrupt user flow
             console.error('Failed to auto-send whatsapp receipt', err);
           });
         } catch (err) {
@@ -1095,33 +1060,25 @@ export default function EmployeePage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#070b14] flex flex-col md:flex-row text-slate-100">
-        <div className="hidden md:flex flex-col w-64 bg-[#0d1424] border-r border-slate-800 min-h-screen animate-pulse"></div>
-        <div className="flex-1 p-8 grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-96 animate-pulse"></div>
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-32 animate-pulse"></div>
-            <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-32 animate-pulse"></div>
-            <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-32 animate-pulse"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8">
+        <Spinner size={32} className="text-indigo-600" />
+        <p className="mt-4 text-slate-700 font-bold text-lg">Cargando módulo de empleado...</p>
       </div>
     );
 
   // SHIFT MODAL
   if (!isShiftSet) {
     return (
-      <div className="fixed inset-0 bg-[#070b14]/90 flex items-center justify-center p-4 z-50 backdrop-blur-md">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
-          <div className="w-16 h-16 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl">
+          <div className="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <User size={32} />
           </div>
-          <h2 className="text-2xl font-black text-center text-white mb-2">
+          <h2 className="text-2xl font-black text-center text-slate-900 mb-2">
             Inicio de Turno
           </h2>
-          <p className="text-center text-slate-400 mb-6 text-sm">
-            Por favor, ingresa tu nombre para registrar quién está operando el
-            sistema.
+          <p className="text-center text-slate-600 mb-6 text-sm">
+            Por favor, ingresa tu nombre para registrar quién está operando el sistema.
           </p>
 
           <form onSubmit={handleStartShift}>
@@ -1130,12 +1087,12 @@ export default function EmployeePage() {
               value={shiftName || ""}
               onChange={(e) => setShiftName(e.target.value)}
               placeholder="Ej. Juan Pérez"
-              className="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-lg text-center text-white placeholder-slate-500 mb-4 font-semibold"
+              className="w-full p-4 bg-white border border-slate-300 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg text-center text-slate-900 placeholder-slate-400 mb-4 font-semibold"
               required
             />
             <button
               type="submit"
-              className={`${styles.btnPrimary} py-4 text-lg w-full shadow-lg shadow-indigo-600/30`}
+              className={`${styles.btnPrimary} py-4 text-lg w-full shadow-md bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-2xl`}
             >
               Comenzar Turno
             </button>
@@ -1148,31 +1105,31 @@ export default function EmployeePage() {
   // BLACKLIST MODAL
   if (blacklistAlert) {
     return (
-      <div className="fixed inset-0 bg-red-950/90 flex items-center justify-center p-4 z-50 backdrop-blur-md animate-in fade-in duration-300">
-        <div className="bg-slate-900 rounded-3xl p-8 md:p-10 max-w-lg w-full shadow-[0_0_50px_rgba(239,68,68,0.4)] animate-in zoom-in-95 duration-300 transform transition-all border-2 border-red-500">
-          <div className="w-20 h-20 bg-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/40">
+      <div className="fixed inset-0 bg-red-950/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div className="bg-white rounded-3xl p-8 md:p-10 max-w-lg w-full shadow-2xl border-2 border-red-500">
+          <div className="w-20 h-20 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-200">
             <X size={48} strokeWidth={3} />
           </div>
-          <h2 className="text-3xl font-black text-center text-white mb-2 uppercase tracking-tight">
+          <h2 className="text-3xl font-black text-center text-slate-900 mb-2 uppercase tracking-tight">
             ¡ALERTA ROJA!
           </h2>
-          <h3 className="text-lg font-bold text-center text-red-400 mb-6 uppercase">
+          <h3 className="text-lg font-bold text-center text-red-600 mb-6 uppercase">
             Entrada Restringida Módulo De Seguridad
           </h3>
 
-          <div className="bg-slate-800/80 p-6 rounded-2xl border border-slate-700/80 mb-8">
-            <p className="text-center text-slate-300 mb-2 font-semibold text-sm">
+          <div className="bg-red-50 p-6 rounded-2xl border border-red-200 mb-8">
+            <p className="text-center text-slate-700 mb-2 font-semibold text-sm">
               El vehículo con placa:
             </p>
             <div className="text-center mb-4">
-              <span className="inline-block px-5 py-3 bg-slate-900 border border-slate-700 text-amber-400 font-mono text-3xl font-black tracking-widest rounded-2xl shadow-inner">
+              <span className="inline-block px-5 py-3 bg-white border border-red-300 text-red-700 font-mono text-3xl font-black tracking-widest rounded-2xl shadow-sm">
                 {blacklistAlert.plate}
               </span>
             </div>
-            <p className="text-center text-slate-300 font-semibold text-sm">
+            <p className="text-center text-slate-700 font-semibold text-sm">
               Motivo del veto:
             </p>
-            <p className="text-center text-red-400 font-bold text-base mt-1">
+            <p className="text-center text-red-700 font-bold text-base mt-1">
               {blacklistAlert.reason}
             </p>
           </div>
@@ -1182,7 +1139,7 @@ export default function EmployeePage() {
               setBlacklistAlert(null);
               setPlate("");
             }}
-            className="w-full py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-bold text-base uppercase tracking-wider transition-colors shadow-lg shadow-red-600/30 focus:outline-none focus:ring-4 focus:ring-red-500/50"
+            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold text-base uppercase tracking-wider transition-colors shadow-lg"
           >
             Entendido, Rechazar Ingreso
           </button>
@@ -1192,19 +1149,19 @@ export default function EmployeePage() {
   }
 
   return (
-    <div className="h-screen bg-[#070b14] text-slate-100 flex flex-col md:flex-row w-full overflow-hidden font-sans">
+    <div className="h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row w-full overflow-hidden font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-[#0d1424] text-white p-4 flex justify-between items-center shadow-md border-b border-slate-800 z-30 shrink-0">
+      <div className="md:hidden bg-white text-slate-900 p-4 flex justify-between items-center shadow-sm border-b border-slate-200 z-30 shrink-0">
         <div className="flex items-center gap-3 font-bold text-lg">
-          <Car size={24} className="text-indigo-400" />
-          <span className="truncate max-w-[200px] font-extrabold text-white">
+          <Car size={24} className="text-indigo-700" />
+          <span className="truncate max-w-[200px] font-extrabold text-slate-900">
             {parkingLot?.name}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl transition-colors active:scale-95 border border-slate-700"
+            className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl transition-colors active:scale-95 border border-slate-300"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -1214,23 +1171,23 @@ export default function EmployeePage() {
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} md:translate-x-0 fixed md:relative top-0 left-0 z-50 transition-transform duration-300 w-72 bg-[#0d1424]/95 border-r border-slate-800/80 text-slate-300 flex-shrink-0 flex flex-col h-full`}
+        className={`${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} md:translate-x-0 fixed md:relative top-0 left-0 z-50 transition-transform duration-300 w-72 bg-white border-r border-slate-200 text-slate-800 flex-shrink-0 flex flex-col h-full`}
       >
-        <div className="p-6 flex items-center justify-between gap-3 border-b border-slate-800">
-          <div className="flex items-center gap-3 font-extrabold text-xl text-white">
-            <Car size={28} className="text-indigo-400" />
+        <div className="p-6 flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50">
+          <div className="flex items-center gap-3 font-extrabold text-xl text-slate-900">
+            <Car size={28} className="text-indigo-700" />
             <span>Operación</span>
           </div>
           <div className="flex items-center gap-3">
             <button
-              className="md:hidden text-slate-400 hover:text-white"
+              className="md:hidden text-slate-500 hover:text-slate-900"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <X size={24} />
@@ -1238,9 +1195,9 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 border-b border-slate-200">
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wider font-extrabold">
+            <p className="text-[11px] text-slate-500 uppercase tracking-wider font-extrabold">
               Turno Actual
             </p>
             <button
@@ -1250,14 +1207,14 @@ export default function EmployeePage() {
                 setIsShiftSet(false);
                 setShiftName("");
               }}
-              className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-700 transition-colors"
+              className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded border border-slate-300 transition-colors font-bold"
             >
               Cambiar
             </button>
           </div>
-          <div className="flex items-center gap-3 text-white bg-slate-800/80 border border-slate-700/80 p-3 rounded-2xl shadow-sm">
-            <User size={16} className="text-indigo-400 shrink-0" />
-            <span className="font-bold truncate text-slate-100">{shiftName}</span>
+          <div className="flex items-center gap-3 text-slate-900 bg-indigo-50 border border-indigo-200 p-3 rounded-2xl shadow-sm">
+            <User size={16} className="text-indigo-700 shrink-0" />
+            <span className="font-bold truncate text-slate-900">{shiftName}</span>
           </div>
         </div>
 
@@ -1267,9 +1224,9 @@ export default function EmployeePage() {
               setActiveTab("operation");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "operation" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "operation" ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
           >
-            <LogIn size={20} />
+            <LogIn size={20} className="text-indigo-700" />
             <span className="whitespace-nowrap">
               Ingreso / Salida
             </span>
@@ -1279,9 +1236,9 @@ export default function EmployeePage() {
               setActiveTab("history");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "history" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "history" ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
           >
-            <History size={20} />
+            <History size={20} className="text-indigo-700" />
             <span className="whitespace-nowrap">Historial</span>
           </button>
           <button
@@ -1289,9 +1246,9 @@ export default function EmployeePage() {
               setActiveTab("private");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "private" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "private" ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
           >
-            <Home size={20} className="flex-shrink-0" />
+            <Home size={20} className="flex-shrink-0 text-indigo-700" />
             <span className="whitespace-nowrap">Parq. Privados</span>
           </button>
 
@@ -1300,23 +1257,23 @@ export default function EmployeePage() {
               setActiveTab("inspections");
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "inspections" ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-md" : "hover:bg-slate-800/60 hover:text-white text-slate-400"}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "inspections" ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
           >
-            <Camera size={20} className="flex-shrink-0" />
+            <Camera size={20} className="flex-shrink-0 text-indigo-700" />
             <span className="whitespace-nowrap">Revista</span>
           </button>
         </nav>
 
-        <div className="p-4 mt-auto border-t border-slate-800">
+        <div className="p-4 mt-auto border-t border-slate-200">
           <div className="mb-4 px-1">
-            <p className="text-xs text-slate-400 mb-1 font-semibold">Ocupación</p>
-            <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
+            <p className="text-xs text-slate-600 mb-1 font-semibold">Ocupación</p>
+            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden border border-slate-300">
               <div
                 className={`h-2.5 rounded-full transition-all duration-500 ${
                   activeSessions.length >= (parkingLot?.capacity || 1)
                     ? "bg-red-500"
                     : activeSessions.length >= (parkingLot?.capacity || 1) * 0.8
-                      ? "bg-amber-400"
+                      ? "bg-amber-500"
                       : "bg-emerald-500"
                 }`}
                 style={{
@@ -1324,16 +1281,16 @@ export default function EmployeePage() {
                 }}
               ></div>
             </div>
-            <p className="text-xs text-right mt-1 text-slate-300 font-bold">
+            <p className="text-xs text-right mt-1 text-slate-800 font-bold">
               {activeSessions.length} / {parkingLot?.capacity || 0}
             </p>
           </div>
 
           {parkingLot?.show_revenue && (
             <div className="mb-4 px-1">
-              <p className="text-xs text-slate-400 mb-1 font-semibold">Recaudo del Turno</p>
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-emerald-400 block mb-2">
+              <p className="text-xs text-slate-600 mb-1 font-semibold">Recaudo del Turno</p>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex flex-col items-center justify-center">
+                <span className="text-xl font-black text-emerald-800 block mb-2">
                   {new Intl.NumberFormat("es-CO", {
                     style: "currency",
                     currency: "COP",
@@ -1343,7 +1300,7 @@ export default function EmployeePage() {
                 <button
                   onClick={handleCloseRegister}
                   disabled={isClosingRegister || accumulatedRevenue === 0}
-                  className="w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-colors truncate shadow-md"
+                  className="w-full px-3 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-colors truncate shadow-sm"
                 >
                   {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
                 </button>
@@ -1353,14 +1310,14 @@ export default function EmployeePage() {
 
           <button
             onClick={() => setShowPreferences(true)}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors w-full mb-1 text-sm font-semibold"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-slate-700 hover:bg-slate-100 transition-colors w-full mb-1 text-sm font-semibold"
           >
             <Menu size={18} />
             <span>Preferencias</span>
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-red-400 hover:bg-red-500/10 transition-colors w-full text-sm font-semibold"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-red-600 hover:bg-red-50 transition-colors w-full text-sm font-semibold"
           >
             <LogOut size={18} />
             <span>Cerrar Sesión</span>
@@ -1369,7 +1326,7 @@ export default function EmployeePage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#070b14] relative">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 relative">
         <div className="max-w-7xl mx-auto w-full p-4 lg:p-8 xl:p-12 pb-24 md:pb-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
@@ -1434,44 +1391,44 @@ export default function EmployeePage() {
 
                 {/* Resumen Rápido */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl flex items-center justify-between">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       Vehículos Parqueados
                     </p>
-                    <p className="text-3xl font-black text-white">
+                    <p className="text-3xl font-black text-slate-900">
                       {activeSessions.length}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center border border-indigo-200">
                     <Car size={24} />
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl flex items-center justify-between">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       Suscripciones Activas
                     </p>
-                    <p className="text-3xl font-black text-emerald-400">
+                    <p className="text-3xl font-black text-emerald-700">
                       {subscribers.length}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center border border-emerald-500/20">
+                  <div className="w-12 h-12 bg-emerald-50 text-emerald-700 rounded-2xl flex items-center justify-center border border-emerald-200">
                     <CheckCircle2 size={24} />
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl flex items-center justify-between">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       Vehículos Vetados
                     </p>
-                    <p className="text-3xl font-black text-rose-400">
+                    <p className="text-3xl font-black text-rose-700">
                       {blacklistedCount}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-2xl flex items-center justify-center border border-rose-500/20">
+                  <div className="w-12 h-12 bg-rose-50 text-rose-700 rounded-2xl flex items-center justify-center border border-rose-200">
                     <AlertTriangle size={24} />
                   </div>
                 </div>
@@ -1479,19 +1436,19 @@ export default function EmployeePage() {
 
               <div className="flex flex-col xl:flex-row gap-6 lg:gap-8">
                 {/* Entry Form */}
-                <div className="xl:w-[380px] shrink-0 bg-slate-900/80 p-6 lg:p-8 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl h-fit">
+                <div className="xl:w-[380px] shrink-0 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 h-fit">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3.5 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
+                    <div className="p-3.5 bg-indigo-50 text-indigo-700 rounded-2xl border border-indigo-200">
                       <LogIn size={24} />
                     </div>
-                    <h2 className="text-2xl font-black text-white tracking-tight">
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                       Nuevo Ingreso
                     </h2>
                   </div>
 
                   <form onSubmit={handleEntrySubmit} className="space-y-5">
                     <div>
-                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-2">
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-2">
                         Placa *
                       </label>
                       <div className="relative flex items-center gap-3">
@@ -1507,7 +1464,7 @@ export default function EmployeePage() {
                             type="text"
                             value={plate || ""}
                             onChange={(e) => handleSearchPlate(e.target.value.toUpperCase())}
-                            className="w-full pl-14 pr-4 py-4 md:py-5 bg-slate-800/90 border border-slate-700 group-hover:border-slate-600 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-amber-300 transition-all shadow-inner placeholder:text-slate-600 placeholder:font-normal placeholder:tracking-normal text-center"
+                            className="w-full pl-14 pr-4 py-4 md:py-5 bg-white border-2 border-slate-300 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono text-2xl sm:text-3xl font-black tracking-widest text-slate-900 transition-all shadow-sm placeholder:text-slate-400 placeholder:font-normal placeholder:tracking-normal text-center"
                             placeholder="ABC-123"
                             maxLength={7}
                             required
@@ -1515,14 +1472,14 @@ export default function EmployeePage() {
                         </div>
                       </div>
                       {!isNewVehicle && plate.length >= 5 && (
-                        <p className="text-xs font-bold text-emerald-400 mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl w-fit">
+                        <p className="text-xs font-bold text-emerald-700 mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl w-fit">
                           <CheckCircle2 size={14} /> Vehículo registrado anteriormente
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-2">
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-2">
                         Tipo de Vehículo *
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -1533,8 +1490,8 @@ export default function EmployeePage() {
                             onClick={() => setType(v)}
                             className={`p-4 md:p-5 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all active:scale-95 font-bold ${
                               type === v
-                                ? "bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-lg scale-[1.02]"
-                                : "bg-slate-800/60 border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800"
+                                ? "bg-indigo-50 border-indigo-500 text-indigo-900 shadow-md scale-[1.02]"
+                                : "bg-white border-slate-300 text-slate-700 hover:bg-slate-100"
                             }`}
                           >
                             {v.toLowerCase() === "carros" ? (
@@ -1556,7 +1513,7 @@ export default function EmployeePage() {
                     {parkingLot?.custom_fields?.map(
                       (field: any, idx: number) => (
                         <div key={idx}>
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-1">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1">
                             {field.name} {field.required && "*"}
                           </label>
                           <input
@@ -1571,7 +1528,7 @@ export default function EmployeePage() {
                                 [field.name]: val,
                               });
                             }}
-                            className="w-full p-3.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-semibold"
+                            className="w-full p-3.5 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                             placeholder={`Ingresar ${field.name.toLowerCase()}`}
                             required={field.required}
                           />
@@ -1582,14 +1539,14 @@ export default function EmployeePage() {
                     {prefShowNotes && (
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700">
                             Observaciones{" "}
                             {prefRequirePhoto
                               ? "(Obligatorio con foto)"
                               : "(Opcional)"}
                           </label>
                           {previousObservation && (
-                            <label className="flex items-center gap-2 text-xs text-indigo-400 font-bold cursor-pointer bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-xl">
+                            <label className="flex items-center gap-2 text-xs text-indigo-700 font-bold cursor-pointer bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-xl">
                               <input
                                 type="checkbox"
                                 checked={usePreviousObservation}
@@ -1603,7 +1560,7 @@ export default function EmployeePage() {
                                     });
                                     if (previousObservation.photoUrl) {
                                       setPhotoDataUrl(previousObservation.photoUrl);
-                                      setPhotoFile(null); // Clear any newly taken file
+                                      setPhotoFile(null);
                                     }
                                   } else {
                                     setExtraData({
@@ -1615,7 +1572,7 @@ export default function EmployeePage() {
                                     }
                                   }
                                 }}
-                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-700"
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300"
                               />
                               Usar novedad anterior
                             </label>
@@ -1629,7 +1586,7 @@ export default function EmployeePage() {
                               ["Observaciones"]: e.target.value,
                             })
                           }
-                          className="w-full p-3.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-3 text-sm font-semibold"
+                          className="w-full p-3.5 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-3 text-sm font-semibold"
                           placeholder="Daños, rayones o notas importantes..."
                           rows={2}
                           required={prefRequirePhoto && !usePreviousObservation}
@@ -1658,7 +1615,7 @@ export default function EmployeePage() {
                               <button
                                 type="button"
                                 onClick={() => photoInputRef.current?.click()}
-                                className="flex-1 py-3 px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl font-bold transition-colors flex items-center justify-center gap-3 border border-slate-700 shadow-md"
+                                className="flex-1 py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl font-bold transition-colors flex items-center justify-center gap-3 border border-slate-300 shadow-sm"
                               >
                                 <Camera size={20} />
                                 {photoDataUrl
@@ -1667,7 +1624,7 @@ export default function EmployeePage() {
                               </button>
                             </div>
                             {photoDataUrl && (
-                              <div className="mt-2 relative rounded-2xl overflow-hidden border border-slate-700 max-h-48 flex justify-center bg-slate-950">
+                              <div className="mt-2 relative rounded-2xl overflow-hidden border border-slate-300 max-h-48 flex justify-center bg-slate-100">
                                 <Image
                                   src={photoDataUrl}
                                   alt="Observación"
@@ -1683,7 +1640,7 @@ export default function EmployeePage() {
                                     if (photoInputRef.current)
                                       photoInputRef.current.value = "";
                                   }}
-                                  className="absolute top-3 right-2 p-1.5 bg-rose-600 text-white rounded-full hover:bg-rose-500 transition-colors shadow-md"
+                                  className="absolute top-3 right-2 p-1.5 bg-rose-600 text-white rounded-full hover:bg-rose-700 transition-colors shadow-md"
                                   title="Eliminar foto"
                                 >
                                   <X size={14} />
@@ -1698,7 +1655,7 @@ export default function EmployeePage() {
                     <button
                       type="submit"
                       disabled={isSubmittingEntry}
-                      className={`${styles.btnPrimary} mt-6 py-4 md:py-5 text-lg w-full active:scale-[0.98] shadow-lg shadow-indigo-600/30`}
+                      className={`${styles.btnPrimary} mt-6 py-4 md:py-5 text-lg w-full active:scale-[0.98] shadow-md bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-2xl`}
                     >
                       {isSubmittingEntry ? (
                         <Spinner size={24} className="text-white" />
@@ -1711,15 +1668,15 @@ export default function EmployeePage() {
                 </div>
 
                 {/* Active Sessions */}
-                <div className="flex-1 bg-slate-900/80 p-6 lg:p-8 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl min-w-0">
+                <div className="flex-1 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-4">
-                      <div className="p-3.5 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">
+                      <div className="p-3.5 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-200">
                         <Car size={24} />
                       </div>
-                      <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                      <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                         Parqueadero
-                        <span className="bg-slate-800 border border-slate-700 text-slate-200 text-xs font-extrabold px-3 py-1 rounded-full">
+                        <span className="bg-slate-100 border border-slate-300 text-slate-800 text-xs font-extrabold px-3 py-1 rounded-full">
                           {activeSessions.length}
                         </span>
                       </h2>
@@ -1731,15 +1688,15 @@ export default function EmployeePage() {
                             placeholder="Buscar placa activa..."
                             value={activeSearchQuery}
                             onChange={(e) => setActiveSearchQuery(e.target.value.toUpperCase())}
-                            className="w-full pl-9 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
+                            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
                         />
                     </div>
                   </div>
 
                   {filteredActiveSessions.length === 0 ? (
-                    <div className="text-center py-16 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
-                      <Car size={48} className="mx-auto text-slate-600 mb-4" />
-                      <p className="text-slate-400 font-bold">
+                    <div className="text-center py-16 border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50">
+                      <Car size={48} className="mx-auto text-slate-400 mb-4" />
+                      <p className="text-slate-600 font-bold">
                         {activeSearchQuery ? "No se encontraron vehículos con esa placa." : "No hay vehículos en el parqueadero."}
                       </p>
                     </div>
@@ -1748,7 +1705,7 @@ export default function EmployeePage() {
                       {filteredActiveSessions.map((session) => (
                         <div
                           key={session.id}
-                          className={`border p-4.5 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-slate-800/60 ${viewingSession?.id === session.id ? "border-indigo-500 shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500/50 bg-slate-800/90" : "border-slate-700/80 hover:border-slate-600 hover:bg-slate-800/80"}`}
+                          className={`border p-4.5 rounded-3xl flex flex-col justify-between gap-4 transition-all bg-white ${viewingSession?.id === session.id ? "border-indigo-500 shadow-md ring-1 ring-indigo-500/50 bg-indigo-50/20" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div
@@ -1761,25 +1718,25 @@ export default function EmployeePage() {
                                 )
                               }
                             >
-                              <div className="w-20 h-16 bg-slate-900 rounded-2xl flex items-center justify-center font-mono font-black text-lg text-amber-300 border border-slate-700 shadow-md shrink-0 group-hover:border-indigo-500 transition-colors">
+                              <div className="w-20 h-16 bg-amber-50 rounded-2xl flex items-center justify-center font-mono font-black text-lg text-amber-900 border border-amber-300 shadow-sm shrink-0 group-hover:border-indigo-500 transition-colors">
                                 {session.vehicles.plate}
                               </div>
                               <div>
                                 <div className="flex items-center gap-3">
-                                  <p className="font-black text-white capitalize text-base">
+                                  <p className="font-black text-slate-900 capitalize text-base">
                                     {session.vehicles.type}
                                   </p>
                                   {subscribers.some(
                                     (sub) =>
                                       sub.plate === session.vehicles.plate,
                                   ) && (
-                                    <span className="bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    <span className="bg-indigo-100 border border-indigo-300 text-indigo-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                                       Abonado
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1.5">
-                                  <Clock size={14} className="text-indigo-400" />
+                                <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-1.5">
+                                  <Clock size={14} className="text-indigo-700" />
                                   <span>
                                     {new Date(
                                       session.entry_time,
@@ -1792,7 +1749,7 @@ export default function EmployeePage() {
                                     })}
                                   </span>
                                   <span
-                                    className={`ml-2 text-xs font-bold transition-colors ${viewingSession?.id === session.id ? "text-indigo-300" : "text-slate-400 group-hover:text-indigo-400"}`}
+                                    className={`ml-2 text-xs font-bold transition-colors ${viewingSession?.id === session.id ? "text-indigo-700" : "text-slate-500 group-hover:text-indigo-700"}`}
                                   >
                                     {viewingSession?.id === session.id
                                       ? "(Ocultar detalles)"
@@ -1802,17 +1759,17 @@ export default function EmployeePage() {
                               </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0 border-t sm:border-0 pt-4 sm:pt-0 border-slate-700/60">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0 border-t sm:border-0 pt-4 sm:pt-0 border-slate-200">
                               <div className="flex items-center gap-3">
-                                <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider hidden sm:block">
+                                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider hidden sm:block">
                                   Cobro:
                                 </span>
-                                <div className="bg-slate-900 border border-slate-700 rounded-2xl py-2.5 px-4 flex items-center shadow-inner w-full sm:w-auto overflow-hidden">
-                                  <span className="text-slate-400 font-bold mr-1.5 text-sm">
+                                <div className="bg-slate-50 border border-slate-300 rounded-2xl py-2.5 px-4 flex items-center shadow-inner w-full sm:w-auto overflow-hidden">
+                                  <span className="text-slate-600 font-bold mr-1.5 text-sm">
                                     $
                                   </span>
                                   <span
-                                    className={`text-lg font-black truncate tracking-tight ${subscribers.some((sub) => sub.plate === session.vehicles.plate) ? "text-emerald-400" : "text-white"}`}
+                                    className={`text-lg font-black truncate tracking-tight ${subscribers.some((sub) => sub.plate === session.vehicles.plate) ? "text-emerald-700" : "text-slate-900"}`}
                                   >
                                     {(subscribers.some(
                                       (sub) =>
@@ -1844,7 +1801,7 @@ export default function EmployeePage() {
                                   handleExit(session.id);
                                 }}
                                 disabled={isSubmittingExit === session.id}
-                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:bg-slate-700 shadow-lg shadow-indigo-600/20`}
+                                className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap shrink-0 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-2xl shadow-sm`}
                               >
                                 {isSubmittingExit === session.id ? (
                                   <>
@@ -1863,21 +1820,21 @@ export default function EmployeePage() {
 
                           {/* Dropdown Extra Data / Entry Summary */}
                           {viewingSession?.id === session.id && (
-                            <div className="mt-2 text-sm border-t border-slate-700/80 pt-3 flex flex-col gap-3 animate-in fade-in slide-in-from-top-3">
+                            <div className="mt-2 text-sm border-t border-slate-200 pt-3 flex flex-col gap-3 animate-in fade-in slide-in-from-top-3">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="flex justify-between items-center bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80">
-                                  <span className="text-slate-400 font-medium">
+                                <div className="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                                  <span className="text-slate-600 font-medium">
                                     Registrado por:
                                   </span>
-                                  <span className="font-bold text-white">
+                                  <span className="font-bold text-slate-900">
                                     {session.entry_employee_name || "N/A"}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80">
-                                  <span className="text-slate-400 font-medium">
+                                <div className="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                                  <span className="text-slate-600 font-medium">
                                     Hora Entrada:
                                   </span>
-                                  <span className="font-bold text-white text-right">
+                                  <span className="font-bold text-slate-900 text-right">
                                     {new Date(
                                       session.entry_time,
                                     ).toLocaleString("es-CO", {
@@ -1889,8 +1846,8 @@ export default function EmployeePage() {
                                     })}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80">
-                                  <span className="text-slate-400 font-medium">
+                                <div className="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                                  <span className="text-slate-600 font-medium">
                                     Tiquete de Ingreso:
                                   </span>
                                   <button
@@ -1898,7 +1855,7 @@ export default function EmployeePage() {
                                       e.stopPropagation();
                                       setViewingSession(session);
                                     }}
-                                    className="text-indigo-400 font-bold hover:underline text-sm flex items-center gap-1.5"
+                                    className="text-indigo-700 font-bold hover:underline text-sm flex items-center gap-1.5"
                                     title="Imprimir Tiquete de Ingreso"
                                   >
                                     <Printer size={15} />
@@ -1914,8 +1871,8 @@ export default function EmployeePage() {
                                 (session.extra_data &&
                                   Object.keys(session.extra_data).length >
                                     0)) && (
-                                <div className="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-700/80 mt-2">
-                                  <span className="text-slate-400 block mb-2 font-bold text-xs uppercase tracking-wider">
+                                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 mt-2">
+                                  <span className="text-slate-600 block mb-2 font-bold text-xs uppercase tracking-wider">
                                     Datos Extra:
                                   </span>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1925,12 +1882,12 @@ export default function EmployeePage() {
                                     }).map(([k, v]) => (
                                       <div
                                         key={k}
-                                        className="text-xs bg-slate-800/80 p-3 rounded-xl border border-slate-700/80"
+                                        className="text-xs bg-white p-3 rounded-xl border border-slate-200"
                                       >
-                                        <span className="font-extrabold block text-slate-400 uppercase mb-[2px] text-[10px] tracking-wide">
+                                        <span className="font-extrabold block text-slate-500 uppercase mb-[2px] text-[10px] tracking-wide">
                                           {k}
                                         </span>
-                                        <span className="text-white font-bold">
+                                        <span className="text-slate-900 font-bold">
                                           {v as string}
                                         </span>
                                       </div>
@@ -1961,7 +1918,6 @@ export default function EmployeePage() {
             </div>
           )}
 
-          {/* TAB: PRIVATE SPACES */}
           {/* TAB: INSPECTIONS */}
           {activeTab === "inspections" && parkingLot && profile && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1987,12 +1943,12 @@ export default function EmployeePage() {
 
           {/* Info Modal */}
           {viewingSession && (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200 print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
+            <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200 print:absolute print:inset-0 print:bg-transparent print:p-0 print:block">
               <div
                 id="printable-receipt"
                 className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print:shadow-none print:max-w-none print:w-full print:p-0 flex flex-col print:h-auto print:block print:m-0"
               >
-                <div className="bg-white border-r border-slate-200 border-b border-slate-200 p-4 flex justify-between items-center text-slate-900 print:border-none print:pb-2 print:mb-4 print:border-b print:border-dashed print:border-slate-300">
+                <div className="bg-white border-b border-slate-200 p-4 flex justify-between items-center text-slate-900 print:border-none print:pb-2 print:mb-4 print:border-b print:border-dashed print:border-slate-300">
                   <div className="flex flex-col w-full text-center sm:text-left print:text-center">
                     <div className="hidden print:flex flex-col items-center justify-center mb-4">
                       {parkingLot?.logo_url || appSettings?.logo_url ? (
@@ -2004,7 +1960,7 @@ export default function EmployeePage() {
                           className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-2 border-2 border-slate-100 shadow-xl"
                         />
                       ) : (
-                        <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-xl border border-slate-100">
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-700 text-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-xl border border-slate-100">
                           <Car size={32} />
                         </div>
                       )}
@@ -2012,13 +1968,13 @@ export default function EmployeePage() {
                         {appSettings?.app_name || parkingLot?.name || "Parqueadero"}
                       </h2>
                     </div>
-                    <h3 className="text-lg font-bold font-mono print:text-slate-900">
+                    <h3 className="text-lg font-bold font-mono text-slate-900">
                       Tiquete Vehículo - {viewingSession.vehicles.plate}
                     </h3>
                   </div>
                   <button
                     onClick={() => setViewingSession(null)}
-                    className="p-1 hover:bg-indigo-900 rounded-3xl transition-colors print:hidden"
+                    className="p-1 hover:bg-slate-100 rounded-3xl transition-colors print:hidden text-slate-500 hover:text-slate-900"
                   >
                     <X size={20} />
                   </button>
@@ -2026,19 +1982,19 @@ export default function EmployeePage() {
 
                 <div className="p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-50  p-3 rounded-3xl border border-slate-100 ">
+                    <div className="bg-slate-50 p-3 rounded-3xl border border-slate-200">
                       <p className="text-xs text-slate-500 font-bold mb-1">
                         Tipo
                       </p>
-                      <p className="font-extrabold text-slate-900  capitalize">
+                      <p className="font-extrabold text-slate-900 capitalize">
                         {viewingSession.vehicles.type}
                       </p>
                     </div>
-                    <div className="bg-slate-50  p-3 rounded-3xl border border-slate-100 ">
+                    <div className="bg-slate-50 p-3 rounded-3xl border border-slate-200">
                       <p className="text-xs text-slate-500 font-bold mb-1">
                         Hora Ingreso
                       </p>
-                      <p className="font-extrabold text-slate-900 ">
+                      <p className="font-extrabold text-slate-900">
                         {new Date(viewingSession.entry_time).toLocaleString("es-CO", {
                           day: "2-digit",
                           month: "2-digit",
@@ -2049,11 +2005,11 @@ export default function EmployeePage() {
                       </p>
                     </div>
                     {viewingSession.entry_employee_name && (
-                      <div className="bg-slate-50  p-3 rounded-3xl border border-slate-100  col-span-2">
+                      <div className="bg-slate-50 p-3 rounded-3xl border border-slate-200 col-span-2">
                         <p className="text-xs text-slate-500 font-bold mb-1">
                           Registrado por
                         </p>
-                        <p className="font-extrabold text-slate-900 ">
+                        <p className="font-extrabold text-slate-900">
                           {viewingSession.entry_employee_name}
                         </p>
                       </div>
@@ -2062,7 +2018,7 @@ export default function EmployeePage() {
 
                   {viewingSession.extra_data &&
                     Object.keys(viewingSession.extra_data).length > 0 && (
-                      <div className="bg-slate-100/50 p-4 rounded-3xl border border-indigo-100 space-y-2 mt-4">
+                      <div className="bg-indigo-50/50 p-4 rounded-3xl border border-indigo-100 space-y-2 mt-4">
                         <h4 className="font-extrabold text-indigo-900 text-sm mb-3">
                           Información Adicional
                         </h4>
@@ -2072,7 +2028,7 @@ export default function EmployeePage() {
                               return (
                                 <div
                                   key={k}
-                                  className="flex flex-col gap-3 border-b border-indigo-100/50 pb-2 last:border-0 last:pb-0"
+                                  className="flex flex-col gap-3 border-b border-indigo-100 pb-2 last:border-0 last:pb-0"
                                 >
                                   <span className="text-slate-600 font-bold">
                                     Foto de Observación
@@ -2096,12 +2052,12 @@ export default function EmployeePage() {
                             return (
                               <div
                                 key={k}
-                                className="flex justify-between items-center text-sm border-b border-indigo-100/50 pb-2 last:border-0 last:pb-0"
+                                className="flex justify-between items-center text-sm border-b border-indigo-100 pb-2 last:border-0 last:pb-0"
                               >
-                                <span className="text-slate-600  font-bold">
+                                <span className="text-slate-600 font-bold">
                                   {k}
                                 </span>
-                                <span className="text-slate-900  font-extrabold">
+                                <span className="text-slate-900 font-extrabold">
                                   {v as string}
                                 </span>
                               </div>
@@ -2117,7 +2073,7 @@ export default function EmployeePage() {
                     onClick={() => {
                       window.print();
                     }}
-                    className="flex-1 py-3 bg-slate-900 text-white rounded-3xl font-bold transition-colors hover:bg-slate-800 flex justify-center items-center gap-3"
+                    className="flex-1 py-3 bg-indigo-700 text-white rounded-3xl font-bold transition-colors hover:bg-indigo-800 flex justify-center items-center gap-3 shadow-md"
                   >
                     <Printer size={18} />
                     Imprimir
@@ -2126,7 +2082,6 @@ export default function EmployeePage() {
                     onClick={() => {
                       const sessionId = viewingSession.id;
                       setViewingSession(null);
-                      // Pre-fill the exit form logic
                       setExitPlate(sessionId);
                       const currentFee = calculateFee(
                         new Date(viewingSession.entry_time),
@@ -2144,7 +2099,7 @@ export default function EmployeePage() {
                       ).toString();
                       setFee(currentFee);
                     }}
-                    className="flex-1 py-3 bg-white border border-slate-200 text-slate-900 rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-3"
+                    className="flex-1 py-3 bg-white border border-slate-300 text-slate-900 rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-3"
                   >
                     Cerrar Detalle
                   </button>
@@ -2154,24 +2109,24 @@ export default function EmployeePage() {
           )}
 
           {showConfirmEntry && (
-            <div className="fixed inset-0 bg-white border-r border-slate-200/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white  rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-6 text-center">
-                  <div className="w-16 h-16 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-md border border-slate-100">
+                  <div className="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200 shadow-md">
                     <AlertTriangle size={32} />
                   </div>
-                  <h3 className="font-bold text-slate-900  text-xl mb-2">
+                  <h3 className="font-bold text-slate-900 text-xl mb-2">
                     Confirmar Ingreso
                   </h3>
-                  <p className="text-sm text-slate-500 font-bold">
+                  <p className="text-sm text-slate-600 font-bold">
                     ¿Estás seguro de registrar el ingreso de la placa{" "}
-                    <span className="text-slate-900  font-bold uppercase">
+                    <span className="text-slate-900 font-bold uppercase">
                       {plate}
                     </span>
                     ?
                   </p>
                 </div>
-                <div className="p-5 bg-slate-50  border-t border-slate-100  flex gap-3 justify-center">
+                <div className="p-5 bg-slate-50 border-t border-slate-200 flex gap-3 justify-center">
                   <button
                     onClick={() => setShowConfirmEntry(false)}
                     className={`${styles.btnSecondary} w-full`}
@@ -2181,7 +2136,7 @@ export default function EmployeePage() {
                   </button>
                   <button
                     onClick={processEntry}
-                    className={`${styles.btnPrimary} w-full flex items-center justify-center gap-3 active:scale-95`}
+                    className={`${styles.btnPrimary} w-full flex items-center justify-center gap-3 active:scale-95 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl`}
                     disabled={isSubmittingEntry}
                   >
                     {isSubmittingEntry ? (
@@ -2196,10 +2151,10 @@ export default function EmployeePage() {
             </div>
           )}
           {showPreferences && (
-            <div className="fixed inset-0 bg-white border-r border-slate-200/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white  rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="bg-white border-r border-slate-200 text-slate-900 p-5 flex justify-between items-center">
-                  <h3 className="font-bold text-lg flex items-center gap-3">
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-slate-50 border-b border-slate-200 text-slate-900 p-5 flex justify-between items-center">
+                  <h3 className="font-bold text-lg flex items-center gap-3 text-slate-900">
                     <Menu size={20} />
                     Preferencias Adicionales
                   </h3>
@@ -2213,7 +2168,7 @@ export default function EmployeePage() {
                 <div className="p-6 space-y-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-slate-900  text-sm">
+                      <p className="font-bold text-slate-900 text-sm">
                         Sonidos de Notificación
                       </p>
                       <p className="text-xs text-slate-500">
@@ -2229,14 +2184,14 @@ export default function EmployeePage() {
                           savePref("pref_sound", e.target.checked)
                         }
                       />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white  after:border-slate-300  after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-800"></div>
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-700"></div>
                     </label>
                   </div>
                 </div>
-                <div className="p-4 bg-slate-50  border-t border-slate-100 ">
+                <div className="p-4 bg-slate-50 border-t border-slate-200">
                   <button
                     onClick={() => setShowPreferences(false)}
-                    className={`${styles.btnPrimary} w-full`}
+                    className={`${styles.btnPrimary} w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl`}
                   >
                     Cerrar y Guardar
                   </button>
