@@ -2,10 +2,9 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LogIn, ArrowLeft, Car, Eye, EyeOff, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getErrorMessage } from "@/lib/error";
@@ -166,85 +165,60 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-dvh relative flex flex-col items-center justify-center p-4 overflow-hidden" style={{ background: "#090d16" }}>
+    <div className="min-h-dvh relative flex flex-col items-center justify-center p-4 bg-slate-100">
 
       {/* Botón de regreso */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="absolute top-6 left-6"
-      >
+      <div className="absolute top-6 left-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm font-semibold"
+          className="inline-flex items-center gap-2 text-slate-700 hover:text-indigo-700 transition-colors text-sm font-semibold"
         >
           <ArrowLeft size={16} />
           Regresar
         </Link>
-      </motion.div>
+      </div>
 
       {/* Estado de conexión */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="absolute top-6 right-6"
-      >
+      <div className="absolute top-6 right-6">
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${
           isOnline
-            ? "bg-emerald-950 border border-emerald-800 text-emerald-400"
-            : "bg-rose-950 border border-rose-800 text-rose-400"
+            ? "bg-emerald-100 border border-emerald-300 text-emerald-800"
+            : "bg-rose-100 border border-rose-300 text-rose-800"
         }`}>
           {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
           {isOnline ? "En línea" : "Sin conexión"}
         </div>
-      </motion.div>
+      </div>
 
       {/* Tarjeta principal */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative w-full max-w-md z-10"
-      >
-        <div className="relative rounded-2xl p-8 md:p-10"
-          style={{
-            background: "#111827",
-            border: "1px solid #374151",
-          }}
-        >
+      <div className="relative w-full max-w-md z-10">
+        <div className="relative rounded-2xl p-8 md:p-10 bg-white border border-slate-300 shadow-md">
           {/* Logo e icono */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-indigo-600 text-white shadow-lg">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-indigo-700 text-white shadow-sm">
               <Car size={32} />
             </div>
 
-            <h1 className="text-2xl font-extrabold text-white">
+            <h1 className="text-2xl font-extrabold text-slate-900">
               Bienvenido a NexoPark
             </h1>
-            <p className="mt-1 text-sm font-medium" style={{ color: "#9ca3af" }}>
+            <p className="mt-1 text-sm font-medium text-slate-600">
               Ingresa tus credenciales para continuar
             </p>
           </div>
 
           {/* Error */}
-          <AnimatePresence mode="wait">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="alert-error flex items-start gap-3 mb-6"
-              >
-                <span className="text-rose-400 mt-0.5 shrink-0">⚠</span>
-                <span className="text-sm font-medium">{error}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {error && (
+            <div className="alert-error flex items-start gap-3 mb-6 bg-rose-50 border border-rose-300 rounded-xl p-3">
+              <span className="text-rose-700 mt-0.5 shrink-0">⚠</span>
+              <span className="text-sm font-medium text-rose-900">{error}</span>
+            </div>
+          )}
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold mb-2 uppercase tracking-widest text-gray-300">
+              <label className="block text-xs font-bold mb-2 uppercase tracking-widest text-slate-700">
                 Usuario o Correo
               </label>
               <input
@@ -259,7 +233,7 @@ function LoginContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-2 uppercase tracking-widest text-gray-300">
+              <label className="block text-xs font-bold mb-2 uppercase tracking-widest text-slate-700">
                 Contraseña
               </label>
               <div className="relative">
@@ -275,7 +249,7 @@ function LoginContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors text-gray-400 hover:text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors text-slate-500 hover:text-slate-800"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -297,14 +271,14 @@ function LoginContent() {
           </form>
 
           {/* Footer de la tarjeta */}
-          <p className="text-center text-xs mt-6" style={{ color: "#9ca3af" }}>
+          <p className="text-center text-xs mt-6 text-slate-500">
             Sistema seguro • Datos protegidos con RLS
           </p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Texto de marca inferior */}
-      <p className="relative z-10 mt-8 text-xs font-semibold" style={{ color: "#9ca3af" }}>
+      <p className="relative z-10 mt-8 text-xs font-semibold text-slate-600">
         NexoPark © 2026 · Todos los derechos reservados
       </p>
     </div>
@@ -315,8 +289,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-dvh flex items-center justify-center" style={{ background: "#090d16" }}>
-          <Spinner size={32} className="text-indigo-500" />
+        <div className="min-h-dvh flex items-center justify-center bg-slate-100">
+          <Spinner size={32} className="text-indigo-700" />
         </div>
       }
     >
