@@ -301,6 +301,8 @@ export default function AdminHistory({
         (exitTime.getTime() - entryTime.getTime()) / 60000,
       );
 
+      const isPaused = parkingLot?.features?.is_cash_paused || false;
+
       const { data: updatedSession, error: updateError } = await supabase
         .from("parking_sessions")
         .update({
@@ -311,6 +313,10 @@ export default function AdminHistory({
           receipt_number: receiptNumber,
           duration_minutes: durationMinutes,
           exit_employee_name: "Admin",
+          extra_data: {
+            ...(sessionToExit.extra_data || {}),
+            is_paused: isPaused,
+          },
         })
         .eq("id", sessionToExit.id)
         .select("*, vehicles(*)")
