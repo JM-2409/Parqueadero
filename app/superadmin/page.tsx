@@ -639,15 +639,15 @@ export default function SuperAdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center gap-4" style={{ background: "var(--np-bg-primary)" }}>
-        <div className="animate-pulse-glow p-5 rounded-2xl" style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)" }}>
-          <ShieldCheck size={36} style={{ color: "#818cf8" }} />
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-slate-50">
+        <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-100">
+          <ShieldCheck size={36} className="text-indigo-600" />
         </div>
         <div className="text-center">
-          <p className="font-bold text-lg" style={{ color: "#f1f5f9" }}>Cargando panel del dueño</p>
-          <p className="text-sm mt-1" style={{ color: "#64748b" }}>Un momento por favor...</p>
+          <p className="font-bold text-lg text-slate-900">Cargando panel del dueño</p>
+          <p className="text-sm mt-1 text-slate-500">Un momento por favor...</p>
         </div>
-        <Spinner size={24} className="text-indigo-500" />
+        <Spinner size={24} className="text-indigo-600" />
       </div>
     );
   }
@@ -888,12 +888,12 @@ export default function SuperAdminPage() {
           {/* TAB: PARQUEADEROS */}
           {activeTab === "lots" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl">
+              <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
+                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100">
                     <Building2 size={24} />
                   </div>
-                  <h2 className="text-xl font-extrabold text-white">
+                  <h2 className="text-xl font-extrabold text-slate-900">
                     Crear Nuevo Parqueadero
                   </h2>
                 </div>
@@ -903,7 +903,7 @@ export default function SuperAdminPage() {
                   className="grid md:grid-cols-3 gap-4"
                 >
                   <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-1">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       Nombre
                     </label>
                     <input
@@ -912,12 +912,12 @@ export default function SuperAdminPage() {
                       onChange={(e) =>
                         setNewLot({ ...newLot, name: e.target.value })
                       }
-                      className="w-full p-3.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
+                      className="w-full p-3.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                       placeholder="Ej. Parqueadero Central"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-1">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       NIT
                     </label>
                     <input
@@ -926,12 +926,12 @@ export default function SuperAdminPage() {
                       onChange={(e) =>
                         setNewLot({ ...newLot, nit: e.target.value })
                       }
-                      className="w-full p-3.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
+                      className="w-full p-3.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                       placeholder="Ej. 900.123.456-7"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-1">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       Dirección
                     </label>
                     <input
@@ -940,7 +940,7 @@ export default function SuperAdminPage() {
                       onChange={(e) =>
                         setNewLot({ ...newLot, address: e.target.value })
                       }
-                      className="w-full p-3.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
+                      className="w-full p-3.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                       placeholder="Ej. Calle 123 #45-67"
                     />
                   </div>
@@ -948,7 +948,7 @@ export default function SuperAdminPage() {
                     <button
                       type="submit"
                       disabled={isCreatingLot}
-                      className="py-3.5 px-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl font-bold transition-colors flex items-center justify-center gap-3 w-full md:w-auto min-w-[220px] shadow-lg shadow-indigo-600/30"
+                      className="py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-2xl font-bold transition-colors flex items-center justify-center gap-3 w-full md:w-auto min-w-[220px] shadow-lg shadow-indigo-600/20"
                     >
                       {isCreatingLot ? (
                         <Spinner size={20} className="text-white" />
@@ -961,16 +961,16 @@ export default function SuperAdminPage() {
                 </form>
               </div>
 
-              <div className="bg-slate-900/80 p-6 rounded-3xl shadow-xl border border-slate-800 backdrop-blur-xl">
+              <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
-                  <h2 className="text-xl font-extrabold text-white">
+                  <h2 className="text-xl font-extrabold text-slate-900">
                     Parqueaderos Registrados
                   </h2>
                   <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-3">
                     <select
                       value={subscriptionFilter}
                       onChange={(e) => setSubscriptionFilter(e.target.value)}
-                      className="px-4 py-3 border border-slate-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-800 text-white font-semibold"
+                      className="px-4 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-50 text-slate-900 font-semibold"
                     >
                       <option value="all">Todas las suscripciones</option>
                       <option value="active">Activas</option>
@@ -982,13 +982,13 @@ export default function SuperAdminPage() {
                         placeholder="Buscar parqueadero..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-4 pr-4 py-3 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
+                        className="w-full pl-4 pr-4 py-3 bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                       />
                     </div>
                   </div>
                 </div>
                 {parkingLots.length === 0 ? (
-                  <p className="text-slate-400 text-center py-8 bg-slate-800/40 rounded-3xl border border-dashed border-slate-800 font-semibold">
+                  <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-3xl border border-dashed border-slate-200 font-semibold">
                     No hay parqueaderos registrados aún.
                   </p>
                 ) : (
@@ -1018,12 +1018,12 @@ export default function SuperAdminPage() {
                         return (
                           <div
                             key={lot.id}
-                            className="border border-slate-700/80 p-5 rounded-3xl hover:border-indigo-500/60 hover:shadow-xl transition-all bg-slate-800/60 flex flex-col relative group"
+                            className="border border-slate-200 p-5 rounded-3xl hover:border-indigo-400 hover:shadow-xl transition-all bg-white flex flex-col relative group"
                           >
                             <div className="absolute top-3 right-3 flex items-center gap-1">
                               <button
                                 onClick={() => openResetModal(lot.id, lot.name)}
-                                className="p-2 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white rounded-2xl transition-all border border-amber-500/20 active:scale-95"
+                                className="p-2 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-2xl transition-all border border-amber-200 active:scale-95"
                                 title="Reiniciar parqueadero (Vaciar todos los datos a cero sin borrar usuarios)"
                               >
                                 <BarChart3 size={16} />
@@ -1041,14 +1041,14 @@ export default function SuperAdminPage() {
                                     },
                                   })
                                 }
-                                className="p-2 bg-slate-700/80 text-slate-300 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-600 hover:text-white focus:opacity-100 border border-slate-600"
+                                className="p-2 bg-slate-100 text-slate-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-600 hover:text-white focus:opacity-100 border border-slate-200"
                                 title="Editar parqueadero"
                               >
                                 <Settings size={16} />
                               </button>
                               <button
                                 onClick={() => openDeleteModal(lot.id, lot.name)}
-                                className="w-8 h-8 flex items-center justify-center text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 rounded-full transition-all shadow-sm border border-rose-500/20 active:scale-95"
+                                className="w-8 h-8 flex items-center justify-center text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 rounded-full transition-all shadow-sm border border-rose-200 active:scale-95"
                                 title="Eliminar parqueadero permanentemente"
                               >
                                 <Trash2 size={16} />
@@ -1057,36 +1057,36 @@ export default function SuperAdminPage() {
 
                             <div className="flex items-start justify-between mb-3 pr-8">
                               <div>
-                                <h3 className="font-extrabold text-lg text-white leading-tight flex flex-wrap items-center gap-2">
+                                <h3 className="font-extrabold text-lg text-slate-900 leading-tight flex flex-wrap items-center gap-2">
                                   {lot.name}
                                   {lot.is_active === undefined ||
                                   lot.is_active ? (
-                                    <span className="px-2.5 py-0.5 text-[10px] uppercase font-black bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30">
+                                    <span className="px-2.5 py-0.5 text-[10px] uppercase font-black bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
                                       Activo
                                     </span>
                                   ) : (
-                                    <span className="px-2.5 py-0.5 text-[10px] uppercase font-black bg-slate-700/80 text-slate-400 rounded-full border border-slate-600">
+                                    <span className="px-2.5 py-0.5 text-[10px] uppercase font-black bg-slate-100 text-slate-600 rounded-full border border-slate-200">
                                       Inactivo
                                     </span>
                                   )}
                                   {lot.is_suspended && (
-                                    <span className="px-2.5 py-0.5 text-[10px] uppercase font-black bg-rose-500/20 text-rose-400 rounded-full border border-rose-500/30">
+                                    <span className="px-2.5 py-0.5 text-[10px] uppercase font-black bg-rose-100 text-rose-800 rounded-full border border-rose-200">
                                       Suspendido
                                     </span>
                                   )}
                                 </h3>
                               </div>
-                              <div className="p-3 bg-slate-900 rounded-2xl border border-slate-700 shrink-0">
+                              <div className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100 shrink-0">
                                 <Building2
                                   size={18}
-                                  className="text-indigo-400"
+                                  className="text-indigo-600"
                                 />
                               </div>
                             </div>
-                            <p className="text-xs text-amber-300 font-mono font-bold bg-slate-900/90 inline-block px-2.5 py-1 rounded-xl border border-slate-700 w-max mb-2">
+                            <p className="text-xs text-amber-800 font-mono font-bold bg-amber-50 inline-block px-2.5 py-1 rounded-xl border border-amber-200 w-max mb-2">
                               NIT: {lot.nit}
                             </p>
-                            <p className="text-xs text-slate-300 font-medium mb-2 line-clamp-2 h-10">
+                            <p className="text-xs text-slate-600 font-medium mb-2 line-clamp-2 h-10">
                               {lot.address}
                             </p>
 
@@ -1626,20 +1626,20 @@ export default function SuperAdminPage() {
 
       {/* Modal de Edición de Parqueadero */}
       {editingLot && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-slate-800">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 text-slate-900 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
+                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100">
                   <Building2 size={20} />
                 </div>
-                <h3 className="text-xl font-extrabold text-white">
+                <h3 className="text-xl font-extrabold text-slate-900">
                   Editar Parqueadero
                 </h3>
               </div>
               <button
                 onClick={() => setEditingLot(null)}
-                className="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-xl border border-slate-700"
+                className="text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 p-2 rounded-xl border border-slate-200"
               >
                 <X size={20} />
               </button>
@@ -1653,7 +1653,7 @@ export default function SuperAdminPage() {
               >
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-1">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       Nombre
                     </label>
                     <input
@@ -1662,11 +1662,11 @@ export default function SuperAdminPage() {
                       onChange={(e) =>
                         setEditingLot({ ...editingLot, name: e.target.value })
                       }
-                      className="w-full p-3.5 bg-slate-800 border border-slate-700 text-white rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
+                      className="w-full p-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-1">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       NIT
                     </label>
                     <input
@@ -1675,11 +1675,11 @@ export default function SuperAdminPage() {
                       onChange={(e) =>
                         setEditingLot({ ...editingLot, nit: e.target.value })
                       }
-                      className="w-full p-3.5 bg-slate-800 border border-slate-700 text-white rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
+                      className="w-full p-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700  mb-1">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
                       Dirección
                     </label>
                     <input
@@ -1691,17 +1691,17 @@ export default function SuperAdminPage() {
                           address: e.target.value,
                         })
                       }
-                      className="w-full p-3.5 bg-slate-800 border border-slate-700 text-white rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
+                      className="w-full p-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold"
                     />
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-800">
-                  <h4 className="font-extrabold text-white mb-4">
+                <div className="pt-4 border-t border-slate-100">
+                  <h4 className="font-extrabold text-slate-900 mb-4">
                     Opciones de Parqueadero
                   </h4>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <label className="flex items-center gap-3 p-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
+                    <label className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors">
                       <input
                         type="checkbox"
                         checked={
@@ -1716,19 +1716,19 @@ export default function SuperAdminPage() {
                             },
                           })
                         }
-                        className="w-5 h-5 text-indigo-500 rounded border-slate-600 focus:ring-indigo-500"
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           Seguridad de Equipos
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-slate-500">
                           Requiere aprobar dispositivos antes de ingresar
                         </div>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
+                    <label className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors">
                       <input
                         type="checkbox"
                         checked={
@@ -1743,19 +1743,19 @@ export default function SuperAdminPage() {
                             },
                           })
                         }
-                        className="w-5 h-5 text-indigo-500 rounded border-slate-600 focus:ring-indigo-500"
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           Recibos por WhatsApp
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-slate-500">
                           Permitir el envío de recibos por WhatsApp
                         </div>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
+                    <label className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors">
                       <input
                         type="checkbox"
                         checked={
@@ -1770,19 +1770,19 @@ export default function SuperAdminPage() {
                             },
                           })
                         }
-                        className="w-5 h-5 text-indigo-500 rounded border-slate-600 focus:ring-indigo-500"
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           Abonados (Mensualidades)
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-slate-500">
                           Gestión de vehículos mensuales
                         </div>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
+                    <label className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors">
                       <input
                         type="checkbox"
                         checked={
@@ -1797,19 +1797,19 @@ export default function SuperAdminPage() {
                             },
                           })
                         }
-                        className="w-5 h-5 text-indigo-500 rounded border-slate-600 focus:ring-indigo-500"
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           Múltiples Empleados
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-slate-500">
                           Permite roles y cuentas extra
                         </div>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
+                    <label className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors">
                       <input
                         type="checkbox"
                         checked={editingLot.features?.reports || false}
@@ -1822,19 +1822,19 @@ export default function SuperAdminPage() {
                             },
                           })
                         }
-                        className="w-5 h-5 text-indigo-500 rounded border-slate-600 focus:ring-indigo-500"
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           Reportes Avanzados
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-slate-500">
                           Cierres de caja y analíticas
                         </div>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
+                    <label className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors">
                       <input
                         type="checkbox"
                         checked={editingLot.features?.pdf_exports || false}
@@ -1847,13 +1847,13 @@ export default function SuperAdminPage() {
                             },
                           })
                         }
-                        className="w-5 h-5 text-indigo-500 rounded border-slate-600 focus:ring-indigo-500"
+                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           Exportar a PDF
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-slate-500">
                           Permitir exportar recibos en PDF
                         </div>
                       </div>
@@ -1863,11 +1863,11 @@ export default function SuperAdminPage() {
               </form>
             </div>
 
-            <div className="p-6 border-t border-slate-800 flex justify-end gap-3 bg-slate-900/90 rounded-b-2xl">
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
               <button
                 type="button"
                 onClick={() => setEditingLot(null)}
-                className="px-6 py-3.5 text-slate-300 hover:bg-slate-800 bg-slate-800/60 font-bold rounded-2xl border border-slate-700 transition-colors text-sm"
+                className="px-6 py-3.5 text-slate-600 hover:bg-slate-200 bg-slate-100 font-bold rounded-2xl border border-slate-200 transition-colors text-sm"
               >
                 Cancelar
               </button>
@@ -1875,7 +1875,7 @@ export default function SuperAdminPage() {
                 type="submit"
                 form="edit-lot-form"
                 disabled={isEditingLot}
-                className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-400 text-white font-bold rounded-3xl transition-colors flex items-center justify-center gap-3 min-w-[200px]"
+                className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold rounded-3xl transition-colors flex items-center justify-center gap-3 min-w-[200px]"
               >
                 {isEditingLot && (
                   <Spinner size={16} className="text-white" />

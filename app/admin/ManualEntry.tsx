@@ -588,7 +588,7 @@ export default function ManualEntry({
                     Tarifa Cobrada ($) *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-extrabold text-slate-500 text-lg z-10 pointer-events-none">
                       $
                     </span>
                     <input
@@ -596,7 +596,7 @@ export default function ManualEntry({
                       value={totalFee}
                       onChange={(e) => setTotalFee(e.target.value)}
                       disabled={!isSpecialFee}
-                      className={`w-full text-base rounded-3xl px-5 py-3 pl-8 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-slate-500 shadow-xl border border-slate-100 shadow-indigo-100/50"}`}
+                      className={`w-full text-base rounded-3xl py-3 !pl-10 !pr-5 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-slate-500 shadow-xl border border-slate-100 shadow-indigo-100/50"}`}
                       placeholder="0.00"
                       min="0"
                       step="0.01"
