@@ -239,7 +239,7 @@ export default function AdminPage() {
     // Fetch stats for current shift (since last closure)
     let query = supabase
       .from("parking_sessions")
-      .select("total_charged")
+      .select("total_charged, extra_data")
       .eq("parking_lot_id", parkingLotId)
       .not("exit_time", "is", null);
 
@@ -270,10 +270,9 @@ export default function AdminPage() {
     const { data: withdrawalsData } = await withdrawalsQuery;
 
     if (shiftData) {
-      const revenue = shiftData.reduce(
-        (sum, s) => sum + (Number(s.total_charged) || 0),
-        0,
-      );
+      const revenue = shiftData
+        .filter((s) => !s.extra_data?.is_paused)
+        .reduce((sum, s) => sum + (Number(s.total_charged) || 0), 0);
       const withdrawals = withdrawalsData?.reduce((sum, w) => sum + (Number(w.amount) || 0), 0) || 0;
       setCurrentShiftRevenue(revenue);
       setShiftWithdrawals(withdrawals);

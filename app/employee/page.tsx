@@ -144,7 +144,7 @@ export default function EmployeePage() {
 
     let query = supabase
       .from("parking_sessions")
-      .select("total_charged")
+      .select("total_charged, extra_data")
       .eq("parking_lot_id", id)
       .not("exit_time", "is", null);
 
@@ -154,10 +154,9 @@ export default function EmployeePage() {
 
     const { data: shiftData } = await query;
     if (shiftData) {
-      const revenue = shiftData.reduce(
-        (sum, s) => sum + (Number(s.total_charged) || 0),
-        0,
-      );
+      const revenue = shiftData
+        .filter((s) => !s.extra_data?.is_paused)
+        .reduce((sum, s) => sum + (Number(s.total_charged) || 0), 0);
       setAccumulatedRevenue(revenue);
     }
   }, []);
@@ -966,6 +965,8 @@ export default function EmployeePage() {
     const durationMinutes = Math.round(
       (exitTime.getTime() - entryTime.getTime()) / 60000,
     );
+
+    const isPaused = parkingLot?.features?.is_cash_paused || false;
 
     const { data: updatedSession, error: updateError } = await supabase
       .from("parking_sessions")

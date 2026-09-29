@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Clock, Calendar, DollarSign, X, HandCoins, Download, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Calendar, DollarSign, X, HandCoins, Download, FileText, ChevronDown, ChevronUp, PauseCircle, PlayCircle } from "lucide-react";
 import styles from "./admin.module.css";
 import { downloadClosureReport } from "@/lib/reports";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
@@ -22,6 +22,8 @@ export default function CashClosuresHistory({
   shiftWithdrawals?: number;
   onRegisterClosed?: () => void;
 }) {
+  const [isCashPaused, setIsCashPaused] = useState(false);
+  const [isTogglingPause, setIsTogglingPause] = useState(false);
   const [closures, setClosures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClosingRegister, setIsClosingRegister] = useState(false);
@@ -38,7 +40,61 @@ export default function CashClosuresHistory({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const fetchParkingLotConfig = useCallback(async () => {
+    const { data } = await supabase
+      .from("parking_lots")
+      .select("features")
+      .eq("id", parkingLotId)
+      .maybeSingle();
+
+    if (data?.features) {
+      setIsCashPaused(!!data.features.is_cash_paused);
+    }
+  }, [parkingLotId]);
+
+  const toggleCashPause = async () => {
+    setIsTogglingPause(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const { data: lotData } = await supabase
+        .from("parking_lots")
+        .select("features")
+        .eq("id", parkingLotId)
+        .single();
+
+      const currentFeatures = lotData?.features || {};
+      const newPauseState = !isCashPaused;
+
+      const { error: updateError } = await supabase
+        .from("parking_lots")
+        .update({
+          features: {
+            ...currentFeatures,
+            is_cash_paused: newPauseState,
+          },
+        })
+        .eq("id", parkingLotId);
+
+      if (updateError) throw updateError;
+
+      setIsCashPaused(newPauseState);
+      setSuccess(
+        newPauseState
+          ? "Caja PAUSADA (Modo Histórico activo). Los nuevos registros no sumarán a la caja actual."
+          : "Caja REANUDADA (Modo Normal activo). Los cobros volverán a sumar a la caja."
+      );
+      setTimeout(() => setSuccess(""), 4000);
+    } catch (err: unknown) {
+      setError("Error al cambiar estado de pausa de caja: " + getErrorMessage(err));
+    } finally {
+      setIsTogglingPause(false);
+    }
+  };
+
   const fetchClosures = useCallback(async () => {
+    fetchParkingLotConfig();
     const { data } = await supabase
       .from("cash_closures")
       .select("*, profiles:closed_by(full_name, email)")
@@ -259,6 +315,27 @@ export default function CashClosuresHistory({
 
       {success && <SuccessMessage message={success} />}
 
+      {/* Banner de Estado Pausado de Caja */}
+      {isCashPaused && (
+        <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-3xl flex items-center justify-between gap-4 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <PauseCircle size={28} className="text-amber-600 flex-shrink-0 animate-pulse" />
+            <div>
+              <p className="font-extrabold text-sm text-amber-900">CAJA EN MODO PAUSA (Modo Histórico)</p>
+              <p className="text-xs text-amber-700">Los cobros y salidas registradas mientras la caja esté pausada NO se sumarán a la caja actual ni afectarán los cierres.</p>
+            </div>
+          </div>
+          <button
+            onClick={toggleCashPause}
+            disabled={isTogglingPause}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 shadow-sm"
+          >
+            <PlayCircle size={16} />
+            {isTogglingPause ? "Procesando..." : "Reanudar Caja"}
+          </button>
+        </div>
+      )}
+
       {currentShiftRevenue !== undefined && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={`${styles.card} flex flex-col justify-center bg-indigo-50 border-indigo-100`}>
@@ -316,6 +393,19 @@ export default function CashClosuresHistory({
                 </div>
               </div>
               <div className="flex flex-col gap-2 w-full sm:w-auto">
+                <button
+                  onClick={toggleCashPause}
+                  disabled={isTogglingPause}
+                  className={`w-full sm:w-auto px-4 py-2 rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2 border ${
+                    isCashPaused
+                      ? "bg-amber-500 text-white border-amber-600 hover:bg-amber-600 shadow-md"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  }`}
+                  title={isCashPaused ? "Reanudar caja normal" : "Pausar caja para ingresar registros históricos"}
+                >
+                  {isCashPaused ? <PlayCircle size={16} /> : <PauseCircle size={16} />}
+                  {isTogglingPause ? "Guardando..." : isCashPaused ? "Reanudar Caja" : "Pausar Caja"}
+                </button>
                 <button
                   onClick={() => setShowWithdrawModal(true)}
                   disabled={currentRegisterCash <= 0 || isClosingRegister}
