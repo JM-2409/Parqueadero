@@ -1388,7 +1388,10 @@ export default function EmployeePage() {
                 )}
 
                 {/* Occupancy Gauge Header */}
-                <OccupancyGauge data={occupancyData} />
+                <OccupancyGauge
+                  data={occupancyData}
+                  allowedVehicles={parkingLot?.allowed_vehicles}
+                />
 
                 {/* Resumen Rápido */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
