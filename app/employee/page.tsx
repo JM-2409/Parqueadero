@@ -441,7 +441,7 @@ export default function EmployeePage() {
           event: "*",
           schema: "public",
           table: "parking_sessions",
-          filter: `parking_lot_id=${parkingLot.id}`,
+          filter: `parking_lot_id=eq.${parkingLot.id}`,
         },
         () => {
           fetchActiveSessions(parkingLot.id);
