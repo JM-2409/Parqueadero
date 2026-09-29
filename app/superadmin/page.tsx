@@ -74,6 +74,19 @@ export default function SuperAdminPage() {
     isLoading: false,
   });
 
+  // Reset modal state
+  const [resetModal, setResetModal] = useState<{
+    isOpen: boolean;
+    id: string;
+    name: string;
+    isLoading: boolean;
+  }>({
+    isOpen: false,
+    id: "",
+    name: "",
+    isLoading: false,
+  });
+
   // Form states
   const [newLot, setNewLot] = useState({ name: "", nit: "", address: "" });
   const [isCreatingLot, setIsCreatingLot] = useState(false);
@@ -95,6 +108,51 @@ export default function SuperAdminPage() {
 
   const closeDeleteModal = () => {
     setDeleteModal({ isOpen: false, id: "", name: "", isLoading: false });
+  };
+
+  const openResetModal = (id: string, name: string) => {
+    setResetModal({ isOpen: true, id, name, isLoading: false });
+  };
+
+  const closeResetModal = () => {
+    setResetModal({ isOpen: false, id: "", name: "", isLoading: false });
+  };
+
+  const handleResetParkingLot = async () => {
+    const { id, name } = resetModal;
+    setResetModal((prev) => ({ ...prev, isLoading: true }));
+    setError("");
+    setSuccess("");
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await fetch("/api/parking-lots/reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ parkingLotId: id }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Error al reiniciar el parqueadero");
+      }
+
+      setSuccess(`Los datos de "${name}" se han reiniciado desde cero exitosamente.`);
+      fetchParkingLots();
+      fetchMetrics();
+      setTimeout(() => setSuccess(""), 4000);
+    } catch (err: unknown) {
+      setError("Error al reiniciar parqueadero: " + getErrorMessage(err));
+    } finally {
+      closeResetModal();
+    }
   };
 
   const handleDeleteParkingLot = async () => {
@@ -962,31 +1020,40 @@ export default function SuperAdminPage() {
                             key={lot.id}
                             className="border border-slate-700/80 p-5 rounded-3xl hover:border-indigo-500/60 hover:shadow-xl transition-all bg-slate-800/60 flex flex-col relative group"
                           >
-                            <button
-                              onClick={() =>
-                                setEditingLot({
-                                  ...lot,
-                                  features: lot.features || {
-                                    whatsapp_receipts: false,
-                                    monthly_subscribers: false,
-                                    multiple_employees: false,
-                                    reports: false,
-                                    pdf_exports: false,
-                                  },
-                                })
-                              }
-                              className="absolute top-3 right-12 p-2.5 bg-slate-700/80 text-slate-300 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-600 hover:text-white focus:opacity-100 border border-slate-600"
-                              title="Editar parqueadero"
-                            >
-                              <Settings size={16} />
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(lot.id, lot.name)}
-                              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 rounded-full transition-all shadow-sm border border-rose-500/20 active:scale-95"
-                              title="Eliminar parqueadero permanentemente"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <div className="absolute top-3 right-3 flex items-center gap-1">
+                              <button
+                                onClick={() => openResetModal(lot.id, lot.name)}
+                                className="p-2 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white rounded-2xl transition-all border border-amber-500/20 active:scale-95"
+                                title="Reiniciar parqueadero (Vaciar todos los datos a cero sin borrar usuarios)"
+                              >
+                                <BarChart3 size={16} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setEditingLot({
+                                    ...lot,
+                                    features: lot.features || {
+                                      whatsapp_receipts: false,
+                                      monthly_subscribers: false,
+                                      multiple_employees: false,
+                                      reports: false,
+                                      pdf_exports: false,
+                                    },
+                                  })
+                                }
+                                className="p-2 bg-slate-700/80 text-slate-300 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-600 hover:text-white focus:opacity-100 border border-slate-600"
+                                title="Editar parqueadero"
+                              >
+                                <Settings size={16} />
+                              </button>
+                              <button
+                                onClick={() => openDeleteModal(lot.id, lot.name)}
+                                className="w-8 h-8 flex items-center justify-center text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 rounded-full transition-all shadow-sm border border-rose-500/20 active:scale-95"
+                                title="Eliminar parqueadero permanentemente"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
 
                             <div className="flex items-start justify-between mb-3 pr-8">
                               <div>
@@ -1827,6 +1894,16 @@ export default function SuperAdminPage() {
         onCancel={closeDeleteModal}
         confirmText="Eliminar permanentemente"
         isLoading={deleteModal.isLoading}
+      />
+
+      <ConfirmModal
+        isOpen={resetModal.isOpen}
+        title="Reiniciar Parqueadero a Cero"
+        message={`¿Estás seguro de que deseas vaciar TODOS los datos operativos (sesiones, cierres de caja, abonados, movimientos e inspecciones) de "${resetModal.name}"? Los administradores y empleados NO serán eliminados. Esta acción dejará el parqueadero desde cero.`}
+        onConfirm={handleResetParkingLot}
+        onCancel={closeResetModal}
+        confirmText="Reiniciar a cero"
+        isLoading={resetModal.isLoading}
       />
     </div>
   );
