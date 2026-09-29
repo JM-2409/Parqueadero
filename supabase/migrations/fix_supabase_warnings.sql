@@ -1,0 +1,1 @@
+ALTER TABLE tariffs_v3 DROP CONSTRAINT IF EXISTS tariffs_v3_parking_lot_id_fkey; ALTER TABLE tariffs_v3 ADD CONSTRAINT tariffs_v3_parking_lot_id_fkey FOREIGN KEY (parking_lot_id) REFERENCES parking_lots(id) ON DELETE CASCADE;
