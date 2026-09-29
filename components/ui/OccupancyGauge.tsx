@@ -77,57 +77,7 @@ export function OccupancyGauge({
   );
 
   return (
-    <div className="space-y-4">
-      {/* ── Banner de ocupación global (Tema Claro) ── */}
-      <div className="relative rounded-2xl p-5 overflow-hidden bg-white border border-slate-200 shadow-sm">
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp size={16} className="text-indigo-600" />
-              <span className="text-xs font-extrabold uppercase tracking-widest text-slate-500">
-                Ocupación Total en Tiempo Real
-              </span>
-            </div>
-            <p className="text-3xl font-black text-slate-900">
-              {totalOccupied}{" "}
-              <span className="text-base font-semibold text-slate-500">
-                / {totalCapacity} vehículos
-              </span>
-            </p>
-          </div>
-          <div className="flex items-center justify-end sm:justify-start">
-            <div className="relative w-20 h-20 flex-shrink-0">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="15.9"
-                  fill="none"
-                  stroke="#e2e8f0"
-                  strokeWidth="3"
-                />
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="15.9"
-                  fill="none"
-                  stroke={totalPct >= 90 ? "#e11d48" : totalPct >= 70 ? "#d97706" : "#4338ca"}
-                  strokeWidth="3"
-                  strokeDasharray={`${totalPct} ${100 - totalPct}`}
-                  strokeLinecap="round"
-                  style={{
-                    transition: "stroke-dasharray 0.8s ease",
-                  }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="font-black text-sm text-slate-900">{totalPct}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div>
       {/* ── Tarjetas por tipo de vehículo (Filtradas según allowedVehicles) ── */}
       <div className={`grid grid-cols-1 ${displayCategories.length === 1 ? "sm:grid-cols-1" : displayCategories.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"} gap-3`}>
         {displayCategories.map((catKey) => {

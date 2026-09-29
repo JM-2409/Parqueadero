@@ -1340,16 +1340,28 @@ export default function EmployeePage() {
 
           {/* TAB: OPERATION */}
           {activeTab === "operation" && (() => {
-            const carrosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "carros" || s.vehicles?.type?.toLowerCase() === "carro").length;
-            const motosCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "motos" || s.vehicles?.type?.toLowerCase() === "moto").length;
-            const bicisCount = activeSessions.filter((s) => s.vehicles?.type?.toLowerCase() === "bicicletas" || s.vehicles?.type?.toLowerCase() === "bicicleta").length;
             const totalCap = parkingLot?.capacity || 100;
+            const allowedVehiclesList = (parkingLot?.allowed_vehicles && parkingLot.allowed_vehicles.length > 0)
+              ? parkingLot.allowed_vehicles
+              : ["carros", "motos", "bicicletas"];
 
-            const occupancyData = {
-              carros: { occupied: carrosCount, capacity: Math.round(totalCap * 0.5) },
-              motos: { occupied: motosCount, capacity: Math.round(totalCap * 0.35) },
-              bicicletas: { occupied: bicisCount, capacity: Math.round(totalCap * 0.15) },
-            };
+            const numTypes = allowedVehiclesList.length || 1;
+            const capPerType = Math.max(1, Math.round(totalCap / numTypes));
+
+            const occupancyData: Record<string, { occupied: number; capacity: number }> = {};
+
+            allowedVehiclesList.forEach((vType: string) => {
+              const normalized = vType.toLowerCase();
+              const count = activeSessions.filter((s) => {
+                const sessionType = s.vehicles?.type?.toLowerCase() || "";
+                return sessionType === normalized || sessionType === normalized.slice(0, -1);
+              }).length;
+
+              occupancyData[normalized] = {
+                occupied: count,
+                capacity: capPerType,
+              };
+            });
 
             return (
               <div className="flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
