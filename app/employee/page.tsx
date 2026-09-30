@@ -123,6 +123,8 @@ export default function EmployeePage() {
     reason: string;
   } | null>(null);
 
+  const [activeSpecialTariff, setActiveSpecialTariff] = useState<any>(null);
+
   // Exit form states
   const [exitPlate, setExitPlate] = useState("");
   const [fee, setFee] = useState("");
@@ -577,6 +579,11 @@ export default function EmployeePage() {
           setUsePreviousObservation(false);
         }
 
+        const matchingSpecial = specialTariffs.find(
+          (st) => st.plate === debouncedPlate.toUpperCase() && st.is_active !== false
+        );
+        setActiveSpecialTariff(matchingSpecial || null);
+
         if (foundData) {
           setExtraData(newExtraData);
           setIsNewVehicle(false);
@@ -585,6 +592,7 @@ export default function EmployeePage() {
           setExtraData({});
         }
       } else {
+        setActiveSpecialTariff(null);
         setIsNewVehicle(true);
         setExtraData({});
         setPreviousObservation(null);
@@ -1536,6 +1544,25 @@ export default function EmployeePage() {
                           <CheckCircle2 size={14} /> Vehículo registrado anteriormente
                         </p>
                       )}
+
+                      {activeSpecialTariff && plate.length >= 5 && (
+                        <div className="mt-2 p-3 bg-amber-50 border border-amber-300 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                          <div className="flex items-center gap-2 text-amber-800 font-extrabold text-xs">
+                            <DollarSign size={16} className="text-amber-600" />
+                            <span>¡VEHÍCULO CON TARIFA ESPECIAL!</span>
+                          </div>
+                          <p className="text-xs font-black text-amber-950 mt-1">
+                            {activeSpecialTariff.rate_type === "dia"
+                              ? `$${Number(activeSpecialTariff.amount).toLocaleString("es-CO")} / Día (00:00 - 24:00)`
+                              : `$${Number(activeSpecialTariff.amount).toLocaleString("es-CO")} (${activeSpecialTariff.rate_type})`}
+                          </p>
+                          {activeSpecialTariff.description && (
+                            <p className="text-[11px] text-amber-800 italic mt-0.5">
+                              Nota: &quot;{activeSpecialTariff.description}&quot;
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -1792,6 +1819,15 @@ export default function EmployeePage() {
                                   ) && (
                                     <span className="bg-indigo-100 border border-indigo-300 text-indigo-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                                       Abonado
+                                    </span>
+                                  )}
+                                  {specialTariffs.some(
+                                    (st) =>
+                                      st.plate === session.vehicles.plate.toUpperCase() &&
+                                      st.is_active !== false
+                                  ) && (
+                                    <span className="bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                      Tarifa Especial
                                     </span>
                                   )}
                                 </div>
