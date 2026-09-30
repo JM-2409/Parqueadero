@@ -1099,9 +1099,15 @@ export default function EmployeePage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8">
-        <Spinner size={32} className="text-indigo-600" />
-        <p className="mt-4 text-slate-700 font-bold text-lg">Cargando módulo de empleado...</p>
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-slate-50">
+        <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-200">
+          <Car size={36} className="text-indigo-600" />
+        </div>
+        <div className="text-center">
+          <p className="font-bold text-lg text-slate-900">Cargando portal de operario</p>
+          <p className="text-sm mt-1 text-slate-600">Un momento por favor...</p>
+        </div>
+        <Spinner size={24} className="text-indigo-600" />
       </div>
     );
 
