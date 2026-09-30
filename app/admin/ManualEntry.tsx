@@ -32,6 +32,7 @@ export default function ManualEntry({
   const [manualReceiptNumber, setManualReceiptNumber] = useState("");
   const [extraData, setExtraData] = useState<Record<string, string>>({});
   const [tariffs, setTariffs] = useState<any[]>([]);
+  const [specialTariffs, setSpecialTariffs] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -95,6 +96,13 @@ export default function ManualEntry({
         .select("*")
         .eq("parking_lot_id", parkingLotId);
       if (data) setTariffs(data);
+
+      const { data: specialData } = await supabase
+        .from("special_tariffs")
+        .select("*")
+        .eq("parking_lot_id", parkingLotId)
+        .eq("is_active", true);
+      if (specialData) setSpecialTariffs(specialData);
     };
     fetchTariffs();
   }, [parkingLotId]);
@@ -123,10 +131,20 @@ export default function ManualEntry({
     const vehicleTariffs = tariffs.filter((t) => t.vehicle_type === type);
     if (vehicleTariffs.length === 0) return;
 
-    const calculatedFee = calculateFee(entry, exit, vehicleTariffs, {
-      entry_grace_period_mins: parkingLot.entry_grace_period_mins,
-      shift_grace_period_mins: parkingLot.shift_grace_period_mins,
-    });
+    const vehicleSpecialTariffs = specialTariffs.filter(
+      (st) => st.plate === plate.trim().toUpperCase()
+    );
+
+    const calculatedFee = calculateFee(
+      entry,
+      exit,
+      vehicleTariffs,
+      {
+        entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+        shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+      },
+      vehicleSpecialTariffs
+    );
 
     setTotalFee(calculatedFee.toString());
   }, [

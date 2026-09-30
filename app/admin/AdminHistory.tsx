@@ -66,6 +66,7 @@ export default function AdminHistory({
   const parkingLotId = parkingLot.id;
   const [sessions, setSessions] = useState<ParkingSession[]>([]);
   const [tariffs, setTariffs] = useState<any[]>([]);
+  const [specialTariffs, setSpecialTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [localSearchTerm, setLocalSearchTerm] = useState("");
@@ -115,6 +116,13 @@ export default function AdminHistory({
       .select("*")
       .eq("parking_lot_id", parkingLotId);
     if (tariffData) setTariffs(tariffData);
+
+    const { data: specialData } = await supabase
+      .from("special_tariffs")
+      .select("*")
+      .eq("parking_lot_id", parkingLotId)
+      .eq("is_active", true);
+    if (specialData) setSpecialTariffs(specialData);
 
     // Fetch sessions with pagination and search
     let query = supabase
@@ -277,10 +285,40 @@ export default function AdminHistory({
       const rules = tariffs.filter(
         (t) => t.vehicle_type === sessionToExit.vehicles.type,
       );
-      const finalFee = calculateFee(entryTime, exitTime, rules, {
-        entry_grace_period_mins: parkingLot.entry_grace_period_mins,
-        shift_grace_period_mins: parkingLot.shift_grace_period_mins,
-      });
+      const vehicleSpecialTariffs = specialTariffs.filter(
+        (st) => st.plate === sessionToExit.vehicles.plate.toUpperCase(),
+      );
+
+      const { data: pastSessions } = await supabase
+        .from("parking_sessions")
+        .select("entry_time, exit_time")
+        .eq("parking_lot_id", parkingLotId)
+        .eq("vehicle_id", sessionToExit.vehicle_id)
+        .eq("status", "completed")
+        .not("exit_time", "is", null);
+
+      const pastPaidDates: string[] = [];
+      if (pastSessions) {
+        pastSessions.forEach((ps) => {
+          if (ps.entry_time) {
+            const d = new Date(ps.entry_time);
+            const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            pastPaidDates.push(dateKey);
+          }
+        });
+      }
+
+      const finalFee = calculateFee(
+        entryTime,
+        exitTime,
+        rules,
+        {
+          entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+          shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+        },
+        vehicleSpecialTariffs,
+        pastPaidDates,
+      );
 
       let receiptNumber = sessionToExit.receipt_number;
       if (!receiptNumber) {
@@ -431,10 +469,20 @@ export default function AdminHistory({
       (t) => t.vehicle_type === session.vehicles.type,
     );
 
-    return calculateFee(entryTime, exitTime, rules, {
-      entry_grace_period_mins: parkingLot.entry_grace_period_mins,
-      shift_grace_period_mins: parkingLot.shift_grace_period_mins,
-    });
+    const vehicleSpecialTariffs = specialTariffs.filter(
+      (st) => st.plate === session.vehicles.plate.toUpperCase(),
+    );
+
+    return calculateFee(
+      entryTime,
+      exitTime,
+      rules,
+      {
+        entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+        shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+      },
+      vehicleSpecialTariffs,
+    );
   };
 
   const exportToPDF = async () => {

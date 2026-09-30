@@ -32,6 +32,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TariffSettings from "./TariffSettings";
+import SpecialTariffs from "./SpecialTariffs";
 import AdminHistory from "./AdminHistory";
 import CashClosuresHistory from "./CashClosuresHistory";
 import ManualEntry from "./ManualEntry";
@@ -45,7 +46,8 @@ import EmployeeLogs from "./EmployeeLogs";
 import {
   FileEdit,
   Shield,
-  Activity
+  Activity,
+  Tag
 } from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
 import {
@@ -934,6 +936,18 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
+              handleTabChange("special_tariffs");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "special_tariffs" ? styles.navItemActive : ""}`}
+          >
+            <Tag size={20} className="text-amber-500" />
+            <span className="font-bold whitespace-nowrap text-left">
+              Tarifas Especiales
+            </span>
+          </button>
+          <button
+            onClick={() => {
               handleTabChange("employees");
               setIsMobileMenuOpen(false);
             }}
@@ -1181,6 +1195,15 @@ export default function AdminPage() {
                 parkingLot={parkingLot}
                 initialFilterStatus="active"
                 hideStatusTabs={true}
+              />
+            </div>
+          )}
+
+          {/* TAB: TARIFAS ESPECIALES */}
+          {activeTab === "special_tariffs" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <SpecialTariffs
+                parkingLotId={parkingLot.id}
               />
             </div>
           )}
