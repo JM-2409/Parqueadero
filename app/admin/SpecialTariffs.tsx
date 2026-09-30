@@ -237,13 +237,13 @@ export default function SpecialTariffs({
                   Valor a Cobrar ($) *
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base pointer-events-none">$</span>
                   <input
                     type="number"
                     min="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-8 pr-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none font-bold"
+                    className="w-full bg-slate-50 border-0 text-slate-900 text-sm rounded-3xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none font-bold"
                     placeholder="5000"
                     required
                   />
