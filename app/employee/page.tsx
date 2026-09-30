@@ -29,7 +29,7 @@ import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
 import Image from "next/image";
 import InspectionsTab from "./InspectionsTab";
-import { calculateFee } from "@/lib/pricing";
+import { calculateFee, formatDateKey } from "@/lib/pricing";
 
 import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
@@ -86,6 +86,7 @@ export default function EmployeePage() {
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const [blacklistedCount, setBlacklistedCount] = useState<number>(0);
   const [tariffs, setTariffs] = useState<any[]>([]);
+  const [specialTariffs, setSpecialTariffs] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showConfirmEntry, setShowConfirmEntry] = useState(false);
@@ -257,6 +258,13 @@ export default function EmployeePage() {
         .select("*")
         .eq("parking_lot_id", id);
       if (tariffData) setTariffs(tariffData);
+
+      const { data: specialData } = await supabase
+        .from("special_tariffs")
+        .select("*")
+        .eq("parking_lot_id", id)
+        .eq("is_active", true);
+      if (specialData) setSpecialTariffs(specialData);
 
       setLoading(false);
     },
@@ -940,10 +948,40 @@ export default function EmployeePage() {
 
     let finalFee = 0;
     if (!subscriber) {
-      finalFee = calculateFee(entryTime, exitTime, rules, {
-        entry_grace_period_mins: parkingLot.entry_grace_period_mins,
-        shift_grace_period_mins: parkingLot.shift_grace_period_mins,
-      });
+      const vehicleSpecialTariffs = specialTariffs.filter(
+        (st) => st.plate === sessionToExit.vehicles.plate.toUpperCase(),
+      );
+
+      // Fetch completed sessions for this specific vehicle to get past paid dates for daily special tariff calculation
+      const { data: pastSessions } = await supabase
+        .from("parking_sessions")
+        .select("entry_time, exit_time")
+        .eq("parking_lot_id", parkingLot.id)
+        .eq("vehicle_id", sessionToExit.vehicle_id)
+        .eq("status", "completed")
+        .not("exit_time", "is", null);
+
+      const pastPaidDates: string[] = [];
+      if (pastSessions) {
+        pastSessions.forEach((ps) => {
+          if (ps.entry_time) {
+            const dateKey = formatDateKey(new Date(ps.entry_time));
+            pastPaidDates.push(dateKey);
+          }
+        });
+      }
+
+      finalFee = calculateFee(
+        entryTime,
+        exitTime,
+        rules,
+        {
+          entry_grace_period_mins: parkingLot.entry_grace_period_mins,
+          shift_grace_period_mins: parkingLot.shift_grace_period_mins,
+        },
+        vehicleSpecialTariffs,
+        pastPaidDates,
+      );
     }
 
     let receiptNumber = sessionToExit.receipt_number;
@@ -1806,6 +1844,9 @@ export default function EmployeePage() {
                                             shift_grace_period_mins:
                                               parkingLot.shift_grace_period_mins,
                                           },
+                                          specialTariffs.filter(
+                                            (st) => st.plate === session.vehicles.plate.toUpperCase()
+                                          ),
                                         )
                                     ).toLocaleString("es-CO")}
                                   </span>

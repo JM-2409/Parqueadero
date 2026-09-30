@@ -11,6 +11,18 @@ export interface PricingSettings {
   shift_grace_period_mins?: number;
 }
 
+export interface SpecialTariff {
+  id?: string;
+  parking_lot_id?: string;
+  plate: string;
+  rate_type: string; // 'dia', 'hora', 'minuto', 'fijo'
+  amount: number;
+  start_date: string | Date;
+  end_date?: string | Date | null;
+  description?: string | null;
+  is_active?: boolean;
+}
+
 function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule[]): number {
   let currentMs = startMs;
   let totalFee = 0;
@@ -116,18 +128,97 @@ function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule
   return totalFee;
 }
 
-export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[], settings?: PricingSettings): number {
+export function formatDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function calculateFee(
+  entryTime: Date,
+  exitTime: Date,
+  rules: TariffRule[],
+  settings?: PricingSettings,
+  specialTariffs?: SpecialTariff[],
+  pastPaidDates?: string[]
+): number {
+  let entryMs = entryTime.getTime();
+  let exitMs = exitTime.getTime();
+  let durationMs = exitMs - entryMs;
+
+  if (durationMs <= 0) return 0;
+
+  // Check if there is an active matching special tariff for this plate
+  if (specialTariffs && specialTariffs.length > 0) {
+    const activeSpecial = specialTariffs.find((st) => {
+      if (st.is_active === false) return false;
+      const stStartMs = new Date(st.start_date).getTime();
+      const stEndMs = st.end_date ? new Date(st.end_date).getTime() : Infinity;
+      return exitMs > stStartMs && entryMs < stEndMs;
+    });
+
+    if (activeSpecial) {
+      const stStartMs = new Date(activeSpecial.start_date).getTime();
+      const stEndMs = activeSpecial.end_date ? new Date(activeSpecial.end_date).getTime() : Infinity;
+
+      const specialStartMs = Math.max(entryMs, stStartMs);
+      const specialEndMs = Math.min(exitMs, stEndMs);
+
+      let totalFee = 0;
+
+      // 1. Segment BEFORE special tariff (Normal rules)
+      if (entryMs < specialStartMs && rules && rules.length > 0) {
+        totalFee += calculateFee(entryTime, new Date(specialStartMs), rules, settings);
+      }
+
+      // 2. Segment DURING special tariff
+      if (specialStartMs < specialEndMs) {
+        const rateType = activeSpecial.rate_type || 'dia';
+        if (rateType === 'dia' || rateType === 'fijo_diario') {
+          // Iterate day by day from 00:00 to 24:00
+          const paidSet = new Set(pastPaidDates || []);
+          let currentCursor = specialStartMs;
+
+          while (currentCursor < specialEndMs) {
+            const currentDate = new Date(currentCursor);
+            const dateKey = formatDateKey(currentDate);
+
+            if (!paidSet.has(dateKey)) {
+              totalFee += Number(activeSpecial.amount) || 0;
+            }
+
+            // Move cursor to start of next day (00:00:00)
+            const nextDay = new Date(currentDate);
+            nextDay.setHours(24, 0, 0, 0);
+            currentCursor = nextDay.getTime();
+          }
+        } else if (rateType === 'hora') {
+          const durationMins = Math.ceil((specialEndMs - specialStartMs) / 60000);
+          const hours = Math.ceil(durationMins / 60);
+          totalFee += hours * (Number(activeSpecial.amount) || 0);
+        } else if (rateType === 'minuto') {
+          const durationMins = Math.floor((specialEndMs - specialStartMs) / 60000);
+          totalFee += durationMins * (Number(activeSpecial.amount) || 0);
+        } else if (rateType === 'fijo') {
+          totalFee += Number(activeSpecial.amount) || 0;
+        }
+      }
+
+      // 3. Segment AFTER special tariff (Normal rules)
+      if (specialEndMs < exitMs && rules && rules.length > 0) {
+        totalFee += calculateFee(new Date(specialEndMs), exitTime, rules, settings);
+      }
+
+      return totalFee;
+    }
+  }
+
   if (!rules || !Array.isArray(rules) || rules.length === 0) return 0;
 
   // Use provided settings or defaults
   const entryGraceMins = settings?.entry_grace_period_mins !== undefined ? settings.entry_grace_period_mins : 0;
   const shiftGraceMins = settings?.shift_grace_period_mins !== undefined ? settings.shift_grace_period_mins : 15;
-
-  let entryMs = entryTime.getTime();
-  let exitMs = exitTime.getTime();
-  let durationMs = exitMs - entryMs;
-  
-  if (durationMs <= 0) return 0;
 
   // 1. Gabela inicial (grace period entry) (ej. si sale antes de 15 min, paga 0)
   const entryGraceMs = Math.max(0, entryGraceMins * 60000);
@@ -219,4 +310,3 @@ export function calculateFee(entryTime: Date, exitTime: Date, rules: TariffRule[
     return calculateIntervalCost(entryMs, exitMs, rules);
   }
 }
-

@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest";
-import { calculateFee, TariffRule, PricingSettings } from "./pricing";
+import { calculateFee, TariffRule, PricingSettings, SpecialTariff } from "./pricing";
 
 describe("calculateFee", () => {
   const entryTime = new Date("2024-05-20T10:00:00Z"); // Lunes, 10 AM UTC
@@ -181,5 +181,69 @@ describe("calculateFee", () => {
 
     // Se ajusta la salida a 18:00. Tiempo facturado de 15:00 a 18:00 (3 horas).
     expect(result).toBe(3000);
+  });
+
+  describe("Tarifas Especiales por Placa", () => {
+    const rules: TariffRule[] = [
+      { vehicle_type: "car", rate_type: "hora", amount: 2000 },
+      { vehicle_type: "car", rate_type: "dia", amount: 15000 }
+    ];
+
+    test("debe aplicar tarifa especial diaria ($5.000) dentro del rango de vigencia", () => {
+      const entry = new Date("2025-03-01T08:00:00Z");
+      const exit = new Date("2025-03-01T18:00:00Z");
+      const specialTariffs: SpecialTariff[] = [
+        {
+          plate: "ABC123",
+          rate_type: "dia",
+          amount: 5000,
+          start_date: "2025-03-01T00:00:00Z",
+          is_active: true
+        }
+      ];
+
+      const fee = calculateFee(entry, exit, rules, undefined, specialTariffs);
+      expect(fee).toBe(5000);
+    });
+
+    test("debe cobrar $0 en segundo ingreso el mismo día si la fecha ya fue pagada previa", () => {
+      const entry = new Date("2025-03-01T14:00:00Z");
+      const exit = new Date("2025-03-01T16:00:00Z");
+      const specialTariffs: SpecialTariff[] = [
+        {
+          plate: "ABC123",
+          rate_type: "dia",
+          amount: 5000,
+          start_date: "2025-03-01T00:00:00Z",
+          is_active: true
+        }
+      ];
+      const pastPaidDates = ["2025-03-01"];
+
+      const fee = calculateFee(entry, exit, rules, undefined, specialTariffs, pastPaidDates);
+      expect(fee).toBe(0);
+    });
+
+    test("debe realizar cálculo mixto (tarifa normal antes de fecha especial + tarifa especial)", () => {
+      // Ingresa el 28 de Feb a las 18:00 (6 horas antes del 1 de marzo)
+      // Sale el 1 de Marzo a las 12:00
+      const entry = new Date("2025-02-28T18:00:00Z");
+      const exit = new Date("2025-03-01T12:00:00Z");
+      const specialTariffs: SpecialTariff[] = [
+        {
+          plate: "ABC123",
+          rate_type: "dia",
+          amount: 5000,
+          start_date: "2025-03-01T00:00:00Z",
+          is_active: true
+        }
+      ];
+
+      // Segmento 1: 28 Feb 18:00 a 1 Mar 00:00 (6 horas * 2000 = 12000, max dia 15000 => 12000)
+      // Segmento 2: 1 Mar 00:00 a 1 Mar 12:00 (Tarifa especial dia => 5000)
+      // Total: 12000 + 5000 = 17000
+      const fee = calculateFee(entry, exit, rules, { shift_grace_period_mins: 0 }, specialTariffs);
+      expect(fee).toBe(17000);
+    });
   });
 });
