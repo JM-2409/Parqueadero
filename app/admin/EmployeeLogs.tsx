@@ -56,22 +56,12 @@ export default function EmployeeLogs({
         {logs.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <Activity size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="font-bold">
-              No hay registros recientes o la tabla no ha sido configurada.
+            <p className="font-bold text-slate-700 text-base">
+              No hay registros de turnos recientes.
             </p>
-            <pre className="bg-slate-100 text-slate-600 p-4 rounded-3xl mt-4 text-sm text-left overflow-x-auto whitespace-pre-wrap border border-slate-200">
-              {`CREATE TABLE public.employee_logs (
-    id uuid not null default gen_random_uuid(),
-    parking_lot_id uuid null,
-    employee_name text null,
-    action text null,
-    created_at timestamp with time zone null default now(),
-    constraint employee_logs_pkey primary key (id)
-);
-
-ALTER TABLE public.employee_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public full logs" ON public.employee_logs FOR ALL USING (true) WITH CHECK (true);`}
-            </pre>
+            <p className="text-xs text-slate-500 mt-1">
+              Los inicios y salidas de turno de los operarios aparecerán aquí cuando inicien sesión.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
