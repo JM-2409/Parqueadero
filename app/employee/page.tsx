@@ -124,6 +124,7 @@ export default function EmployeePage() {
   } | null>(null);
 
   const [activeSpecialTariff, setActiveSpecialTariff] = useState<any>(null);
+  const [confirmExitSession, setConfirmExitSession] = useState<any>(null);
 
   // Exit form states
   const [exitPlate, setExitPlate] = useState("");
@@ -902,16 +903,21 @@ export default function EmployeePage() {
     setIsSubmittingEntry(false);
   };
 
-  const handleExit = async (sessionId: string) => {
+  const handleExitRequest = (sessionId: string) => {
     if (!navigator.onLine) {
       setError("Sin conexión a internet. Requiere conexión para registrar salida.");
       return;
     }
-    if (
-      !window.confirm(
-        "¿Estás seguro de que deseas registrar la salida de este vehículo?",
-      )
-    ) {
+    let sessionToExit = activeSessions.find((s) => s.id === sessionId);
+    if (sessionToExit) {
+      setConfirmExitSession(sessionToExit);
+    }
+  };
+
+  const processExit = async (sessionId: string) => {
+    setConfirmExitSession(null);
+    if (!navigator.onLine) {
+      setError("Sin conexión a internet. Requiere conexión para registrar salida.");
       return;
     }
 
@@ -1897,7 +1903,7 @@ export default function EmployeePage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleExit(session.id);
+                                  handleExitRequest(session.id);
                                 }}
                                 disabled={isSubmittingExit === session.id}
                                 className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap shrink-0 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-2xl shadow-sm`}
@@ -2012,7 +2018,7 @@ export default function EmployeePage() {
               <EmployeeHistory
                 parkingLot={parkingLot}
                 tariffs={tariffs}
-                onExitSession={handleExit}
+                onExitSession={handleExitRequest}
               />
             </div>
           )}
@@ -2201,6 +2207,43 @@ export default function EmployeePage() {
                     className="flex-1 py-3 bg-white border border-slate-300 text-slate-900 rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-3"
                   >
                     Cerrar Detalle
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {confirmExitSession && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-200 shadow-md">
+                    <LogOut size={32} />
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-xl mb-2">
+                    Confirmar Salida
+                  </h3>
+                  <p className="text-sm text-slate-600 font-bold mb-3">
+                    ¿Estás seguro de registrar la salida de la placa{" "}
+                    <span className="text-slate-900 font-black uppercase px-2 py-0.5 bg-amber-100 rounded-lg">
+                      {confirmExitSession.vehicles?.plate}
+                    </span>
+                    ?
+                  </p>
+                </div>
+                <div className="p-5 bg-slate-50 border-t border-slate-200 flex gap-3 justify-center">
+                  <button
+                    onClick={() => setConfirmExitSession(null)}
+                    className={`${styles.btnSecondary} w-full`}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => processExit(confirmExitSession.id)}
+                    className={`${styles.btnPrimary} w-full flex items-center justify-center gap-2 active:scale-95 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl`}
+                  >
+                    <CheckCircle2 size={18} />
+                    Confirmar Salida
                   </button>
                 </div>
               </div>

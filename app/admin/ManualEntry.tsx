@@ -27,7 +27,6 @@ export default function ManualEntry({
   const [exitDate, setExitDate] = useState("");
   const [exitTime, setExitTime] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
-  const [isSpecialFee, setIsSpecialFee] = useState(false);
   const [totalFee, setTotalFee] = useState("");
   const [manualReceiptNumber, setManualReceiptNumber] = useState("");
   const [extraData, setExtraData] = useState<Record<string, string>>({});
@@ -109,7 +108,6 @@ export default function ManualEntry({
 
   useEffect(() => {
     if (
-      isSpecialFee ||
       !isCompleted ||
       !entryDate ||
       !entryTime ||
@@ -154,7 +152,6 @@ export default function ManualEntry({
     exitTime,
     type,
     tariffs,
-    isSpecialFee,
     isCompleted,
     parkingLot.entry_grace_period_mins,
     parkingLot.shift_grace_period_mins,
@@ -586,23 +583,7 @@ export default function ManualEntry({
                 </div>
 
                 <div className="mt-6">
-                  <div className="flex items-center gap-3 mb-3 p-4 bg-slate-50 rounded-3xl border border-slate-100">
-                    <input
-                      type="checkbox"
-                      id="isSpecialFee"
-                      checked={isSpecialFee}
-                      onChange={(e) => setIsSpecialFee(e.target.checked)}
-                      className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-500 transition-colors"
-                    />
-                    <label
-                      htmlFor="isSpecialFee"
-                      className="text-sm font-bold text-slate-700 cursor-pointer select-none"
-                    >
-                      Tarifa especial (Ingresar valor manualmente)
-                    </label>
-                  </div>
-
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 mt-4 ml-1">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                     Tarifa Cobrada ($) *
                   </label>
                   <div className="relative">
@@ -613,25 +594,16 @@ export default function ManualEntry({
                       type="number"
                       value={totalFee}
                       onChange={(e) => setTotalFee(e.target.value)}
-                      disabled={!isSpecialFee}
-                      className={`w-full text-base rounded-3xl py-3 !pl-12 !pr-5 outline-none font-black transition-all ${!isSpecialFee ? "bg-slate-100/50 text-slate-500 border border-slate-100" : "bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-slate-500 shadow-xl border border-slate-100 shadow-indigo-100/50"}`}
+                      className="w-full text-base rounded-3xl py-3 !pl-12 !pr-5 outline-none font-black transition-all bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-slate-500 shadow-sm"
                       placeholder="0.00"
                       min="0"
                       step="0.01"
                       required={isCompleted}
                     />
                   </div>
-                  {!isSpecialFee && (
-                    <p className="text-xs font-bold text-slate-400 mt-2 ml-1">
-                      El valor se calcula automáticamente según las tarifas.
-                      Marca{" "}
-                      <span className="font-bold text-slate-500">
-                        &quot;Tarifa especial&quot;
-                      </span>{" "}
-                      para modificarlo.
-                    </p>
-                  )}
-
+                  <p className="text-xs font-bold text-slate-400 mt-2 ml-1">
+                    Se calcula automáticamente según las tarifas (o tarifas especiales configuradas). Puedes ajustar este monto si lo requieres.
+                  </p>
                 </div>
               </>
             )}
