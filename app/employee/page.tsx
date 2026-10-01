@@ -90,6 +90,8 @@ export default function EmployeePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showConfirmEntry, setShowConfirmEntry] = useState(false);
+  const [confirmExitSessionId, setConfirmExitSessionId] = useState<string | null>(null);
+  const [showConfirmCloseRegister, setShowConfirmCloseRegister] = useState(false);
 
   // Search in Active Sessions
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
@@ -165,12 +167,11 @@ export default function EmployeePage() {
   }, []);
 
   const handleCloseRegister = async () => {
-    if (
-      !window.confirm(
-        "¿Está seguro que desea cerrar la caja? El recaudo volverá a $0 para su turno.",
-      )
-    )
-      return;
+    setShowConfirmCloseRegister(true);
+  };
+
+  const executeCloseRegister = async () => {
+    setShowConfirmCloseRegister(false);
     setIsClosingRegister(true);
     try {
       const {
@@ -907,11 +908,13 @@ export default function EmployeePage() {
       setError("Sin conexión a internet. Requiere conexión para registrar salida.");
       return;
     }
-    if (
-      !window.confirm(
-        "¿Estás seguro de que deseas registrar la salida de este vehículo?",
-      )
-    ) {
+    setConfirmExitSessionId(sessionId);
+  };
+
+  const executeExit = async (sessionId: string) => {
+    setConfirmExitSessionId(null);
+    if (!navigator.onLine) {
+      setError("Sin conexión a internet. Requiere conexión para registrar salida.");
       return;
     }
 
@@ -2201,6 +2204,88 @@ export default function EmployeePage() {
                     className="flex-1 py-3 bg-white border border-slate-300 text-slate-900 rounded-3xl font-bold transition-colors hover:bg-slate-100 flex justify-center items-center gap-3"
                   >
                     Cerrar Detalle
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {confirmExitSessionId && (() => {
+            const sessionObj = activeSessions.find(s => s.id === confirmExitSessionId);
+            const plateStr = sessionObj?.vehicles?.plate || "";
+            return (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-6 text-center">
+                    <div className="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-200 shadow-md">
+                      <LogOut size={32} />
+                    </div>
+                    <h3 className="font-bold text-slate-900 text-xl mb-2">
+                      Confirmar Salida
+                    </h3>
+                    <p className="text-sm text-slate-600 font-bold">
+                      ¿Estás seguro de que deseas registrar la salida del vehículo{" "}
+                      {plateStr && (
+                        <span className="text-slate-900 font-extrabold uppercase font-mono block text-lg mt-1">
+                          {plateStr}
+                        </span>
+                      )}
+                      ?
+                    </p>
+                  </div>
+                  <div className="p-5 bg-slate-50 border-t border-slate-200 flex gap-3 justify-center">
+                    <button
+                      onClick={() => setConfirmExitSessionId(null)}
+                      className={`${styles.btnSecondary} w-full`}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => executeExit(confirmExitSessionId)}
+                      className={`${styles.btnPrimary} w-full flex items-center justify-center gap-2 active:scale-95 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl`}
+                    >
+                      <CheckCircle2 size={18} />
+                      Confirmar Salida
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {showConfirmCloseRegister && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 shadow-md">
+                    <DollarSign size={32} />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-xl mb-2">
+                    Confirmar Cierre de Caja
+                  </h3>
+                  <p className="text-sm text-slate-600 font-bold">
+                    ¿Está seguro que desea cerrar la caja? El recaudo del turno volverá a $0.
+                  </p>
+                </div>
+                <div className="p-5 bg-slate-50 border-t border-slate-200 flex gap-3 justify-center">
+                  <button
+                    onClick={() => setShowConfirmCloseRegister(false)}
+                    className={`${styles.btnSecondary} w-full`}
+                    disabled={isClosingRegister}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={executeCloseRegister}
+                    className={`${styles.btnPrimary} w-full flex items-center justify-center gap-2 active:scale-95 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl`}
+                    disabled={isClosingRegister}
+                  >
+                    {isClosingRegister ? (
+                      <Spinner size={18} className="text-white" />
+                    ) : (
+                      <CheckCircle2 size={18} />
+                    )}
+                    Confirmar Cierre
                   </button>
                 </div>
               </div>
