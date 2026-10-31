@@ -1017,6 +1017,11 @@ export default function EmployeePage() {
 
     const isPaused = parkingLot?.features?.is_cash_paused || false;
 
+    const sessionExtraData = {
+      ...(sessionToExit.extra_data || {}),
+      is_paused: isPaused,
+    };
+
     const { data: updatedSession, error: updateError } = await supabase
       .from("parking_sessions")
       .update({
@@ -1027,6 +1032,7 @@ export default function EmployeePage() {
         receipt_number: receiptNumber,
         duration_minutes: durationMinutes,
         exit_employee_name: shiftName,
+        extra_data: sessionExtraData,
       })
       .eq("id", sessionId)
       .select("*, vehicles(*)")

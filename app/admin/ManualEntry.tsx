@@ -27,6 +27,7 @@ export default function ManualEntry({
   const [exitDate, setExitDate] = useState("");
   const [exitTime, setExitTime] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
+  const [addToCash, setAddToCash] = useState(true);
   const [isSpecialFee, setIsSpecialFee] = useState(false);
   const [totalFee, setTotalFee] = useState("");
   const [manualReceiptNumber, setManualReceiptNumber] = useState("");
@@ -345,6 +346,11 @@ export default function ManualEntry({
           .eq("id", parkingLotId);
       }
 
+      // Si el vehículo ya salió y el usuario eligió no sumar a la caja actual, marcamos is_paused: true
+      if (isCompleted) {
+        sanitizedExtraData.is_paused = !addToCash;
+      }
+
       const sessionData: any = {
         parking_lot_id: parkingLotId,
         vehicle_id: vehicleId,
@@ -632,6 +638,26 @@ export default function ManualEntry({
                     </p>
                   )}
 
+                  {/* Opción para registrar o no en el recaudo de caja actual */}
+                  <div className="mt-4 p-4 rounded-3xl border transition-all bg-indigo-50/50 border-indigo-200">
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        id="addToCash"
+                        checked={addToCash}
+                        onChange={(e) => setAddToCash(e.target.checked)}
+                        className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
+                      />
+                      <span className="text-sm font-bold text-slate-800">
+                        Sumar este cobro al recaudo de la caja actual
+                      </span>
+                    </label>
+                    <p className="text-xs text-slate-500 mt-1 ml-7">
+                      {addToCash
+                        ? "El monto cobrado se sumará a los ingresos del turno y al arqueo de caja."
+                        : "Solo quedará registrado en el historial del vehículo. NO sumará dinero a la caja actual."}
+                    </p>
+                  </div>
                 </div>
               </>
             )}

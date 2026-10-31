@@ -58,26 +58,54 @@ export default function CashClosuresHistory({
     setSuccess("");
 
     try {
-      const { data: lotData } = await supabase
-        .from("parking_lots")
-        .select("features")
-        .eq("id", parkingLotId)
-        .single();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      const currentFeatures = lotData?.features || {};
       const newPauseState = !isCashPaused;
 
-      const { error: updateError } = await supabase
-        .from("parking_lots")
-        .update({
-          features: {
-            ...currentFeatures,
-            is_cash_paused: newPauseState,
+      // Intentamos actualizar a través de la API segura con service-role
+      const response = await fetch("/api/parking-lots/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          parkingLotId,
+          updateData: {
+            features: {
+              is_cash_paused: newPauseState,
+            },
           },
-        })
-        .eq("id", parkingLotId);
+        }),
+      });
 
-      if (updateError) throw updateError;
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        // Fallback directo a Supabase en caso de que falle la API
+        const { data: lotData } = await supabase
+          .from("parking_lots")
+          .select("features")
+          .eq("id", parkingLotId)
+          .single();
+
+        const currentFeatures = lotData?.features || {};
+        const { error: directError } = await supabase
+          .from("parking_lots")
+          .update({
+            features: {
+              ...currentFeatures,
+              is_cash_paused: newPauseState,
+            },
+          })
+          .eq("id", parkingLotId);
+
+        if (directError) {
+          throw new Error(result.error || directError.message);
+        }
+      }
 
       setIsCashPaused(newPauseState);
       setSuccess(
