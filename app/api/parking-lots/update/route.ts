@@ -116,6 +116,28 @@ export async function POST(req: Request) {
           safeUpdateData[key] = updateData[key];
         }
       }
+
+      // Permitir actualizar is_cash_paused en features sin sobreescribir las demás features
+      if (updateData.features !== undefined) {
+        const { data: currentLot } = await supabaseAdmin
+          .from("parking_lots")
+          .select("features")
+          .eq("id", parkingLotId)
+          .single();
+
+        const existingFeatures = currentLot?.features || {};
+        safeUpdateData.features = {
+          ...existingFeatures,
+          ...updateData.features,
+          // Conservar flags protegidas de superadmin si ya estaban
+          require_device_approval: existingFeatures.require_device_approval,
+          whatsapp_receipts: existingFeatures.whatsapp_receipts,
+          monthly_subscribers: existingFeatures.monthly_subscribers,
+          multiple_employees: existingFeatures.multiple_employees,
+          reports: existingFeatures.reports,
+          pdf_exports: existingFeatures.pdf_exports,
+        };
+      }
     } else if (role === "superadmin") {
       const allowedKeys = [
         "name",
