@@ -13,10 +13,12 @@ export default function ManualEntry({
   parkingLot,
   allowedVehicles,
   customFields,
+  onEntryAdded,
 }: {
   parkingLot: any;
   allowedVehicles: string[];
   customFields: any[];
+  onEntryAdded?: () => void;
 }) {
   const parkingLotId = parkingLot.id;
   const [plate, setPlate] = useState("");
@@ -386,6 +388,10 @@ export default function ManualEntry({
       setTotalFee("");
       setManualReceiptNumber("");
       setExtraData({});
+
+      if (onEntryAdded) {
+        onEntryAdded();
+      }
 
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: unknown) {

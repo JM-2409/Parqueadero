@@ -1237,6 +1237,10 @@ export default function AdminPage() {
                 parkingLot={parkingLot}
                 allowedVehicles={allowedVehicles}
                 customFields={customFields}
+                onEntryAdded={() => {
+                  fetchTodayStats(parkingLot.id);
+                  fetchStats(parkingLot.id, statPeriod);
+                }}
               />
             </div>
           )}
