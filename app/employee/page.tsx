@@ -1044,6 +1044,7 @@ export default function EmployeePage() {
       setSuccess("Salida registrada exitosamente");
       setExitPlate("");
       setFee("");
+      await fetchRevenue(parkingLot.id);
       await fetchActiveSessions(parkingLot.id);
       setSelectedSession(updatedSession);
 
