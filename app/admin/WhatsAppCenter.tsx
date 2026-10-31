@@ -58,7 +58,7 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
 
   const totalByType = messages.reduce((acc, m) => { acc[m.type] = (acc[m.type] || 0) + 1; return acc; }, {} as Record<string, number>);
 
-  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f1f5f9", padding: "0.6rem 1rem", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
+  const inputStyle = { background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "12px", color: "#0f172a", padding: "0.6rem 1rem", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
 
   return (
     <div className="space-y-5">
@@ -68,7 +68,7 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
           <MessageCircle size={22} style={{ color: "#4ade80" }} />
         </div>
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#f1f5f9" }}>Centro de Mensajes WhatsApp</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#0f172a" }}>Centro de Mensajes WhatsApp</h2>
           <p className="text-sm" style={{ color: "#64748b" }}>{messages.length} mensajes enviados</p>
         </div>
       </div>
@@ -78,9 +78,9 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
         {Object.entries(TYPE_CONFIG).map(([type, cfg]) => {
           const Icon = cfg.icon;
           return (
-            <div key={type} className="p-4 rounded-2xl text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div key={type} className="p-4 rounded-2xl text-center" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
               <Icon size={20} className="mx-auto mb-1.5" style={{ color: cfg.color }} />
-              <p className="text-xl font-black" style={{ color: "#f1f5f9" }}>{totalByType[type] || 0}</p>
+              <p className="text-xl font-black" style={{ color: "#0f172a" }}>{totalByType[type] || 0}</p>
               <p className="text-xs mt-0.5 font-semibold" style={{ color: "#64748b" }}>{cfg.label}</p>
             </div>
           );
@@ -102,7 +102,7 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
               className="px-3 py-2 rounded-xl text-xs font-bold transition-all"
               style={typeFilter === opt.v
                 ? { background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.3)" }
-                : { background: "rgba(255,255,255,0.03)", color: "#64748b", border: "1px solid rgba(255,255,255,0.06)" }}>
+                : { background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}>
               {opt.l}
             </button>
           ))}
@@ -124,7 +124,7 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
               const Icon = cfg.icon;
               return (
                 <div key={msg.id} className="flex items-start gap-3 p-4 rounded-2xl"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
                   <div className="p-2 rounded-xl shrink-0" style={{ background: `rgba(${cfg.color === "#818cf8" ? "99,102,241" : cfg.color === "#22d3ee" ? "6,182,212" : cfg.color === "#fbbf24" ? "245,158,11" : "148,163,184"},0.12)` }}>
                     <Icon size={15} style={{ color: cfg.color }} />
                   </div>
@@ -136,7 +136,7 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
                           {msg.phone}
                         </a>
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: "rgba(255,255,255,0.05)", color: cfg.color }}>
+                          style={{ background: "#f8fafc", color: cfg.color }}>
                           {cfg.label}
                         </span>
                       </div>

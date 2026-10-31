@@ -37,8 +37,11 @@ const createDbChain = (resolveValue: any) => {
     eq: vi.fn().mockReturnThis(),
     not: vi.fn().mockReturnThis(),
     gt: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
     lte: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     then: vi.fn((resolve) => resolve(resolveValue)),
   };
   return chain;

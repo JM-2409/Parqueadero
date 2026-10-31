@@ -127,7 +127,7 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
     setDeliverModal({ open: false, id: "" }); setDeliveredTo(""); setActionId(null);
   };
 
-  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f1f5f9", padding: "0.65rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
+  const inputStyle = { background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "12px", color: "#0f172a", padding: "0.65rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
   const labelStyle = { display: "block", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "0.3rem" };
 
   return (
@@ -139,7 +139,7 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
             <Package size={22} style={{ color: "#22d3ee" }} />
           </div>
           <div>
-            <h2 className="text-xl font-bold" style={{ color: "#f1f5f9" }}>Registro de Paquetes</h2>
+            <h2 className="text-xl font-bold" style={{ color: "#0f172a" }}>Registro de Paquetes</h2>
             <p className="text-sm" style={{ color: "#64748b" }}>{pending.length} paquete{pending.length !== 1 ? "s" : ""} esperando entrega</p>
           </div>
         </div>
@@ -174,8 +174,8 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
 
       {/* Formulario */}
       {showForm && (
-        <div className="p-5 rounded-2xl space-y-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#f1f5f9" }}>Nuevo Paquete / Domicilio</h3>
+        <div className="p-5 rounded-2xl space-y-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+          <h3 className="font-bold text-sm" style={{ color: "#0f172a" }}>Nuevo Paquete / Domicilio</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label style={labelStyle}>Apartamento / Casa *</label>
               <input style={inputStyle} value={form.apartment} onChange={e => setForm(f => ({ ...f, apartment: e.target.value }))} placeholder="Ej: 402, Casa 8" /></div>
@@ -210,7 +210,7 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
             style={tab === t.v
               ? { background: "rgba(6,182,212,0.15)", color: "#22d3ee", border: "1px solid rgba(6,182,212,0.3)" }
-              : { background: "rgba(255,255,255,0.03)", color: "#64748b", border: "1px solid rgba(255,255,255,0.06)" }}>
+              : { background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}>
             {t.v === "pending" ? <Package size={14} /> : <History size={14} />}
             {t.l}
             {t.cnt !== null && <span className="px-1.5 py-0.5 rounded-full text-xs font-black" style={{ background: "rgba(6,182,212,0.2)", color: "#22d3ee" }}>{t.cnt}</span>}
@@ -222,8 +222,8 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
       {deliverModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)" }}>
           <div className="w-full max-w-sm p-6 rounded-2xl space-y-4" style={{ background: "#0d1424", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <h3 className="font-bold" style={{ color: "#f1f5f9" }}>¿Quién recibió el paquete?</h3>
-            <input style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f1f5f9", padding: "0.65rem 1rem", width: "100%", outline: "none" }}
+            <h3 className="font-bold" style={{ color: "#0f172a" }}>¿Quién recibió el paquete?</h3>
+            <input style={{ background: "#f8fafc", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#0f172a", padding: "0.65rem 1rem", width: "100%", outline: "none" }}
               value={deliveredTo} onChange={e => setDeliveredTo(e.target.value)} placeholder="Nombre de quien recibió" autoFocus />
             <div className="flex gap-3">
               <button onClick={handleDeliver} disabled={!!actionId}
@@ -232,7 +232,7 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
                 {actionId ? <Spinner size={14} /> : <CheckCircle2 size={14} />} Confirmar
               </button>
               <button onClick={() => setDeliverModal({ open: false, id: "" })}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm" style={{ background: "rgba(255,255,255,0.05)", color: "#64748b" }}>
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm" style={{ background: "#f8fafc", color: "#64748b" }}>
                 Cancelar
               </button>
             </div>
@@ -257,7 +257,7 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
                   <div className="text-2xl shrink-0">{COMPANY_ICONS[pkg.company || "Otro"] || "📦"}</div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold" style={{ color: "#f1f5f9" }}>Apto {pkg.apartment}</p>
+                      <p className="font-bold" style={{ color: "#0f172a" }}>Apto {pkg.apartment}</p>
                       {pkg.recipient_name && <span style={{ color: "#94a3b8", fontSize: "0.875rem" }}>{pkg.recipient_name}</span>}
                     </div>
                     <div className="text-xs flex items-center gap-3 mt-0.5 flex-wrap" style={{ color: "#64748b" }}>
@@ -294,10 +294,10 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
             <p className="font-semibold">Sin historial</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid #e2e8f0" }}>
             <table className="w-full text-sm" style={{ minWidth: "500px" }}>
               <thead>
-                <tr style={{ background: "rgba(6,182,212,0.08)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <tr style={{ background: "rgba(6,182,212,0.08)", borderBottom: "1px solid #e2e8f0" }}>
                   {["Apto", "Destinatario", "Empresa", "Llegó", "Entregado a", "Estado"].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-bold" style={{ color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</th>
                   ))}
@@ -305,8 +305,8 @@ export default function PackageRegistry({ parkingLotId, employeeName, whatsappEn
               </thead>
               <tbody>
                 {historyPkgs.map((pkg, i) => (
-                  <tr key={pkg.id} style={{ borderBottom: i < historyPkgs.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                    <td className="px-4 py-3 font-bold" style={{ color: "#f1f5f9" }}>Apto {pkg.apartment}</td>
+                  <tr key={pkg.id} style={{ borderBottom: i < historyPkgs.length - 1 ? "1px solid #e2e8f0" : "none" }}>
+                    <td className="px-4 py-3 font-bold" style={{ color: "#0f172a" }}>Apto {pkg.apartment}</td>
                     <td className="px-4 py-3" style={{ color: "#94a3b8" }}>{pkg.recipient_name || "—"}</td>
                     <td className="px-4 py-3" style={{ color: "#94a3b8" }}>{COMPANY_ICONS[pkg.company || ""] || "📦"} {pkg.company}</td>
                     <td className="px-4 py-3" style={{ color: "#94a3b8" }}>{fmtDate(pkg.arrival_time)} {fmtTime(pkg.arrival_time)}</td>

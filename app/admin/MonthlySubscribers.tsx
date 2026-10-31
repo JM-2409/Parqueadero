@@ -1,3 +1,4 @@
+import { toLocalDateInput } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -31,7 +32,7 @@ export default function MonthlySubscribers({
     phone: "",
     vehicle_type: "carros",
     amount_paid: 0,
-    start_date: new Date().toISOString().split("T")[0],
+    start_date: toLocalDateInput(),
     end_date: new Date(new Date().setMonth(new Date().getMonth() + 1))
       .toISOString()
       .split("T")[0],
@@ -135,7 +136,7 @@ export default function MonthlySubscribers({
         phone: "",
         vehicle_type: "carros",
         amount_paid: 0,
-        start_date: new Date().toISOString().split("T")[0],
+        start_date: toLocalDateInput(),
         end_date: new Date(new Date().setMonth(new Date().getMonth() + 1))
           .toISOString()
           .split("T")[0],

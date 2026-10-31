@@ -72,6 +72,7 @@ import {
   ArrowDown
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/error";
+import { cashDate, fetchCashSummary, isCountedInCash } from "@/lib/cash";
 
 
 function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
@@ -190,15 +191,17 @@ export default function AdminPage() {
       pastDate.setDate(pastDate.getDate() - periodDays);
       const { data: periodData } = await supabase
         .from("parking_sessions")
-        .select("exit_time, total_charged")
+        .select("exit_time, cash_recorded_at, total_charged, include_in_cash, status, extra_data")
         .eq("parking_lot_id", parkingLotId)
-        .not("exit_time", "is", null)
-        .gte("exit_time", pastDate.toISOString());
+        .eq("status", "completed")
+        .gte("cash_recorded_at", pastDate.toISOString());
 
       if (periodData) {
         const dailyMap: Record<string, number> = {};
-        periodData.forEach((s) => {
-          const exitTime = new Date(s.exit_time);
+        periodData.filter(isCountedInCash).forEach((s) => {
+          const moment = cashDate(s);
+          if (!moment) return;
+          const exitTime = new Date(moment);
           const dateKey = `${exitTime.getFullYear()}-${String(exitTime.getMonth() + 1).padStart(2, "0")}-${String(exitTime.getDate()).padStart(2, "0")}`;
 
           dailyMap[dateKey] =
@@ -227,62 +230,29 @@ export default function AdminPage() {
   );
 
   const fetchTodayStats = useCallback(async (parkingLotId: string) => {
-    // Fetch last closure
-    const { data: lastClosure } = await supabase
-      .from("cash_closures")
-      .select("closed_at")
-      .eq("parking_lot_id", parkingLotId)
-      .order("closed_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const lastClosureTime = lastClosure ? lastClosure.closed_at : null;
-
-    // Fetch stats for current shift (since last closure)
-    let query = supabase
-      .from("parking_sessions")
-      .select("total_charged, extra_data")
-      .eq("parking_lot_id", parkingLotId)
-      .not("exit_time", "is", null);
-
-    if (lastClosureTime) {
-      query = query.gt("exit_time", lastClosureTime);
-    }
-
-    let withdrawalsQuery = supabase
-      .from("cash_withdrawals")
-      .select("amount")
-      .eq("parking_lot_id", parkingLotId);
-
-    if (lastClosureTime) {
-      withdrawalsQuery = withdrawalsQuery.gt("withdrawn_at", lastClosureTime);
-    }
-
     // Fetch today stats for total vehicles (all day, irrespective of closure)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const { data: todayVehiclesData } = await supabase
+    const { count: todayVehiclesCount } = await supabase
       .from("parking_sessions")
-      .select("id")
+      .select("id", { count: "exact", head: true })
       .eq("parking_lot_id", parkingLotId)
       .gte("entry_time", today.toISOString());
 
-    // Fetch accumulated revenue for shift
-    const { data: shiftData } = await query;
-    const { data: withdrawalsData } = await withdrawalsQuery;
-
-    if (shiftData) {
-      const revenue = shiftData
-        .filter((s) => !s.extra_data?.is_paused)
-        .reduce((sum, s) => sum + (Number(s.total_charged) || 0), 0);
-      const withdrawals = withdrawalsData?.reduce((sum, w) => sum + (Number(w.amount) || 0), 0) || 0;
-      setCurrentShiftRevenue(revenue);
-      setShiftWithdrawals(withdrawals);
+    // Recaudo de la caja abierta: lo calcula la base de datos con la misma
+    // regla que usa el cierre y el reporte.
+    try {
+      const summary = await fetchCashSummary(parkingLotId);
+      setCurrentShiftRevenue(summary.revenue);
+      setShiftWithdrawals(summary.withdrawals);
       setTodayStats((prev) => ({
         ...prev,
-        vehicles: todayVehiclesData?.length || 0,
-        revenue,
+        vehicles: todayVehiclesCount || 0,
+        revenue: summary.revenue,
       }));
+    } catch (err) {
+      console.error("No se pudo calcular la caja actual", err);
+      setTodayStats((prev) => ({ ...prev, vehicles: todayVehiclesCount || 0 }));
     }
   }, []);
 

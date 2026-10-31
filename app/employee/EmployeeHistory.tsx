@@ -1,5 +1,6 @@
 "use client";
 
+import { publicExtraData } from "@/lib/cash";
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -272,12 +273,12 @@ export default function EmployeeHistory({
                       <td className="p-4 text-slate-600 hidden md:table-cell">
                         {Object.keys({
                           ...session.vehicles?.custom_fields_data,
-                          ...session.extra_data,
+                          ...publicExtraData(session.extra_data),
                         }).length > 0 ? (
                           <div className="flex flex-col gap-1">
                             {Object.entries({
                               ...session.vehicles?.custom_fields_data,
-                              ...session.extra_data,
+                              ...publicExtraData(session.extra_data),
                             }).map(([k, v]) => {
                               if (k === "observation_photo_url") {
                                 return (
@@ -362,12 +363,12 @@ export default function EmployeeHistory({
                               </h4>
                               {Object.keys({
                                 ...session.vehicles?.custom_fields_data,
-                                ...session.extra_data,
+                                ...publicExtraData(session.extra_data),
                               }).length > 0 ? (
                                 <div className="grid grid-cols-2 gap-3">
                                   {Object.entries({
                                     ...session.vehicles?.custom_fields_data,
-                                    ...session.extra_data,
+                                    ...publicExtraData(session.extra_data),
                                   }).map(([k, v]) => {
                                     if (k === "observation_photo_url") {
                                       return (

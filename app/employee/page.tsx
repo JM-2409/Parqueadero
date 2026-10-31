@@ -1,5 +1,6 @@
 "use client";
 
+import { toLocalDateInput } from "@/lib/utils";
 import styles from "./employee.module.css";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
@@ -36,6 +37,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { getErrorMessage } from "@/lib/error";
 import { downloadClosureReport } from "@/lib/reports";
+import { cashFields, closeCashRegister, fetchCashSummary, fetchIsCashPaused } from "@/lib/cash";
 import { OccupancyGauge } from "@/components/ui/OccupancyGauge";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 
@@ -137,32 +139,11 @@ export default function EmployeePage() {
   const [isClosingRegister, setIsClosingRegister] = useState(false);
 
   const fetchRevenue = useCallback(async (id: string) => {
-    const { data: lastClosure } = await supabase
-      .from("cash_closures")
-      .select("closed_at")
-      .eq("parking_lot_id", id)
-      .order("closed_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const lastClosureTime = lastClosure ? lastClosure.closed_at : null;
-
-    let query = supabase
-      .from("parking_sessions")
-      .select("total_charged, extra_data")
-      .eq("parking_lot_id", id)
-      .not("exit_time", "is", null);
-
-    if (lastClosureTime) {
-      query = query.gt("exit_time", lastClosureTime);
-    }
-
-    const { data: shiftData } = await query;
-    if (shiftData) {
-      const revenue = shiftData
-        .filter((s) => !s.extra_data?.is_paused)
-        .reduce((sum, s) => sum + (Number(s.total_charged) || 0), 0);
-      setAccumulatedRevenue(revenue);
+    try {
+      const summary = await fetchCashSummary(id);
+      setAccumulatedRevenue(summary.revenue);
+    } catch (err) {
+      console.error("No se pudo calcular el recaudo del turno", err);
     }
   }, []);
 
@@ -174,33 +155,12 @@ export default function EmployeePage() {
     setShowConfirmCloseRegister(false);
     setIsClosingRegister(true);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const { data: lastClosure } = await supabase
-        .from("cash_closures")
-        .select("closed_at")
-        .eq("parking_lot_id", parkingLot.id)
-        .order("closed_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const opened_at = lastClosure
-        ? lastClosure.closed_at
-        : new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
-
-      const { data: newClosure, error } = await supabase.from("cash_closures").insert([
-        {
-          parking_lot_id: parkingLot.id,
-          total_revenue: accumulatedRevenue,
-          closed_by: session?.user?.id,
-          opened_at: opened_at,
-          notes: `Cierre de caja - ${shiftName || "Operario"}`,
-        },
-      ]).select().single();
-
-      if (error) throw error;
+      // El total se calcula y guarda en la base de datos en una sola operación,
+      // así el cierre coincide siempre con el reporte.
+      const newClosure = await closeCashRegister(
+        parkingLot.id,
+        `Cierre de caja - ${shiftName || "Operario"}`,
+      );
 
       playBeep("success");
       setSuccess("Caja cerrada exitosamente.");
@@ -291,8 +251,8 @@ export default function EmployeePage() {
       .select("*")
       .eq("parking_lot_id", parkingLotId)
       .eq("is_active", true)
-      .gte("end_date", new Date().toISOString().split("T")[0])
-      .lte("start_date", new Date().toISOString().split("T")[0]);
+      .gte("end_date", toLocalDateInput())
+      .lte("start_date", toLocalDateInput());
 
     if (data) setSubscribers(data);
   }, []);
@@ -953,8 +913,8 @@ export default function EmployeePage() {
       .eq("parking_lot_id", parkingLot.id)
       .eq("plate", sessionToExit.vehicles.plate)
       .eq("is_active", true)
-      .gte("end_date", new Date().toISOString().split("T")[0])
-      .lte("start_date", new Date().toISOString().split("T")[0])
+      .gte("end_date", toLocalDateInput())
+      .lte("start_date", toLocalDateInput())
       .maybeSingle();
 
     let finalFee = 0;
@@ -1015,12 +975,13 @@ export default function EmployeePage() {
       (exitTime.getTime() - entryTime.getTime()) / 60000,
     );
 
-    const isPaused = parkingLot?.features?.is_cash_paused || false;
-
-    const sessionExtraData = {
-      ...(sessionToExit.extra_data || {}),
-      is_paused: isPaused,
-    };
+    // Se consulta la pausa en el momento del cobro: el administrador pudo
+    // activarla o desactivarla después de que se abrió esta pantalla.
+    const isPaused = await fetchIsCashPaused(
+      parkingLot.id,
+      Boolean(parkingLot?.features?.is_cash_paused),
+    );
+    const cash = cashFields(!isPaused, sessionToExit.extra_data);
 
     const { data: updatedSession, error: updateError } = await supabase
       .from("parking_sessions")
@@ -1032,7 +993,7 @@ export default function EmployeePage() {
         receipt_number: receiptNumber,
         duration_minutes: durationMinutes,
         exit_employee_name: shiftName,
-        extra_data: sessionExtraData,
+        ...cash,
       })
       .eq("id", sessionId)
       .select("*, vehicles(*)")

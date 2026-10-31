@@ -106,3 +106,20 @@ Abre http://localhost:3000
 
 **Mantenedor:** Juan Sebastian Munar Diaz
 **Sitio Web:** https://parqueadero-three.vercel.app
+
+## 💵 Caja: cómo se calcula el recaudo
+
+Toda la lógica de caja vive en la base de datos y en `lib/cash.ts`. **No calcular el recaudo sumando sesiones desde el navegador.**
+
+- `parking_sessions.include_in_cash` (verdadero/falso): indica si un cobro suma a la caja. Es la fuente de verdad. `extra_data.is_paused` se conserva solo por compatibilidad y un disparador lo mantiene sincronizado.
+- `parking_sessions.cash_recorded_at`: momento en que el dinero entró a la caja. Lo fija la base de datos al completar la sesión. En un registro histórico es la fecha en que se registró, no la fecha de salida; por eso un registro antiguo marcado para sumar entra en la caja abierta actual.
+- `get_cash_register_summary(p_parking_lot_id)`: recaudo, retiros y efectivo de la caja abierta (desde el último cierre). Lo usan el panel del empleado y el del administrador.
+- `close_cash_register(p_parking_lot_id, p_notes)`: cierra la caja calculando el total en el mismo instante del cierre, con bloqueo para evitar cierres duplicados.
+- El reporte PDF del cierre (`lib/reports.ts`) lista exactamente los cobros con `include_in_cash = true` y `cash_recorded_at` entre el cierre anterior y el actual. Si el detalle no coincide con lo guardado, muestra una advertencia.
+- Ingreso forzado (panel de administrador): la casilla "Sumar este cobro al recaudo de la caja actual" controla `include_in_cash`. Desmarcada, el registro queda solo en el historial: no suma a caja, cierres, reportes ni gráficas.
+- En el historial del administrador, cada cobro completado tiene el botón "Excluir de caja" / "Incluir en caja", y los excluidos muestran la etiqueta "No suma a caja".
+- Los cambios en cobros, cierres y retiros quedan registrados en `audit_logs`.
+
+Migración correspondiente: `supabase/migrations/20261031000000_caja_movimientos_seguridad.sql`.
+
+Para fechas de formularios y filtros usar `toLocalDateInput()` de `lib/utils.ts`, nunca `toISOString().split("T")[0]` (en Colombia esa fecha cambia al día siguiente desde las 7 p. m.).

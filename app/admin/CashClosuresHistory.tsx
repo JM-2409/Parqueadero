@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Clock, Calendar, DollarSign, X, HandCoins, Download, FileText, ChevronDown, ChevronUp, PauseCircle, PlayCircle } from "lucide-react";
 import styles from "./admin.module.css";
 import { downloadClosureReport } from "@/lib/reports";
+import { closeCashRegister } from "@/lib/cash";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { sanitizeInput } from "@/lib/sanitize";
 import { getErrorMessage } from "@/lib/error";
@@ -133,13 +134,17 @@ export default function CashClosuresHistory({
     if (data) {
       setClosures(data);
 
-      const lastClosureDate = data[0]?.closed_at || new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
-      const { data: withdrawalsData } = await supabase
+      // Los retiros de la caja abierta son los posteriores al último cierre
+      // (o todos, si nunca se ha cerrado la caja), igual que en el resumen.
+      const lastClosureDate = data[0]?.closed_at || null;
+      let withdrawalsQuery = supabase
         .from("cash_withdrawals")
         .select("*")
-        .eq("parking_lot_id", parkingLotId)
-        .gt("withdrawn_at", lastClosureDate)
-        .order("withdrawn_at", { ascending: false });
+        .eq("parking_lot_id", parkingLotId);
+      if (lastClosureDate) {
+        withdrawalsQuery = withdrawalsQuery.gt("withdrawn_at", lastClosureDate);
+      }
+      const { data: withdrawalsData } = await withdrawalsQuery.order("withdrawn_at", { ascending: false });
 
       if (withdrawalsData) {
         setCurrentWithdrawals(withdrawalsData);
@@ -256,38 +261,9 @@ export default function CashClosuresHistory({
       return;
     setIsClosingRegister(true);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      // Fetch last closure to determine opened_at
-      const { data: lastClosure } = await supabase
-        .from("cash_closures")
-        .select("closed_at")
-        .eq("parking_lot_id", parkingLotId)
-        .order("closed_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const opened_at = lastClosure
-        ? lastClosure.closed_at
-        : new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
-
-      const closureNotes = "Cierre de caja - Admin";
-
-      const { data: newClosure, error: insertError } = await supabase.from("cash_closures").insert([
-        {
-          parking_lot_id: parkingLotId,
-          total_revenue: currentRegisterCash,
-          expected_revenue: currentShiftRevenue || 0,
-          withdrawn_amount: shiftWithdrawals || 0,
-          closed_by: session?.user?.id,
-          opened_at: opened_at,
-          notes: closureNotes,
-        },
-      ]).select().single();
-
-      if (insertError) throw insertError;
+      // La base de datos calcula recaudo, retiros y total en el mismo instante
+      // del cierre; así no se guarda un valor desactualizado de la pantalla.
+      const newClosure = await closeCashRegister(parkingLotId, "Cierre de caja - Admin");
 
       setSuccess("Caja cerrada exitosamente.");
 

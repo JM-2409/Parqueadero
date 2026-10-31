@@ -1,5 +1,6 @@
 "use client";
 
+import { toLocalDateInput } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Spinner } from "@/components/ui/Spinner";
@@ -27,7 +28,7 @@ const STATUS_STYLES: Record<string, { label: string; bg: string; color: string; 
   completed: { label: "Completado", bg: "rgba(99,102,241,0.12)", color: "#a5b4fc", border: "rgba(99,102,241,0.3)" },
 };
 
-const EMPTY = { apartment: "", resident_name: "", moving_company: "", truck_plate: "", permit_date: new Date().toISOString().split("T")[0], start_time: "08:00", end_time: "17:00", notes: "" };
+const EMPTY = { apartment: "", resident_name: "", moving_company: "", truck_plate: "", permit_date: toLocalDateInput(), start_time: "08:00", end_time: "17:00", notes: "" };
 
 interface Props { parkingLotId: string; employeeName: string; isAdmin?: boolean; }
 
@@ -74,7 +75,7 @@ export default function MovingPermits({ parkingLotId, employeeName, isAdmin = tr
 
   const filtered = filter === "all" ? permits : permits.filter(p => p.status === filter);
 
-  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f1f5f9", padding: "0.65rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
+  const inputStyle = { background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "12px", color: "#0f172a", padding: "0.65rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
   const labelStyle = { display: "block", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "0.3rem" };
 
   return (
@@ -86,7 +87,7 @@ export default function MovingPermits({ parkingLotId, employeeName, isAdmin = tr
             <Truck size={22} style={{ color: "#fbbf24" }} />
           </div>
           <div>
-            <h2 className="text-xl font-bold" style={{ color: "#f1f5f9" }}>Permisos de Trasteo</h2>
+            <h2 className="text-xl font-bold" style={{ color: "#0f172a" }}>Permisos de Trasteo</h2>
             <p className="text-sm" style={{ color: "#64748b" }}>{permits.filter(p => p.status === "pending").length} pendiente(s) de aprobación</p>
           </div>
         </div>
@@ -104,8 +105,8 @@ export default function MovingPermits({ parkingLotId, employeeName, isAdmin = tr
 
       {/* Formulario */}
       {showForm && (
-        <div className="p-5 rounded-2xl space-y-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#f1f5f9" }}>Nueva Solicitud de Trasteo</h3>
+        <div className="p-5 rounded-2xl space-y-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+          <h3 className="font-bold text-sm" style={{ color: "#0f172a" }}>Nueva Solicitud de Trasteo</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label style={labelStyle}>Apartamento / Casa *</label>
               <input style={inputStyle} value={form.apartment} onChange={e => setForm(f => ({ ...f, apartment: e.target.value }))} placeholder="Ej: 201, Casa 3" /></div>
@@ -141,7 +142,7 @@ export default function MovingPermits({ parkingLotId, employeeName, isAdmin = tr
             className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
             style={filter === opt.v
               ? { background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)" }
-              : { background: "rgba(255,255,255,0.03)", color: "#64748b", border: "1px solid rgba(255,255,255,0.06)" }}>
+              : { background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}>
             {opt.l}
           </button>
         ))}
@@ -159,11 +160,11 @@ export default function MovingPermits({ parkingLotId, employeeName, isAdmin = tr
             {filtered.map(p => {
               const st = STATUS_STYLES[p.status];
               return (
-                <div key={p.id} className="p-5 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div key={p.id} className="p-5 rounded-2xl" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold" style={{ color: "#f1f5f9" }}>Apto {p.apartment}</p>
+                        <p className="font-bold" style={{ color: "#0f172a" }}>Apto {p.apartment}</p>
                         {p.resident_name && <span style={{ color: "#64748b", fontSize: "0.875rem" }}>— {p.resident_name}</span>}
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
                           style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>{st.label}</span>

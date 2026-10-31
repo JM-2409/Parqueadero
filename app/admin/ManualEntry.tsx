@@ -8,6 +8,7 @@ import { calculateFee } from "@/lib/pricing";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { getErrorMessage } from "@/lib/error";
+import { cashFields } from "@/lib/cash";
 
 export default function ManualEntry({
   parkingLot,
@@ -157,6 +158,8 @@ export default function ManualEntry({
     exitTime,
     type,
     tariffs,
+    specialTariffs,
+    plate,
     isSpecialFee,
     isCompleted,
     parkingLot.entry_grace_period_mins,
@@ -194,13 +197,43 @@ export default function ManualEntry({
       }
     }
 
+    const entryCheck = new Date(`${entryDate}T${entryTime}`);
+    if (isNaN(entryCheck.getTime())) {
+      setError("La fecha u hora de entrada no es válida (use formato 24 horas, ej. 14:30)");
+      setLoading(false);
+      return;
+    }
+    // Margen de 5 minutos para diferencias de reloj del dispositivo.
+    const maxAllowed = Date.now() + 5 * 60 * 1000;
+    if (entryCheck.getTime() > maxAllowed) {
+      setError("La fecha de entrada no puede estar en el futuro");
+      setLoading(false);
+      return;
+    }
+
     if (isCompleted) {
-      const entry = new Date(`${entryDate}T${entryTime}`);
+      const entry = entryCheck;
       const exit = new Date(`${exitDate}T${exitTime}`);
+      if (isNaN(exit.getTime())) {
+        setError("La fecha u hora de salida no es válida (use formato 24 horas, ej. 14:30)");
+        setLoading(false);
+        return;
+      }
       if (exit <= entry) {
         setError(
           "La fecha y hora de salida deben ser posteriores a la de entrada",
         );
+        setLoading(false);
+        return;
+      }
+      if (exit.getTime() > maxAllowed) {
+        setError("La fecha de salida no puede estar en el futuro");
+        setLoading(false);
+        return;
+      }
+      const feeValue = parseFloat(totalFee);
+      if (!Number.isFinite(feeValue) || feeValue < 0) {
+        setError("La tarifa cobrada no es válida");
         setLoading(false);
         return;
       }
@@ -330,13 +363,23 @@ export default function ManualEntry({
         if (numericPart) {
           const parsedNumber = parseInt(numericPart, 10);
           if (!isNaN(parsedNumber)) {
-            const { error: updateError } = await supabase
+            // Solo se avanza el consecutivo. Si el recibo físico es antiguo
+            // (menor al consecutivo actual), bajar la secuencia provocaría
+            // números de ticket repetidos en los próximos ingresos.
+            const { data: seqData } = await supabase
               .from("parking_lots")
-              .update({ receipt_sequence: parsedNumber })
-              .eq("id", parkingLotId);
+              .select("receipt_sequence")
+              .eq("id", parkingLotId)
+              .single();
+            if (parsedNumber > (seqData?.receipt_sequence || 0)) {
+              const { error: updateError } = await supabase
+                .from("parking_lots")
+                .update({ receipt_sequence: parsedNumber })
+                .eq("id", parkingLotId);
 
-            if (updateError) {
-              console.error("Error updating receipt sequence:", updateError);
+              if (updateError) {
+                console.error("Error updating receipt sequence:", updateError);
+              }
             }
           }
         }
@@ -346,11 +389,6 @@ export default function ManualEntry({
           .from("parking_lots")
           .update({ receipt_sequence: Number(receiptNumber) })
           .eq("id", parkingLotId);
-      }
-
-      // Si el vehículo ya salió y el usuario eligió no sumar a la caja actual, marcamos is_paused: true
-      if (isCompleted) {
-        sanitizedExtraData.is_paused = !addToCash;
       }
 
       const sessionData: any = {
@@ -364,6 +402,13 @@ export default function ManualEntry({
       };
 
       if (isCompleted) {
+        // Registro histórico ya cobrado:
+        // - Marcado: entra a la caja ABIERTA con la fecha de hoy (la base de
+        //   datos fija cash_recorded_at = ahora), aunque la salida sea antigua.
+        // - Desmarcado: queda solo en el historial, sin sumar a caja,
+        //   cierres, reportes ni gráficas.
+        Object.assign(sessionData, cashFields(addToCash, sanitizedExtraData));
+
         const durationMinutes = Math.round(
           (new Date(exitTimestamp!).getTime() -
             new Date(entryTimestamp).getTime()) /
@@ -383,7 +428,13 @@ export default function ManualEntry({
 
       if (sessionError) throw sessionError;
 
-      setSuccess("Registro histórico añadido exitosamente");
+      setSuccess(
+        isCompleted
+          ? addToCash
+            ? "Registro guardado y sumado a la caja actual"
+            : "Registro guardado solo en el historial (no suma a caja)"
+          : "Ingreso registrado exitosamente",
+      );
       setPlate("");
       setTotalFee("");
       setManualReceiptNumber("");
@@ -645,23 +696,25 @@ export default function ManualEntry({
                   )}
 
                   {/* Opción para registrar o no en el recaudo de caja actual */}
-                  <div className="mt-4 p-4 rounded-3xl border transition-all bg-indigo-50/50 border-indigo-200">
+                  <div
+                    className={`mt-4 p-4 rounded-3xl border transition-all ${addToCash ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}
+                  >
                     <label className="flex items-center gap-3 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         id="addToCash"
                         checked={addToCash}
                         onChange={(e) => setAddToCash(e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-colors"
+                        className="w-5 h-5 accent-emerald-600 rounded border-slate-300 transition-colors"
                       />
                       <span className="text-sm font-bold text-slate-800">
                         Sumar este cobro al recaudo de la caja actual
                       </span>
                     </label>
-                    <p className="text-xs text-slate-500 mt-1 ml-7">
+                    <p className="text-xs text-slate-600 mt-1 ml-8">
                       {addToCash
-                        ? "El monto cobrado se sumará a los ingresos del turno y al arqueo de caja."
-                        : "Solo quedará registrado en el historial del vehículo. NO sumará dinero a la caja actual."}
+                        ? "El monto entra a la caja abierta con fecha de hoy (aunque la salida sea de otro día) y aparecerá en el próximo cierre y su reporte."
+                        : "Solo quedará en el historial del vehículo. NO suma a la caja, ni al cierre, ni al reporte, ni a las gráficas de ingresos."}
                     </p>
                   </div>
                 </div>

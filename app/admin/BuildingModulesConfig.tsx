@@ -199,7 +199,7 @@ export default function BuildingModulesConfig({ parkingLotId, onModulesChange }:
             <Building2 size={22} style={{ color: "#818cf8" }} />
           </div>
           <div>
-            <h2 className="text-xl font-bold" style={{ color: "#f1f5f9" }}>Módulos del Conjunto</h2>
+            <h2 className="text-xl font-bold" style={{ color: "#0f172a" }}>Módulos del Conjunto</h2>
             <p className="text-sm" style={{ color: "#64748b" }}>Activa o desactiva las funcionalidades según las necesidades del conjunto</p>
           </div>
         </div>
@@ -239,8 +239,8 @@ export default function BuildingModulesConfig({ parkingLotId, onModulesChange }:
               style={{
                 background: isActive
                   ? `rgba(${hexToRgb(mod.color)}, 0.08)`
-                  : "rgba(255,255,255,0.03)",
-                border: `1px solid ${isActive ? `rgba(${hexToRgb(mod.color)}, 0.35)` : "rgba(255,255,255,0.07)"}`,
+                  : "#f8fafc",
+                border: `1px solid ${isActive ? `rgba(${hexToRgb(mod.color)}, 0.35)` : "#f8fafc"}`,
                 boxShadow: isActive ? `0 0 20px rgba(${hexToRgb(mod.color)}, 0.1)` : "none",
               }}
             >
@@ -255,8 +255,8 @@ export default function BuildingModulesConfig({ parkingLotId, onModulesChange }:
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   <div className="p-2.5 rounded-xl shrink-0 mt-0.5"
                     style={{
-                      background: isActive ? `rgba(${hexToRgb(mod.color)}, 0.15)` : "rgba(255,255,255,0.05)",
-                      border: `1px solid ${isActive ? `rgba(${hexToRgb(mod.color)}, 0.3)` : "rgba(255,255,255,0.08)"}`,
+                      background: isActive ? `rgba(${hexToRgb(mod.color)}, 0.15)` : "#f8fafc",
+                      border: `1px solid ${isActive ? `rgba(${hexToRgb(mod.color)}, 0.3)` : "#f8fafc"}`,
                     }}>
                     <Icon size={18} style={{ color: isActive ? mod.color : "#475569" }} />
                   </div>

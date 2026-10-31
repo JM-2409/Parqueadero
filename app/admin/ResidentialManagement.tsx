@@ -1,5 +1,6 @@
 "use client";
 
+import { toLocalDateInput } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Calendar, CheckCircle, XCircle, Download, Eye } from "lucide-react";
@@ -95,7 +96,7 @@ export default function ResidentialManagement({ parkingLotId }: ResidentialManag
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `solicitudes_${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `solicitudes_${toLocalDateInput()}.csv`;
     a.click();
   };
 

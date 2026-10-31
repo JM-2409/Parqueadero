@@ -1,5 +1,6 @@
 "use client";
 
+import { publicExtraData } from "@/lib/cash";
 import { Receipt, Printer, X, Car, Send, QrCode } from "lucide-react";
 import { useState } from "react";
 import { sanitizeInput } from "@/lib/sanitize";
@@ -192,7 +193,7 @@ export default function ReceiptModal({
             </div>
 
             {((session.extra_data &&
-              Object.keys(session.extra_data).length > 0) ||
+              Object.keys(publicExtraData(session.extra_data)).length > 0) ||
               (session.vehicles?.custom_fields_data &&
                 Object.keys(session.vehicles.custom_fields_data).length >
                   0)) && (
@@ -202,7 +203,7 @@ export default function ReceiptModal({
                 </span>
                 {Object.entries({
                   ...session.vehicles?.custom_fields_data,
-                  ...session.extra_data,
+                  ...publicExtraData(session.extra_data),
                 }).map(([key, value]) => {
                   if (key === "observation_photo_url") {
                     return (

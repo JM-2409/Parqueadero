@@ -101,8 +101,8 @@ export default function ResidentsDirectory({ parkingLotId }: Props) {
     r.apartment.toLowerCase().includes(search.toLowerCase())
   );
 
-  const cardStyle = { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "20px" };
-  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f1f5f9", padding: "0.75rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.9rem" };
+  const cardStyle = { background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "20px" };
+  const inputStyle = { background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "12px", color: "#0f172a", padding: "0.75rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.9rem" };
   const labelStyle = { display: "block", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "0.375rem" };
 
   return (
@@ -114,7 +114,7 @@ export default function ResidentsDirectory({ parkingLotId }: Props) {
             <Users size={22} style={{ color: "#818cf8" }} />
           </div>
           <div>
-            <h2 className="text-xl font-bold" style={{ color: "#f1f5f9" }}>Directorio de Residentes</h2>
+            <h2 className="text-xl font-bold" style={{ color: "#0f172a" }}>Directorio de Residentes</h2>
             <p className="text-sm" style={{ color: "#64748b" }}>{residents.length} residente{residents.length !== 1 ? "s" : ""} registrado{residents.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function ResidentsDirectory({ parkingLotId }: Props) {
       {showForm && (
         <div className="p-6 rounded-2xl space-y-4" style={cardStyle}>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-base" style={{ color: "#f1f5f9" }}>{editing ? "Editar Residente" : "Nuevo Residente"}</h3>
+            <h3 className="font-bold text-base" style={{ color: "#0f172a" }}>{editing ? "Editar Residente" : "Nuevo Residente"}</h3>
             <button onClick={closeForm} style={{ color: "#475569" }}><X size={20} /></button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -171,7 +171,7 @@ export default function ResidentsDirectory({ parkingLotId }: Props) {
                 className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all"
                 style={form.is_owner === opt.v
                   ? { background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff" }
-                  : { background: "rgba(255,255,255,0.04)", color: "#64748b", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  : { background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}>
                 {opt.l}
               </button>
             ))}
@@ -210,7 +210,7 @@ export default function ResidentsDirectory({ parkingLotId }: Props) {
               {editing ? "Guardar cambios" : "Agregar residente"}
             </button>
             <button onClick={closeForm} className="px-5 py-2.5 rounded-xl font-bold text-sm"
-              style={{ background: "rgba(255,255,255,0.05)", color: "#64748b", border: "1px solid rgba(255,255,255,0.08)" }}>
+              style={{ background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}>
               Cancelar
             </button>
           </div>
@@ -226,10 +226,10 @@ export default function ResidentsDirectory({ parkingLotId }: Props) {
             <p className="text-sm mt-1">{search ? "Intenta otra búsqueda" : "Agrega el primero con el botón de arriba"}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid #e2e8f0" }}>
             <table className="w-full text-sm" style={{ minWidth: "600px" }}>
               <thead>
-                <tr style={{ background: "rgba(99,102,241,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <tr style={{ background: "rgba(99,102,241,0.08)", borderBottom: "1px solid #e2e8f0" }}>
                   {["Apto/Casa", "Residente", "Celular", "Tipo", "Vehículos", "Acciones"].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-bold" style={{ color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</th>
                   ))}
@@ -237,18 +237,18 @@ export default function ResidentsDirectory({ parkingLotId }: Props) {
               </thead>
               <tbody>
                 {filtered.map((r, i) => (
-                  <tr key={r.id} style={{ borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+                  <tr key={r.id} style={{ borderBottom: i < filtered.length - 1 ? "1px solid #e2e8f0" : "none" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Home size={14} style={{ color: "#6366f1" }} />
-                        <span className="font-bold" style={{ color: "#f1f5f9" }}>{r.apartment}</span>
-                        {r.block && <span className="text-xs px-2 py-0.5 rounded-md" style={{ background: "rgba(255,255,255,0.05)", color: "#64748b" }}>{r.block}</span>}
+                        <span className="font-bold" style={{ color: "#0f172a" }}>{r.apartment}</span>
+                        {r.block && <span className="text-xs px-2 py-0.5 rounded-md" style={{ background: "#f8fafc", color: "#64748b" }}>{r.block}</span>}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-semibold" style={{ color: "#e2e8f0" }}>{r.owner_name}</p>
+                      <p className="font-semibold" style={{ color: "#1e293b" }}>{r.owner_name}</p>
                       {r.email && <p className="text-xs mt-0.5" style={{ color: "#64748b" }}>{r.email}</p>}
                     </td>
                     <td className="px-4 py-3">

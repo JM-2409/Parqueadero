@@ -20,6 +20,8 @@ import {
   Hash,
 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
+import { cashFields, fetchIsCashPaused, isCountedInCash, publicExtraData } from "@/lib/cash";
+import { toLocalDateInput } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
 import { deleteParkingSession } from "@/app/actions/sessions";
 import ReceiptModal from "../employee/ReceiptModal";
@@ -51,6 +53,8 @@ interface ParkingSession {
   entry_employee_name?: string;
   exit_employee_name?: string;
   extra_data?: Record<string, any>;
+  include_in_cash?: boolean;
+  cash_recorded_at?: string | null;
   vehicles: Vehicle;
 }
 
@@ -91,6 +95,7 @@ export default function AdminHistory({
   const [newPlate, setNewPlate] = useState("");
   const [isEditingPlate, setIsEditingPlate] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState<any>(null);
+  const [togglingCashId, setTogglingCashId] = useState<string | null>(null);
 
   // New States for enhanced filtering
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
@@ -252,7 +257,9 @@ export default function AdminHistory({
 
   const handleExit = (sessionToExit: any) => {
     const now = new Date();
-    const dStr = now.toISOString().split("T")[0];
+    // Fecha local (no UTC): en Colombia, después de las 7 p. m. la fecha UTC
+    // ya es la del día siguiente y generaba salidas en el futuro.
+    const dStr = toLocalDateInput(now);
     const tStr = now.toTimeString().substring(0, 5);
     setForceExitConfig({
       session: sessionToExit,
@@ -339,7 +346,10 @@ export default function AdminHistory({
         (exitTime.getTime() - entryTime.getTime()) / 60000,
       );
 
-      const isPaused = parkingLot?.features?.is_cash_paused || false;
+      const isPaused = await fetchIsCashPaused(
+        parkingLotId,
+        Boolean(parkingLot?.features?.is_cash_paused),
+      );
 
       const { data: updatedSession, error: updateError } = await supabase
         .from("parking_sessions")
@@ -351,16 +361,14 @@ export default function AdminHistory({
           receipt_number: receiptNumber,
           duration_minutes: durationMinutes,
           exit_employee_name: "Admin",
-          extra_data: {
-            ...(sessionToExit.extra_data || {}),
-            is_paused: isPaused,
-          },
+          ...cashFields(!isPaused, sessionToExit.extra_data),
         })
         .eq("id", sessionToExit.id)
         .select("*, vehicles(*)")
         .single();
 
-      if (!updateError && updatedSession) {
+      if (updateError) throw updateError;
+      if (updatedSession) {
         fetchData();
         setViewingReceipt(updatedSession);
       }
@@ -369,6 +377,32 @@ export default function AdminHistory({
       alert("Hubo un error al forzar salida.");
     }
     setIsSubmittingExit(null);
+  };
+
+  // Incluir/excluir un cobro ya guardado de la caja. Si el cobro pertenece a
+  // una caja ya cerrada, el cierre guardado no cambia; el reporte mostrará
+  // la diferencia como advertencia.
+  const toggleIncludeInCash = async (session: ParkingSession) => {
+    const currentlyIncluded = isCountedInCash(session);
+    const question = currentlyIncluded
+      ? "¿Excluir este cobro de la caja? Quedará solo en el historial y dejará de sumar al recaudo actual."
+      : "¿Incluir este cobro en la caja? Volverá a sumar al recaudo de la caja en la que fue registrado.";
+    if (!confirm(question)) return;
+
+    setTogglingCashId(session.id);
+    try {
+      const { error } = await supabase
+        .from("parking_sessions")
+        .update(cashFields(!currentlyIncluded, session.extra_data))
+        .eq("id", session.id);
+      if (error) throw error;
+      fetchData();
+    } catch (e: unknown) {
+      console.error(e);
+      alert("No se pudo actualizar el cobro: " + ((e as { message?: string })?.message || String(e)));
+    } finally {
+      setTogglingCashId(null);
+    }
   };
 
   const confirmDeleteSession = async () => {
@@ -1062,12 +1096,12 @@ export default function AdminHistory({
                         <td className="p-5 text-slate-600 hidden md:table-cell">
                           {Object.keys({
                             ...session.vehicles?.custom_fields_data,
-                            ...session.extra_data,
+                            ...publicExtraData(session.extra_data),
                           }).length > 0 ? (
                             <div className="flex flex-wrap gap-1.5 max-w-[150px]">
                               {Object.entries({
                                 ...session.vehicles?.custom_fields_data,
-                                ...session.extra_data,
+                                ...publicExtraData(session.extra_data),
                               }).map(([k, v]) => {
                                 if (k === "observation_photo_url") {
                                   return (
@@ -1107,6 +1141,14 @@ export default function AdminHistory({
                           >
                             {isCompleted ? "Completado" : "En Sistema"}
                           </span>
+                          {isCompleted && !isCountedInCash(session) && (
+                            <span
+                              className="mt-2 inline-block px-3 py-1 rounded-3xl text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-amber-50 text-amber-700 border border-amber-200"
+                              title="Este cobro está solo en el historial y no suma a la caja"
+                            >
+                              No suma a caja
+                            </span>
+                          )}
                         </td>
                         <td className="p-5 font-black text-slate-900 text-sm tracking-tight border-l border-slate-50 bg-slate-50/30">
                           {isCompleted ? (
@@ -1158,12 +1200,12 @@ export default function AdminHistory({
                                 </h4>
                                 {Object.keys({
                                   ...session.vehicles?.custom_fields_data,
-                                  ...session.extra_data,
+                                  ...publicExtraData(session.extra_data),
                                 }).length > 0 ? (
                                   <div className="grid grid-cols-2 gap-3">
                                     {Object.entries({
                                       ...session.vehicles?.custom_fields_data,
-                                      ...session.extra_data,
+                                      ...publicExtraData(session.extra_data),
                                     }).map(([k, v]) => {
                                       if (k === "observation_photo_url") {
                                         return (
@@ -1250,6 +1292,28 @@ export default function AdminHistory({
                                   <Edit2 size={16} />
                                   Editar Placa
                                 </button>
+                                {isCompleted && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleIncludeInCash(session);
+                                    }}
+                                    disabled={togglingCashId === session.id}
+                                    className={`px-5 py-3 rounded-3xl text-xs font-bold transition-colors flex items-center gap-3 mb-2 w-full justify-center md:justify-end disabled:opacity-50 ${
+                                      isCountedInCash(session)
+                                        ? "bg-amber-50 text-amber-800 hover:bg-amber-600 hover:text-white"
+                                        : "bg-emerald-50 text-emerald-800 hover:bg-emerald-600 hover:text-white"
+                                    }`}
+                                  >
+                                    {togglingCashId === session.id ? (
+                                      <Spinner className="w-4 h-4" />
+                                    ) : isCountedInCash(session) ? (
+                                      "Excluir de caja"
+                                    ) : (
+                                      "Incluir en caja"
+                                    )}
+                                  </button>
+                                )}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();

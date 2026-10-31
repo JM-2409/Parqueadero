@@ -1,5 +1,6 @@
 "use client";
 
+import { toLocalDateInput } from "@/lib/utils";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Spinner } from "@/components/ui/Spinner";
@@ -45,7 +46,7 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
   const [history, setHistory] = useState<Visitor[]>([]);
   const [tab, setTab] = useState<"inside" | "history">("inside");
   const [loading, setLoading] = useState(true);
-  const [histDate, setHistDate] = useState(new Date().toISOString().split("T")[0]);
+  const [histDate, setHistDate] = useState(toLocalDateInput());
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<typeof EMPTY>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -112,7 +113,7 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
     setExitingId(null); fetchInside(); if (tab === "history") fetchHistory();
   };
 
-  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f1f5f9", padding: "0.65rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
+  const inputStyle = { background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "12px", color: "#0f172a", padding: "0.65rem 1rem", width: "100%", outline: "none", fontFamily: "inherit", fontSize: "0.875rem" };
   const labelStyle = { display: "block", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "0.3rem" };
 
   return (
@@ -124,7 +125,7 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
             <UserCheck size={22} style={{ color: "#34d399" }} />
           </div>
           <div>
-            <h2 className="text-xl font-bold" style={{ color: "#f1f5f9" }}>Visitantes Peatonales</h2>
+            <h2 className="text-xl font-bold" style={{ color: "#0f172a" }}>Visitantes Peatonales</h2>
             <p className="text-sm" style={{ color: "#64748b" }}>
               <span className="font-bold" style={{ color: "#34d399" }}>{inside.length}</span> dentro del conjunto ahora
             </p>
@@ -142,8 +143,8 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
 
       {/* Formulario rápido */}
       {showForm && (
-        <div className="p-5 rounded-2xl space-y-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#f1f5f9" }}>Nueva Entrada</h3>
+        <div className="p-5 rounded-2xl space-y-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+          <h3 className="font-bold text-sm" style={{ color: "#0f172a" }}>Nueva Entrada</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label style={labelStyle}>Nombre del visitante *</label>
               <input style={inputStyle} value={form.visitor_name} onChange={e => setForm(f => ({ ...f, visitor_name: e.target.value }))} placeholder="Nombre completo" /></div>
@@ -177,7 +178,7 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
             style={tab === t.v
               ? { background: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(16,185,129,0.3)" }
-              : { background: "rgba(255,255,255,0.03)", color: "#64748b", border: "1px solid rgba(255,255,255,0.06)" }}>
+              : { background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}>
             {t.v === "inside" ? <UserCheck size={14} /> : <History size={14} />}
             {t.l}
             {t.count !== null && <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs font-black"
@@ -201,7 +202,7 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
                 style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.15)" }}>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-bold" style={{ color: "#f1f5f9" }}>{v.visitor_name}</p>
+                    <p className="font-bold" style={{ color: "#0f172a" }}>{v.visitor_name}</p>
                     <p className="text-xs mt-0.5" style={{ color: "#64748b" }}>{v.visitor_document || "Sin doc."}</p>
                   </div>
                   <span className="text-xs font-bold px-2 py-1 rounded-full shrink-0"
@@ -245,10 +246,10 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
               <p className="font-semibold">Sin registros para esta fecha</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid #e2e8f0" }}>
               <table className="w-full text-sm" style={{ minWidth: "500px" }}>
                 <thead>
-                  <tr style={{ background: "rgba(16,185,129,0.08)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <tr style={{ background: "rgba(16,185,129,0.08)", borderBottom: "1px solid #e2e8f0" }}>
                     {["Visitante", "Apto", "Motivo", "Entrada", "Salida", "Estado"].map(h => (
                       <th key={h} className="text-left px-4 py-3 font-bold" style={{ color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</th>
                     ))}
@@ -256,8 +257,8 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
                 </thead>
                 <tbody>
                   {history.map((v, i) => (
-                    <tr key={v.id} style={{ borderBottom: i < history.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                      <td className="px-4 py-3 font-semibold" style={{ color: "#e2e8f0" }}>{v.visitor_name}</td>
+                    <tr key={v.id} style={{ borderBottom: i < history.length - 1 ? "1px solid #e2e8f0" : "none" }}>
+                      <td className="px-4 py-3 font-semibold" style={{ color: "#1e293b" }}>{v.visitor_name}</td>
                       <td className="px-4 py-3" style={{ color: "#94a3b8" }}>Apto {v.apartment}</td>
                       <td className="px-4 py-3" style={{ color: "#94a3b8" }}>{v.purpose || "—"}</td>
                       <td className="px-4 py-3" style={{ color: "#94a3b8" }}>{fmtTime(v.entry_time)}</td>
@@ -266,7 +267,7 @@ export default function PedestrianVisitors({ parkingLotId, employeeName }: Props
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
                           style={v.status === "inside"
                             ? { background: "rgba(16,185,129,0.15)", color: "#34d399" }
-                            : { background: "rgba(255,255,255,0.06)", color: "#64748b" }}>
+                            : { background: "#f8fafc", color: "#64748b" }}>
                           {v.status === "inside" ? "Adentro" : "Salió"}
                         </span>
                       </td>

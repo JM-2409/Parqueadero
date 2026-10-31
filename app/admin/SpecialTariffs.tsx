@@ -1,5 +1,6 @@
 "use client";
 
+import { toLocalDateInput } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -33,7 +34,7 @@ export default function SpecialTariffs({
   const [rateType, setRateType] = useState("dia");
   const [amount, setAmount] = useState("5000");
   const [startDate, setStartDate] = useState(
-    new Date().toISOString().substring(0, 10)
+    toLocalDateInput()
   );
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
