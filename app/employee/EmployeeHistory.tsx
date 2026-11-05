@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import { calculateFee } from "@/lib/pricing";
+import { withNormalizedVehicle } from "@/lib/utils";
 import ReceiptModal from "./ReceiptModal";
 
 const PAGE_SIZE = 20;
@@ -49,7 +50,7 @@ export default function EmployeeHistory({
 }: {
   parkingLot: any;
   tariffs: any[];
-  onExitSession: (sessionId: string) => void;
+  onExitSession: (session: ParkingSession) => void;
 }) {
   const parkingLotId = parkingLot.id;
   const showRevenue = parkingLot.show_revenue;
@@ -91,7 +92,7 @@ export default function EmployeeHistory({
     if (error) {
       console.error("Error fetching sessions:", error);
     } else if (sessionData) {
-      setSessions(sessionData);
+      setSessions(sessionData.map(withNormalizedVehicle));
     }
 
     if (count !== null) {
@@ -448,7 +449,7 @@ export default function EmployeeHistory({
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onExitSession(session.id);
+                                    onExitSession(session);
                                   }}
                                   className="px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-3xl text-xs font-bold transition-colors flex items-center gap-3 shadow-xl border border-slate-100"
                                 >

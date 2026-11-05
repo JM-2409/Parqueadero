@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest";
-import { cn } from "./utils";
+import { cn, formatElapsedDuration, getSessionVehicle } from "./utils";
 
 describe("cn utility function", () => {
   test("should merge tailwind classes correctly", () => {
@@ -32,5 +32,38 @@ describe("cn utility function", () => {
     const isDanger = true;
     const result = cn("px-2 py-1", { "bg-red-500": isDanger }, "p-4");
     expect(result).toBe("bg-red-500 p-4");
+  });
+});
+
+describe("getSessionVehicle", () => {
+  test("lee la placa cuando vehicles es un objeto", () => {
+    const vehicle = getSessionVehicle({
+      vehicles: { plate: "ABC123", type: "carros" },
+    });
+    expect(vehicle.plate).toBe("ABC123");
+    expect(vehicle.type).toBe("carros");
+  });
+
+  test("lee la placa cuando vehicles llega como arreglo", () => {
+    const vehicle = getSessionVehicle({
+      vehicles: [{ plate: "XYZ99", type: "motos" }],
+    });
+    expect(vehicle.plate).toBe("XYZ99");
+    expect(vehicle.type).toBe("motos");
+  });
+
+  test("devuelve valores vacíos si no hay vehículo", () => {
+    expect(getSessionVehicle({ vehicles: null })).toEqual({
+      plate: "",
+      type: "",
+    });
+  });
+});
+
+describe("formatElapsedDuration", () => {
+  test("formatea horas y minutos transcurridos", () => {
+    const entry = new Date("2026-11-05T10:00:00");
+    const now = new Date("2026-11-05T12:15:00");
+    expect(formatElapsedDuration(entry, now)).toBe("2 h 15 min");
   });
 });

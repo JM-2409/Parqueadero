@@ -1,6 +1,7 @@
 "use client";
 
 import { publicExtraData } from "@/lib/cash";
+import { getSessionVehicle } from "@/lib/utils";
 import { Receipt, Printer, X, Car, Send, QrCode } from "lucide-react";
 import { useState } from "react";
 import { sanitizeInput } from "@/lib/sanitize";
@@ -41,6 +42,7 @@ export default function ReceiptModal({
   parkingLot: any;
   onClose: () => void;
 }) {
+  const vehicle = getSessionVehicle(session);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<"idle" | "success" | "error">(
@@ -59,8 +61,8 @@ export default function ReceiptModal({
       nit: parkingLot?.nit,
       address: parkingLot?.address,
       phone: parkingLot?.phone_contact,
-      plate: session.vehicles?.plate || "-",
-      vehicleType: session.vehicles?.type || "-",
+      plate: vehicle.plate || "-",
+      vehicleType: vehicle.type || "-",
       entryTime: session.entry_time,
       exitTime: session.exit_time,
       durationMinutes,
@@ -90,8 +92,8 @@ export default function ReceiptModal({
     try {
       const params = new URLSearchParams({
         receiptNumber: session.receipt_number?.toString() || "-",
-        plate: session.vehicles?.plate || "-",
-        type: session.vehicles?.type || "-",
+        plate: vehicle.plate || "-",
+        type: vehicle.type || "-",
         total: (session.total_charged || session.fee || 0).toString(),
         entry: entryTime.toLocaleString(),
         exit: exitTime.toLocaleString(),
@@ -182,27 +184,27 @@ export default function ReceiptModal({
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Placa</span>
               <span className="font-mono font-bold text-lg text-slate-900 bg-amber-50 px-3 py-1 rounded-xl border border-amber-300">
-                {session.vehicles.plate}
+                {vehicle.plate || "-"}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Tipo</span>
               <span className="font-bold text-slate-900 capitalize">
-                {session.vehicles.type}
+                {vehicle.type || "-"}
               </span>
             </div>
 
             {((session.extra_data &&
               Object.keys(publicExtraData(session.extra_data)).length > 0) ||
-              (session.vehicles?.custom_fields_data &&
-                Object.keys(session.vehicles.custom_fields_data).length >
+              (vehicle.custom_fields_data &&
+                Object.keys(vehicle.custom_fields_data).length >
                   0)) && (
               <div className="border-t border-slate-200 pt-4 mt-4 space-y-2">
                 <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 block">
                   Datos Adicionales
                 </span>
                 {Object.entries({
-                  ...session.vehicles?.custom_fields_data,
+                  ...vehicle.custom_fields_data,
                   ...publicExtraData(session.extra_data),
                 }).map(([key, value]) => {
                   if (key === "observation_photo_url") {

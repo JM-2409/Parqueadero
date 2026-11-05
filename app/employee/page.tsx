@@ -1,6 +1,6 @@
 "use client";
 
-import { toLocalDateInput } from "@/lib/utils";
+import { getSessionVehicle, toLocalDateInput, withNormalizedVehicle } from "@/lib/utils";
 import styles from "./employee.module.css";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
@@ -22,12 +22,14 @@ import {
   Truck,
   AlertTriangle,
   Printer,
+  ChevronDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import EmployeeHistory from "./EmployeeHistory";
 import PrivateSpaces from "./PrivateSpaces";
 import ReceiptModal from "./ReceiptModal";
+import ExitConfirmModal from "./ExitConfirmModal";
 import Image from "next/image";
 import InspectionsTab from "./InspectionsTab";
 import { calculateFee, formatDateKey } from "@/lib/pricing";
@@ -92,7 +94,7 @@ export default function EmployeePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showConfirmEntry, setShowConfirmEntry] = useState(false);
-  const [confirmExitSessionId, setConfirmExitSessionId] = useState<string | null>(null);
+  const [confirmExitSession, setConfirmExitSession] = useState<any | null>(null);
   const [showConfirmCloseRegister, setShowConfirmCloseRegister] = useState(false);
 
   // Search in Active Sessions
@@ -113,6 +115,7 @@ export default function EmployeePage() {
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [viewingSession, setViewingSession] = useState<any>(null);
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
 
   // Form states
   const [plate, setPlate] = useState("");
@@ -242,7 +245,7 @@ export default function EmployeePage() {
       .eq("status", "active")
       .order("receipt_number", { ascending: false })
       .order("entry_time", { ascending: false });
-    setActiveSessions(data || []);
+    setActiveSessions((data || []).map(withNormalizedVehicle));
   }, []);
 
   const fetchSubscribers = useCallback(async (parkingLotId: string) => {
@@ -863,16 +866,16 @@ export default function EmployeePage() {
     setIsSubmittingEntry(false);
   };
 
-  const handleExit = async (sessionId: string) => {
+  const handleExit = async (session: any) => {
     if (!navigator.onLine) {
       setError("Sin conexión a internet. Requiere conexión para registrar salida.");
       return;
     }
-    setConfirmExitSessionId(sessionId);
+    setConfirmExitSession(withNormalizedVehicle(session));
   };
 
   const executeExit = async (sessionId: string) => {
-    setConfirmExitSessionId(null);
+    setConfirmExitSession(null);
     if (!navigator.onLine) {
       setError("Sin conexión a internet. Requiere conexión para registrar salida.");
       return;
@@ -891,7 +894,7 @@ export default function EmployeePage() {
         .eq("id", sessionId)
         .single();
       if (dbSession) {
-        sessionToExit = dbSession;
+        sessionToExit = withNormalizedVehicle(dbSession);
       }
     }
 
@@ -901,17 +904,18 @@ export default function EmployeePage() {
       return;
     }
 
+    const vehicle = getSessionVehicle(sessionToExit);
     const entryTime = new Date(sessionToExit.entry_time);
     const exitTime = new Date();
     const rules = tariffs.filter(
-      (t) => t.vehicle_type === sessionToExit.vehicles.type,
+      (t) => t.vehicle_type === vehicle.type,
     );
 
     const { data: subscriber } = await supabase
       .from("monthly_subscribers")
       .select("id")
       .eq("parking_lot_id", parkingLot.id)
-      .eq("plate", sessionToExit.vehicles.plate)
+      .eq("plate", vehicle.plate)
       .eq("is_active", true)
       .gte("end_date", toLocalDateInput())
       .lte("start_date", toLocalDateInput())
@@ -920,7 +924,7 @@ export default function EmployeePage() {
     let finalFee = 0;
     if (!subscriber) {
       const vehicleSpecialTariffs = specialTariffs.filter(
-        (st) => st.plate === sessionToExit.vehicles.plate.toUpperCase(),
+        (st) => st.plate === vehicle.plate.toUpperCase(),
       );
 
       // Fetch completed sessions for this specific vehicle to get past paid dates for daily special tariff calculation
@@ -1007,7 +1011,7 @@ export default function EmployeePage() {
       setFee("");
       await fetchRevenue(parkingLot.id);
       await fetchActiveSessions(parkingLot.id);
-      setSelectedSession(updatedSession);
+      setSelectedSession(updatedSession ? withNormalizedVehicle(updatedSession) : updatedSession);
 
       if (
         parkingLot?.features?.whatsapp_receipts &&
@@ -1024,8 +1028,8 @@ export default function EmployeePage() {
 
           const params = new URLSearchParams({
             receiptNumber: receiptNumber.toString(),
-            plate: sessionToExit.vehicles.plate,
-            type: sessionToExit.vehicles.type,
+            plate: vehicle.plate,
+            type: vehicle.type,
             total: finalFee.toString(),
             entry: entryTime.toLocaleString(),
             exit: exitTime.toLocaleString(),
@@ -1073,7 +1077,7 @@ export default function EmployeePage() {
   };
 
   const filteredActiveSessions = activeSessions.filter(s =>
-    s.vehicles.plate.toLowerCase().includes(activeSearchQuery.toLowerCase())
+    getSessionVehicle(s).plate.toLowerCase().includes(activeSearchQuery.toLowerCase())
   );
 
   if (loading)
@@ -1351,7 +1355,7 @@ export default function EmployeePage() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 relative">
-        <div className="max-w-7xl mx-auto w-full p-4 lg:p-8 xl:p-12 pb-24 md:pb-8">
+        <div className="max-w-7xl mx-auto w-full p-4 lg:p-6 pb-24 md:pb-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
               <X size={20} className="flex-shrink-0" />
@@ -1387,7 +1391,7 @@ export default function EmployeePage() {
             });
 
             return (
-              <div className="flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex flex-col gap-4 lg:gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Offline & Queue Status Banner */}
                 {(!offline.isOnline || offline.pendingCount > 0) && (
                   <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
@@ -1422,58 +1426,12 @@ export default function EmployeePage() {
                   </div>
                 )}
 
-                {/* Occupancy Gauge Header */}
                 <OccupancyGauge
                   data={occupancyData}
                   allowedVehicles={parkingLot?.allowed_vehicles}
                 />
 
-                {/* Resumen Rápido */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
-                      Vehículos Parqueados
-                    </p>
-                    <p className="text-3xl font-black text-slate-900">
-                      {activeSessions.length}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center border border-indigo-200">
-                    <Car size={24} />
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
-                      Suscripciones Activas
-                    </p>
-                    <p className="text-3xl font-black text-emerald-700">
-                      {subscribers.length}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-emerald-50 text-emerald-700 rounded-2xl flex items-center justify-center border border-emerald-200">
-                    <CheckCircle2 size={24} />
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
-                      Vehículos Vetados
-                    </p>
-                    <p className="text-3xl font-black text-rose-700">
-                      {blacklistedCount}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-rose-50 text-rose-700 rounded-2xl flex items-center justify-center border border-rose-200">
-                    <AlertTriangle size={24} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col xl:flex-row gap-6 lg:gap-8">
+              <div className="flex flex-col xl:flex-row gap-4 lg:gap-6">
                 {/* Entry Form */}
                 <div className="xl:w-[380px] shrink-0 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 h-fit">
                   <div className="flex items-center gap-4 mb-8">
@@ -1868,7 +1826,7 @@ export default function EmployeePage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleExit(session.id);
+                                  handleExit(session);
                                 }}
                                 disabled={isSubmittingExit === session.id}
                                 className={`${styles.btnPrimary} px-6 py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap shrink-0 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-2xl shadow-sm`}
@@ -2178,48 +2136,18 @@ export default function EmployeePage() {
             </div>
           )}
 
-          {confirmExitSessionId && (() => {
-            const sessionObj = activeSessions.find(s => s.id === confirmExitSessionId);
-            const plateStr = sessionObj?.vehicles?.plate || "";
-            return (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                  <div className="p-6 text-center">
-                    <div className="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-200 shadow-md">
-                      <LogOut size={32} />
-                    </div>
-                    <h3 className="font-bold text-slate-900 text-xl mb-2">
-                      Confirmar Salida
-                    </h3>
-                    <p className="text-sm text-slate-600 font-bold">
-                      ¿Estás seguro de que deseas registrar la salida del vehículo{" "}
-                      {plateStr && (
-                        <span className="text-slate-900 font-extrabold uppercase font-mono block text-lg mt-1">
-                          {plateStr}
-                        </span>
-                      )}
-                      ?
-                    </p>
-                  </div>
-                  <div className="p-5 bg-slate-50 border-t border-slate-200 flex gap-3 justify-center">
-                    <button
-                      onClick={() => setConfirmExitSessionId(null)}
-                      className={`${styles.btnSecondary} w-full`}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={() => executeExit(confirmExitSessionId)}
-                      className={`${styles.btnPrimary} w-full flex items-center justify-center gap-2 active:scale-95 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl`}
-                    >
-                      <CheckCircle2 size={18} />
-                      Confirmar Salida
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
+          {confirmExitSession && (
+            <ExitConfirmModal
+              session={confirmExitSession}
+              parkingLot={parkingLot}
+              tariffs={tariffs}
+              specialTariffs={specialTariffs}
+              subscribers={subscribers}
+              isLoading={isSubmittingExit === confirmExitSession.id}
+              onCancel={() => setConfirmExitSession(null)}
+              onConfirm={() => executeExit(confirmExitSession.id)}
+            />
+          )}
 
           {showConfirmCloseRegister && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
