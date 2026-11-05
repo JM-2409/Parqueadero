@@ -43,11 +43,16 @@ import MonthlySubscribers from "./MonthlySubscribers";
 import VehicleInspectionsHistory from "../employee/VehicleInspectionsHistory";
 import EmployeeManagement from "./EmployeeManagement";
 import EmployeeLogs from "./EmployeeLogs";
+import ReportsTab from "./ReportsTab";
+import BuildingModulesConfig from "./BuildingModulesConfig";
 import {
   FileEdit,
   Shield,
   Activity,
-  Tag
+  Tag,
+  BarChart2,
+  AlertTriangle,
+  ArrowRight
 } from "lucide-react";
 import { sanitizeInput } from "@/lib/sanitize";
 import {
@@ -103,6 +108,8 @@ export default function AdminPage() {
   const [showDeviceAlert, setShowDeviceAlert] = useState(false);
   const [parkingLot, setParkingLot] = useState<any>(null);
   const [todayStats, setTodayStats] = useState({ vehicles: 0, revenue: 0 });
+  const [currentOccupancy, setCurrentOccupancy] = useState(0);
+  const [expiringSubscribers, setExpiringSubscribers] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [customRoles, setCustomRoles] = useState<any[]>([]);
   const [error, setError] = useState("");
@@ -239,6 +246,34 @@ export default function AdminPage() {
       .eq("parking_lot_id", parkingLotId)
       .gte("entry_time", today.toISOString());
 
+    // OcupaciÃ³n actual: vehÃ­culos activos
+    try {
+      const { count: activeCount } = await supabase
+        .from("parking_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("parking_lot_id", parkingLotId)
+        .eq("status", "active");
+      setCurrentOccupancy(activeCount || 0);
+    } catch (e) {
+      console.error("Error al obtener ocupaciÃ³n actual", e);
+    }
+
+    // Abonados que vencen en los prÃ³ximos 7 dÃ­as o ya vencidos
+    try {
+      const proximo = new Date();
+      proximo.setDate(proximo.getDate() + 7);
+      const { data: subsData } = await supabase
+        .from("monthly_subscribers")
+        .select("id, plate, owner_name, end_date")
+        .eq("parking_lot_id", parkingLotId)
+        .lte("end_date", proximo.toISOString().split("T")[0])
+        .order("end_date", { ascending: true })
+        .limit(5);
+      setExpiringSubscribers(subsData || []);
+    } catch (e) {
+      console.error("Error al obtener abonados por vencer", e);
+    }
+
     // Recaudo de la caja abierta: lo calcula la base de datos con la misma
     // regla que usa el cierre y el reporte.
     try {
@@ -364,7 +399,7 @@ export default function AdminPage() {
     checkUser();
   }, [checkUser]);
 
-  // Realtime: sesiones de parqueo (estadísticas del día)
+  // Realtime: sesiones de parqueo (estadÃ­sticas del dÃ­a)
   useEffect(() => {
     if (!parkingLot?.id) return;
 
@@ -389,11 +424,11 @@ export default function AdminPage() {
     };
   }, [parkingLot?.id, fetchTodayStats]);
 
-  // ──────────────────────────────────────────────────────
-  // Realtime: dispositivos pendientes de aprobación
-  // Cuando un empleado inicia sesión en un dispositivo nuevo,
-  // el admin recibe una notificación inmediata sin refrescar.
-  // ──────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Realtime: dispositivos pendientes de aprobaciÃ³n
+  // Cuando un empleado inicia sesiÃ³n en un dispositivo nuevo,
+  // el admin recibe una notificaciÃ³n inmediata sin refrescar.
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!parkingLot?.id) return;
 
@@ -424,7 +459,7 @@ export default function AdminPage() {
           filter: `parking_lot_id=eq.${parkingLot.id}`,
         },
         () => {
-          // Refrescar el conteo cuando cambia el estado de algún dispositivo
+          // Refrescar el conteo cuando cambia el estado de algÃºn dispositivo
           fetchPendingDevicesCount(parkingLot.id);
         },
       )
@@ -511,17 +546,17 @@ export default function AdminPage() {
         ) {
           setShowSqlAlert(true);
           setError(
-            "Falta una configuración en la base de datos para guardar estas preferencias.",
+            "Falta una configuraciÃ³n en la base de datos para guardar estas preferencias.",
           );
         } else {
-          setError(result.error || "Error al actualizar configuración");
+          setError(result.error || "Error al actualizar configuraciÃ³n");
         }
       } else {
-        setSuccess("Configuración actualizada exitosamente");
+        setSuccess("ConfiguraciÃ³n actualizada exitosamente");
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (err: unknown) {
-      setError("Error de red al actualizar configuración: " + getErrorMessage(err));
+      setError("Error de red al actualizar configuraciÃ³n: " + getErrorMessage(err));
     }
     setIsUpdatingSettings(false);
   };
@@ -554,7 +589,7 @@ export default function AdminPage() {
         .maybeSingle();
 
       if (existingProfile) {
-        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
+        setError("Este email ya estÃ¡ registrado en el sistema. Intenta con otro correo.");
         setIsCreatingEmployee(false);
         return;
       }
@@ -581,11 +616,11 @@ export default function AdminPage() {
       const message = getErrorMessage(err) || "Error al crear usuario";
 
       if (message.includes("already registered") || message.includes("already exists")) {
-        setError("Este usuario ya existe en autenticación. Por favor, elige otro correo.");
+        setError("Este usuario ya existe en autenticaciÃ³n. Por favor, elige otro correo.");
       } else if (message.includes("invalid email")) {
-        setError("El formato del email no es válido.");
+        setError("El formato del email no es vÃ¡lido.");
       } else if (message.includes("password")) {
-        setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
+        setError("La contraseÃ±a es muy dÃ©bil. Debe tener al menos 6 caracteres.");
       } else {
         setError(`Error de red o servidor: ${message}`);
       }
@@ -714,7 +749,7 @@ export default function AdminPage() {
           <Settings size={36} className="text-indigo-600" />
         </div>
         <div className="text-center">
-          <p className="font-bold text-lg text-slate-900">Cargando panel de administración</p>
+          <p className="font-bold text-lg text-slate-900">Cargando panel de administraciÃ³n</p>
           <p className="text-sm mt-1 text-slate-600">Un momento por favor...</p>
         </div>
         <Spinner size={24} className="text-indigo-600" />
@@ -724,7 +759,7 @@ export default function AdminPage() {
   return (
     <div className={styles.container}>
 
-      {/* ── Banner de alerta: nuevo dispositivo pendiente (Realtime) ── */}
+      {/* â”€â”€ Banner de alerta: nuevo dispositivo pendiente (Realtime) â”€â”€ */}
       <AnimatePresence>
         {showDeviceAlert && pendingDevicesCount > 0 && (
           <motion.div
@@ -882,6 +917,18 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => {
+              handleTabChange("reports");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "reports" ? styles.navItemActive : ""}`}
+          >
+            <BarChart2 size={20} />
+            <span className="font-bold whitespace-nowrap text-left">
+              Reportes
+            </span>
+          </button>
+          <button
+            onClick={() => {
               handleTabChange("manual_entry");
               setIsMobileMenuOpen(false);
             }}
@@ -926,6 +973,18 @@ export default function AdminPage() {
             <Users size={20} />
             <span className="font-bold whitespace-nowrap text-left">
               Operarios
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              handleTabChange("roles");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "roles" ? styles.navItemActive : ""}`}
+          >
+            <Shield size={20} />
+            <span className="font-bold whitespace-nowrap text-left">
+              Roles
             </span>
           </button>
           <button
@@ -1050,7 +1109,9 @@ export default function AdminPage() {
           {/* TAB: DASHBOARD / HISTORIAL */}
           {activeTab === "dashboard" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-              <div className="grid grid-cols-1 gap-4">
+              {/* Tarjetas de Estadísticas Principales */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* 1. Vehículos Hoy */}
                 <div className={`${styles.card} flex items-center gap-4`}>
                   <div className={`${styles.statIconContainer} ${styles.statIconPrimary}`}>
                     <Car size={32} />
@@ -1062,9 +1123,112 @@ export default function AdminPage() {
                     <p className={styles.cardValue}>
                       {todayStats.vehicles}
                     </p>
+                    <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                      Ingresos registrados hoy
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Ocupación Actual en Tiempo Real */}
+                <div className={`${styles.card} flex flex-col justify-between`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`${styles.statIconContainer} ${
+                      Number(capacity) > 0 && (currentOccupancy / Number(capacity)) >= 0.9
+                        ? "bg-red-50 text-red-600 border border-red-200"
+                        : Number(capacity) > 0 && (currentOccupancy / Number(capacity)) >= 0.75
+                        ? "bg-amber-50 text-amber-600 border border-amber-200"
+                        : "bg-indigo-50 text-indigo-600 border border-indigo-200"
+                    }`}>
+                      <Activity size={32} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className={styles.cardTitle}>
+                        En Parqueadero Ahora
+                      </h3>
+                      <div className="flex items-baseline gap-2">
+                        <p className={styles.cardValue}>
+                          {currentOccupancy}
+                        </p>
+                        {capacity && Number(capacity) > 0 && (
+                          <span className="text-xs font-bold text-slate-400">
+                            / {capacity} cupos
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {capacity && Number(capacity) > 0 && (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1">
+                        <span>Ocupación</span>
+                        <span>{Math.min(100, Math.round((currentOccupancy / Number(capacity)) * 100))}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-500 ${
+                            (currentOccupancy / Number(capacity)) >= 0.9
+                              ? "bg-red-500"
+                              : (currentOccupancy / Number(capacity)) >= 0.75
+                              ? "bg-amber-500"
+                              : "bg-indigo-600"
+                          }`}
+                          style={{ width: `${Math.min(100, (currentOccupancy / Number(capacity)) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Recaudo de Caja Abierta */}
+                <div className={`${styles.card} flex items-center gap-4`}>
+                  <div className={`${styles.statIconContainer} ${styles.statIconSuccess}`}>
+                    <DollarSign size={32} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className={styles.cardTitle}>
+                      Caja Turno Actual
+                    </h3>
+                    <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 truncate">
+                      {new Intl.NumberFormat("es-CO", {
+                        style: "currency",
+                        currency: "COP",
+                        minimumFractionDigits: 0,
+                      }).format(currentShiftRevenue)}
+                    </p>
+                    <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                      {shiftWithdrawals > 0
+                        ? `Retiros: ${new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(shiftWithdrawals)}`
+                        : "Sin retiros en este turno"}
+                    </p>
                   </div>
                 </div>
               </div>
+
+              {/* Alerta de Abonados Próximos a Vencer */}
+              {expiringSubscribers.length > 0 && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-amber-100 text-amber-800 rounded-2xl flex-shrink-0">
+                      <AlertTriangle size={20} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900 text-sm">
+                        {expiringSubscribers.length} abonado{expiringSubscribers.length > 1 ? "s" : ""} por vencer o vencido{expiringSubscribers.length > 1 ? "s" : ""}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        {expiringSubscribers.map(s => `${s.plate} (${s.end_date})`).join(" • ")}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleTabChange("subscribers")}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-2xl transition-all shadow-sm shrink-0"
+                  >
+                    Gestionar Abonados
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
 
               {weeklyStats.length > 0 && (
                 <div className={styles.card}>
@@ -1072,8 +1236,8 @@ export default function AdminPage() {
                     <h3 className="text-slate-700  font-extrabold break-words">
                       Ingresos Acumulados (
                       {statPeriod === "7days"
-                        ? "Últimos 7 Días"
-                        : "Últimos 30 Días"}
+                        ? "Ãšltimos 7 DÃ­as"
+                        : "Ãšltimos 30 DÃ­as"}
                       ):
                       <span className="sm:ml-2 text-emerald-600 font-bold">
                         {new Intl.NumberFormat("es-CO", {
@@ -1097,8 +1261,8 @@ export default function AdminPage() {
                       }}
                       className="px-3 py-1.5 border border-slate-200  text-sm rounded-3xl outline-none focus:ring-2 focus:ring-indigo-500"
                     >
-                      <option value="7days">Últimos 7 días</option>
-                      <option value="30days">Últimos 30 días</option>
+                      <option value="7days">Ãšltimos 7 dÃ­as</option>
+                      <option value="30days">Ãšltimos 30 dÃ­as</option>
                     </select>
                   </div>
                   <div className="h-64 mt-6 [&_.recharts-wrapper]:outline-none [&_.recharts-surface]:outline-none [&_*:focus]:outline-none">
@@ -1188,7 +1352,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* TAB: INGRESO MANUAL */}
+          {/* TAB: CAJA */}
           {activeTab === "cash_closures" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <CashClosuresHistory
@@ -1198,6 +1362,13 @@ export default function AdminPage() {
                 shiftWithdrawals={shiftWithdrawals}
                 onRegisterClosed={() => fetchEmployees(parkingLot.id)}
               />
+            </div>
+          )}
+
+          {/* TAB: REPORTES */}
+          {activeTab === "reports" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <ReportsTab parkingLotId={parkingLot.id} />
             </div>
           )}
 
@@ -1249,6 +1420,13 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* TAB: ROLES PERSONALIZADOS */}
+          {activeTab === "roles" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CustomRoles parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
           {/* TAB: REGISTRO DE TURNOS */}
           {activeTab === "employee_logs" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1270,7 +1448,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* TAB: CONFIGURACIÓN */}
+          {/* TAB: CONFIGURACIÃ“N */}
           {/* TAB: INSPECTIONS */}
           {activeTab === "inspections" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1287,7 +1465,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <h2 className={styles.sectionTitle}>
-                      Configuración del Parqueadero
+                      ConfiguraciÃ³n del Parqueadero
                     </h2>
                     <p className={styles.sectionSubtitle}>
                       Ajustes generales y campos personalizados
@@ -1323,7 +1501,7 @@ export default function AdminPage() {
                           />
                         </label>
                         <p className="text-xs text-slate-500 text-center sm:text-left">
-                          Formatos recomendados: PNG o JPG. Tamaño máx: 2MB.
+                          Formatos recomendados: PNG o JPG. TamaÃ±o mÃ¡x: 2MB.
                         </p>
                       </div>
                     </div>
@@ -1345,7 +1523,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <label className={styles.inputLabel}>
-                        Dirección Comercial
+                        DirecciÃ³n Comercial
                       </label>
                       <input
                         type="text"
@@ -1371,7 +1549,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <label className={styles.inputLabel}>
-                        Minutos de Cortesía (Entrada Gratis) *
+                        Minutos de CortesÃ­a (Entrada Gratis) *
                       </label>
                       <input
                         type="number"
@@ -1388,7 +1566,7 @@ export default function AdminPage() {
                         min="0"
                       />
                       <p className="text-xs text-slate-500 mt-1">
-                        Si está en 0, se empieza a cobrar acorde a la tabla
+                        Si estÃ¡ en 0, se empieza a cobrar acorde a la tabla
                         desde el minuto 1.
                       </p>
                     </div>
@@ -1442,11 +1620,11 @@ export default function AdminPage() {
                       <label className={styles.checkboxContainer}>
                         <div>
                           <span className={styles.checkboxLabel}>
-                            Impresión Automática
+                            ImpresiÃ³n AutomÃ¡tica
                           </span>
                           <span className={styles.checkboxDesc}>
                             Abre el recibo sin preguntar al ingresar un
-                            vehículo.
+                            vehÃ­culo.
                           </span>
                         </div>
                         <input
@@ -1465,7 +1643,7 @@ export default function AdminPage() {
                       <label className={styles.checkboxContainer}>
                         <div>
                           <span className={styles.checkboxLabel}>
-                            Confirmación de Ingreso
+                            ConfirmaciÃ³n de Ingreso
                           </span>
                           <span className={styles.checkboxDesc}>
                             Muestra un aviso intermedio para evitar
@@ -1511,10 +1689,10 @@ export default function AdminPage() {
                         <label className={`${styles.checkboxContainer} animate-in fade-in slide-in-from-top-3`}>
                           <div>
                             <span className={styles.checkboxLabel}>
-                              Exigir Foto de Observación
+                              Exigir Foto de ObservaciÃ³n
                             </span>
                             <span className={styles.checkboxDesc}>
-                              Obliga a tomar una foto con la cámara si hay
+                              Obliga a tomar una foto con la cÃ¡mara si hay
                               observaciones.
                             </span>
                           </div>
@@ -1536,11 +1714,11 @@ export default function AdminPage() {
                         <label className={styles.checkboxContainer}>
                           <div>
                             <span className={styles.checkboxLabel}>
-                              Envío Automático de WhatsApp
+                              EnvÃ­o AutomÃ¡tico de WhatsApp
                             </span>
                             <span className={styles.checkboxDesc}>
                               Si el parqueadero tiene WhatsApp activado, enviar
-                              el recibo de forma automática al registrar salida.
+                              el recibo de forma automÃ¡tica al registrar salida.
                             </span>
                           </div>
                           <input
@@ -1565,7 +1743,7 @@ export default function AdminPage() {
                         Revista
                       </span>
                       <span className="text-sm text-slate-600 block mt-1">
-                        Habilita la capacidad para que los empleados registren revistas fotográficas de los vehículos.
+                        Habilita la capacidad para que los empleados registren revistas fotogrÃ¡ficas de los vehÃ­culos.
                       </span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1578,7 +1756,7 @@ export default function AdminPage() {
                           try {
                             await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
                             fetchParkingLot(parkingLot.id);
-                            setSuccess("Configuración de revistas actualizada.");
+                            setSuccess("ConfiguraciÃ³n de revistas actualizada.");
                             setTimeout(() => setSuccess(""), 3000);
                           } catch (err) {
                             console.error(err);
@@ -1608,7 +1786,7 @@ export default function AdminPage() {
                           try {
                             await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
                             fetchParkingLot(parkingLot.id);
-                            setSuccess("Configuración de revistas actualizada.");
+                            setSuccess("ConfiguraciÃ³n de revistas actualizada.");
                             setTimeout(() => setSuccess(""), 3000);
                           } catch (err) {
                             console.error(err);
@@ -1625,7 +1803,7 @@ export default function AdminPage() {
                         Seguridad de Equipos
                       </span>
                       <span className="text-sm text-slate-600 block mt-1">
-                        Esta opción determina si los empleados deben aprobar sus equipos antes de ingresar.{" "}
+                        Esta opciÃ³n determina si los empleados deben aprobar sus equipos antes de ingresar.{" "}
                         {parkingLot?.features?.require_device_approval ? (
                           <span className="text-emerald-600 font-bold">Actualmente ACTIVADA</span>
                         ) : (
@@ -1638,7 +1816,7 @@ export default function AdminPage() {
 
                   <div>
                     <label className={`${styles.inputLabel} mb-3`}>
-                      Tipos de Vehículos Permitidos
+                      Tipos de VehÃ­culos Permitidos
                     </label>
                     <div className="flex flex-wrap gap-3">
                       {vehicleTypes.map((type) => (
@@ -1661,7 +1839,7 @@ export default function AdminPage() {
                           Estado del Software y Plan
                         </h3>
                         <p className={styles.sectionSubtitle}>
-                          Información sobre su plan actual y capacidades
+                          InformaciÃ³n sobre su plan actual y capacidades
                         </p>
                       </div>
                     </div>
@@ -1669,14 +1847,14 @@ export default function AdminPage() {
                       <div className="space-y-4">
                         <div>
                           <label className={styles.inputLabel}>
-                            Fecha de Expiración
+                            Fecha de ExpiraciÃ³n
                           </label>
                           <div className="w-full p-3.5 border border-slate-200  rounded-3xl bg-white  text-slate-600  font-mono text-sm cursor-not-allowed">
                             {parkingLot?.subscription_end_date
                               ? new Date(
                                   parkingLot.subscription_end_date,
                                 ).toLocaleDateString()
-                              : "No especificada (Suscripción Ilimitada o Pendiente)"}
+                              : "No especificada (SuscripciÃ³n Ilimitada o Pendiente)"}
                           </div>
                           <p className="text-xs text-slate-500 mt-1">
                             Contacte al proveedor para renovar.
@@ -1730,7 +1908,7 @@ export default function AdminPage() {
                           </div>
                         ) : (
                           <div className="p-3 border border-amber-200 bg-amber-50 rounded-3xl text-sm text-amber-700">
-                            Sin plan específico configurado.
+                            Sin plan especÃ­fico configurado.
                           </div>
                         )}
                       </div>
@@ -1744,8 +1922,8 @@ export default function AdminPage() {
                           Campos Personalizados (Visitantes)
                         </h3>
                         <p className={styles.sectionSubtitle}>
-                          Datos extra a pedir al ingresar un vehículo (Ej.
-                          Casco, Teléfono)
+                          Datos extra a pedir al ingresar un vehÃ­culo (Ej.
+                          Casco, TelÃ©fono)
                         </p>
                       </div>
                       <button
@@ -1754,7 +1932,7 @@ export default function AdminPage() {
                         className="flex items-center gap-3 text-sm font-bold text-slate-800 bg-slate-100 hover:bg-indigo-100 px-3 py-3 rounded-3xl transition-colors"
                       >
                         <Plus size={16} />
-                        Añadir Campo
+                        AÃ±adir Campo
                       </button>
                     </div>
 
@@ -1846,7 +2024,7 @@ export default function AdminPage() {
                         </h3>
                         <p className={styles.sectionSubtitle}>
                           Datos extra a pedir o mostrar para los registros de
-                          parqueo privado (Ej. Placa, Teléfono)
+                          parqueo privado (Ej. Placa, TelÃ©fono)
                         </p>
                       </div>
                       <button
@@ -1855,7 +2033,7 @@ export default function AdminPage() {
                         className="flex items-center gap-3 text-sm font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-3 rounded-3xl transition-colors"
                       >
                         <Plus size={16} />
-                        Añadir Campo Privado
+                        AÃ±adir Campo Privado
                       </button>
                     </div>
 
@@ -1977,8 +2155,8 @@ export default function AdminPage() {
                           Comando de Base de Datos Requerido
                         </h4>
                         <p className="text-red-700 text-sm">
-                          Para guardar las nuevas preferencias de impresión y
-                          opciones, debes añadir la columna{" "}
+                          Para guardar las nuevas preferencias de impresiÃ³n y
+                          opciones, debes aÃ±adir la columna{" "}
                           <code>settings</code> jsonb en tu base de datos
                           mediante el editor SQL de Supabase:
                         </p>
@@ -2014,6 +2192,13 @@ export default function AdminPage() {
                   </div>
                 </form>
               </div>
+
+              {/* Módulos de Administración Residencial / Opcionales */}
+              {parkingLot && (
+                <div className="mt-6">
+                  <BuildingModulesConfig parkingLotId={parkingLot.id} />
+                </div>
+              )}
             </div>
           )}
 
