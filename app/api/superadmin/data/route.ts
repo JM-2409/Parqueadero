@@ -6,8 +6,48 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const supabaseUrl = (
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.SUPABASE_URL ||
+      ''
+    ).trim();
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+    const authHeader = req.headers.get('authorization');
+    const bearerMatch = authHeader?.match(/^Bearer\s+(\S+)$/i);
+
+    if (!bearerMatch) {
+      return NextResponse.json(
+        { success: false, error: 'No autenticado' },
+        { status: 401 },
+      );
+    }
+
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+      return NextResponse.json(
+        { success: false, error: 'Configuración de base de datos incompleta' },
+        { status: 500 },
+      );
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAuth.auth.getUser(bearerMatch[1]);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Sesión inválida o vencida' },
+        { status: 401 },
+      );
+    }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -15,9 +55,18 @@ export async function GET(req: Request) {
         persistSession: false
       }
     });
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
 
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json({ success: false, error: "⚠️ Error Crítico: La variable de entorno 'SUPABASE_SERVICE_ROLE_KEY' no está configurada en los ajustes del proyecto (Settings). Las funciones del Super Administrador requieren esta clave para cargar los usuarios." }, { status: 400 });
+    if (profileError) throw profileError;
+    if (profile?.role !== 'superadmin') {
+      return NextResponse.json(
+        { success: false, error: 'No tienes permisos de superadministrador' },
+        { status: 403 },
+      );
     }
 
     const { searchParams } = new URL(req.url);
@@ -76,6 +125,10 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: false, error: "Invalid type" }, { status: 400 });
   } catch (error: unknown) {
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    console.error('Error in /api/superadmin/data:', error);
+    return NextResponse.json(
+      { success: false, error: getErrorMessage(error) },
+      { status: 500 },
+    );
   }
 }

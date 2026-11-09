@@ -1,6 +1,7 @@
 -- ================================================================
 -- NEXOPARK - MÓDULOS DE ADMINISTRACIÓN RESIDENCIAL
 -- Ejecutar en Supabase SQL Editor
+-- OBSOLETO: no volver a ejecutar tras retirar estos módulos.
 -- ================================================================
 
 -- ────────────────────────────────────────────────────────────────

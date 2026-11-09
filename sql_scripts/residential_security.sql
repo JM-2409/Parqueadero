@@ -1,4 +1,5 @@
 -- SEGURIDAD Y PRIVACIDAD DEL RESIDENTE (RLS)
+-- OBSOLETO: no volver a ejecutar tras retirar estos módulos.
 
 -- Habilitar RLS en nuevas tablas
 ALTER TABLE resident_requests ENABLE ROW LEVEL SECURITY;

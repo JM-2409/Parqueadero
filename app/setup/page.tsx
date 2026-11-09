@@ -13,6 +13,18 @@ import {
 export default function VersionsPage() {
   const versions = [
     {
+      version: "v2.1.0",
+      date: "9 Noviembre 2026",
+      title: "Planes y control de suscripciones",
+      type: "feature",
+      changes: [
+        "Gestión de planes, facturas y pagos manuales desde el Superadministrador.",
+        "La vigencia y el plan del parqueadero se actualizan al confirmar el pago completo.",
+        "Precios públicos sincronizados con los planes activos de la plataforma.",
+        "Actualización de configuración y dependencias de TypeScript.",
+      ],
+    },
+    {
       version: "v2.0.0",
       date: "8 Noviembre 2026",
       title: "PWA, Caja Menor y Gestión Administrativa",

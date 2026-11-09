@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Car,
@@ -22,10 +22,50 @@ import {
   Lock,
   Globe,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import {
+  formatSubscriptionPrice,
+  type SubscriptionPlan,
+} from "@/lib/subscriptions";
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState("");
   const appName = process.env.NEXT_PUBLIC_APP_NAME || "NexoPark";
+
+  useEffect(() => {
+    let active = true;
+
+    const loadPlans = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("subscription_plans")
+          .select(
+            "id, name, price, description, currency, billing_interval, max_branches, allow_custom_roles, allow_monthly_subscribers, is_active",
+          )
+          .eq("is_active", true)
+          .order("price", { ascending: true });
+
+        if (!active) return;
+        if (error) throw error;
+        setPlans((data || []) as SubscriptionPlan[]);
+      } catch (error: unknown) {
+        console.error("Error al cargar los planes públicos:", error);
+        setPlansError(
+          "No fue posible cargar los precios. Contáctanos para recibir información.",
+        );
+      } finally {
+        if (active) setPlansLoading(false);
+      }
+    };
+
+    void loadPlans();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div
@@ -230,8 +270,8 @@ export default function Home() {
               {[
                 {
                   icon: MapPin,
-                  title: "Multi-Sucursal",
-                  desc: "Administra múltiples sedes de parqueaderos desde una sola cuenta central.",
+                  title: "Planes escalables",
+                  desc: "Elige un plan para una sede o para administrar varias ubicaciones, según las capacidades contratadas.",
                 },
                 {
                   icon: Clock,
@@ -369,82 +409,113 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {/* Plan Básico */}
-              <div
-                className="rounded-2xl p-8 flex flex-col bg-white border border-slate-200 shadow-sm"
-              >
-                <p className="text-xs font-bold uppercase tracking-widest mb-2 text-slate-500">Básico</p>
-                <p className="text-sm mb-6 text-slate-700">Hasta 50 celdas de parqueo</p>
-                <div className="mb-8">
-                  <span className="text-4xl font-black text-slate-900">$15.000</span>
-                  <span className="text-sm ml-1 text-slate-500">/mes</span>
-                </div>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {["3 operarios", "Recibos digitales", "1 ubicación"].map(f => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-slate-700">
-                      <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href="#contact" className="block w-full py-3 text-center rounded-xl font-bold text-sm text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300"
-                >
-                  Solicitar Plan
-                </a>
+            {plansLoading ? (
+              <div className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-600">
+                Cargando planes vigentes...
               </div>
+            ) : plansError ? (
+              <div
+                role="alert"
+                className="mx-auto max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center font-semibold text-amber-900"
+              >
+                {plansError}
+              </div>
+            ) : plans.length === 0 ? (
+              <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 text-center text-slate-600">
+                En este momento no hay planes disponibles. Contáctanos para
+                conocer las opciones.
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {plans.map((plan) => {
+                  const isRecommended = plan.name
+                    .toLocaleLowerCase()
+                    .includes("premium");
+                  const features = [
+                    plan.max_branches > 1
+                      ? `Hasta ${plan.max_branches} sedes`
+                      : "1 sede",
+                    ...(plan.allow_custom_roles
+                      ? ["Roles personalizados"]
+                      : []),
+                    ...(plan.allow_monthly_subscribers
+                      ? ["Abonados mensuales"]
+                      : []),
+                    "Gestión de operación y caja",
+                  ];
+                  const intervalLabels = {
+                    monthly: "mes",
+                    quarterly: "trimestre",
+                    yearly: "año",
+                  };
 
-              {/* Plan Profesional */}
-              <div
-                className="rounded-2xl p-8 flex flex-col relative bg-white border-2 border-indigo-600 shadow-md"
-              >
-                <div
-                  className="absolute -top-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-700 text-white"
-                >
-                  <Star size={12} /> Más Recomendado
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest mb-2 text-indigo-700">Profesional</p>
-                <p className="text-sm mb-6 text-slate-700">Parqueaderos de mediano tráfico</p>
-                <div className="mb-8">
-                  <span className="text-4xl font-black text-slate-900">$25.000</span>
-                  <span className="text-sm ml-1 text-indigo-700 font-semibold">/mes</span>
-                </div>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {["Hasta 150 celdas", "2 parqueaderos", "10 operarios", "Tarifas avanzadas", "Abonados mensuales", "Lista de control"].map(f => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-slate-800">
-                      <CheckCircle2 size={16} className="text-indigo-600 flex-shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href="#contact"
-                  className="block w-full py-3 text-center rounded-xl font-bold text-sm text-white bg-indigo-700 hover:bg-indigo-800"
-                >
-                  Solicitar Plan
-                </a>
+                  return (
+                    <article
+                      key={plan.id}
+                      className={`relative flex flex-col rounded-2xl bg-white p-8 shadow-sm ${
+                        isRecommended
+                          ? "border-2 border-indigo-600 shadow-md"
+                          : "border border-slate-200"
+                      }`}
+                    >
+                      {isRecommended && (
+                        <div className="absolute -top-3.5 left-1/2 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-indigo-700 px-3 py-1 text-xs font-bold text-white">
+                          <Star size={12} /> Plan destacado
+                        </div>
+                      )}
+                      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-700">
+                        {plan.name}
+                      </p>
+                      <p className="mb-6 min-h-10 text-sm text-slate-700">
+                        {plan.description ||
+                          (plan.max_branches > 1
+                            ? `Para operaciones de hasta ${plan.max_branches} sedes.`
+                            : "Para la operación de una sede de parqueadero.")}
+                      </p>
+                      <div className="mb-8">
+                        <span className="text-4xl font-black text-slate-900">
+                          {formatSubscriptionPrice(
+                            Number(plan.price),
+                            plan.currency,
+                          )}
+                        </span>
+                        <span className="ml-1 text-sm font-semibold text-slate-500">
+                          /{intervalLabels[plan.billing_interval]}
+                        </span>
+                      </div>
+                      <ul className="mb-8 flex-1 space-y-3">
+                        {features.map((feature) => (
+                          <li
+                            key={feature}
+                            className="flex items-center gap-3 text-sm text-slate-700"
+                          >
+                            <CheckCircle2
+                              size={16}
+                              className="flex-shrink-0 text-emerald-600"
+                            />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <a
+                        href={`https://wa.me/573014310093?text=${encodeURIComponent(
+                          `Hola NexoPark, quiero información sobre el plan ${plan.name}.`,
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block w-full rounded-xl py-3 text-center text-sm font-bold ${
+                          isRecommended
+                            ? "bg-indigo-700 text-white hover:bg-indigo-800"
+                            : "border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200"
+                        }`}
+                      >
+                        Solicitar este plan
+                      </a>
+                    </article>
+                  );
+                })}
               </div>
-
-              {/* Plan Empresarial */}
-              <div
-                className="rounded-2xl p-8 flex flex-col bg-white border border-slate-200 shadow-sm"
-              >
-                <p className="text-xs font-bold uppercase tracking-widest mb-2 text-slate-500">Empresarial</p>
-                <p className="text-sm mb-6 text-slate-700">Grandes operadores y redes</p>
-                <div className="mb-8">
-                  <span className="text-4xl font-black text-slate-900">$45.000</span>
-                  <span className="text-sm ml-1 text-slate-500">/mes</span>
-                </div>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {["Capacidad ilimitada", "Red de parqueaderos", "Operarios ilimitados", "Integraciones personalizadas", "Soporte dedicado 24/7"].map(f => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-slate-700">
-                      <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href="#contact" className="block w-full py-3 text-center rounded-xl font-bold text-sm text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300"
-                >
-                  Solicitar Plan
-                </a>
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
@@ -558,7 +629,9 @@ export default function Home() {
               <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-indigo-700 text-white">
                 <Car size={16} />
               </div>
-              <span className="font-bold text-slate-900">NexoPark v2.0.0</span>
+              <span className="font-bold text-slate-900">
+                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.1.0"}
+              </span>
               <span>— Gestión administrativa y operación de parqueaderos</span>
             </div>
             <p className="text-xs text-slate-500">© 2026 NexoPark. Todos los derechos reservados.</p>

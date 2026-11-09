@@ -10,6 +10,7 @@ describe('POST /api/parking-lots/update', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://fake-url.supabase.co';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'fake-anon-key';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'fake-service-role-key';
   });
 

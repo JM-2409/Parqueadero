@@ -1,4 +1,5 @@
 -- EXPANSIÓN HACIA GESTIÓN RESIDENCIAL INTEGRAL
+-- OBSOLETO: no volver a ejecutar tras retirar estos módulos.
 
 -- 1. Actualizar roles en perfiles para incluir 'resident'
 ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_role_check;

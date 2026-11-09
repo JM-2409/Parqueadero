@@ -46,7 +46,6 @@ import VehicleInspectionsHistory from "../employee/VehicleInspectionsHistory";
 import EmployeeManagement from "./EmployeeManagement";
 import EmployeeLogs from "./EmployeeLogs";
 import ReportsTab from "./ReportsTab";
-import BuildingModulesConfig from "./BuildingModulesConfig";
 import {
   FileEdit,
   Shield,
@@ -2213,12 +2212,6 @@ export default function AdminPage() {
                 </form>
               </div>
 
-              {/* Módulos de Administración Residencial / Opcionales */}
-              {parkingLot && (
-                <div className="mt-6">
-                  <BuildingModulesConfig parkingLotId={parkingLot.id} />
-                </div>
-              )}
             </div>
           )}
 

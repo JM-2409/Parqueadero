@@ -1,4 +1,4 @@
-# NexoPark v2.0.0
+# NexoPark v2.1.0
 
 Plataforma web para operar y administrar parqueaderos desde computadores, teléfonos y dispositivos instalados como aplicación web progresiva (PWA).
 
@@ -19,6 +19,13 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
 - Inicio de turno con persistencia local del nombre del operador entre recargas y cierres de la PWA.
 - Legalización de asignaciones: varias facturas por entrega, suma automática y devolución del saldo no gastado a caja menor.
 - La opción de cierre de caja está reservada al panel administrativo.
+
+### Superadministrador
+
+- Gestión de parqueaderos, administradores, dispositivos, métricas y configuración global.
+- Administración de planes, facturas y pagos manuales de suscripción.
+- La vigencia y el plan se actualizan de forma transaccional al confirmar el pago completo de una factura.
+- Los precios publicados en la página principal se leen de los planes activos en Supabase.
 
 ## Tecnologías
 
@@ -45,7 +52,7 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    SUPABASE_SERVICE_ROLE_KEY=
    NEXT_PUBLIC_APP_NAME=NexoPark
-   NEXT_PUBLIC_APP_VERSION=2.0.0
+   NEXT_PUBLIC_APP_VERSION=2.1.0
    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=
    ```
 
@@ -79,6 +86,8 @@ La aplicación utiliza Supabase y políticas de seguridad por fila para limitar 
 El saldo inicial de caja menor es cero y debe cargarse desde el panel administrativo. Las operaciones de fondos, asignaciones y anulaciones validan el rol y el parqueadero en la base de datos. El personal de portería puede consultar las asignaciones de su turno y enviar legalizaciones, pero no puede administrar el saldo ni cerrar la caja general.
 
 Las funciones transaccionales de caja menor usan `SECURITY DEFINER` y sólo permiten ejecución a usuarios autenticados; sus validaciones de rol y parqueadero son obligatorias. No concedas su ejecución a `anon` ni a `public`. Para quitar el aviso de contraseñas filtradas, activa la [protección de contraseñas filtradas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) en la configuración de autenticación de Supabase.
+
+La gestión de suscripciones usa `subscription_plans`, `subscription_invoices` y `subscription_payments`. Los planes activos son visibles públicamente para mostrar precios; sólo el superadministrador puede modificarlos. Los pagos se registran manualmente y la función `record_subscription_payment` confirma la factura y actualiza el plan y la vigencia en una sola transacción. No hay integración con una pasarela ni cobros automáticos.
 
 No publiques `SUPABASE_SERVICE_ROLE_KEY` ni la guardes en código cliente. Configura los secretos únicamente en el entorno de servidor.
 

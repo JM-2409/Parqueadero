@@ -13,6 +13,7 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 interface ParkingLotData {
   id?: number | string;
   is_suspended?: boolean;
+  subscription_end_date?: string | null;
   features?: {
     require_device_approval?: boolean;
     [key: string]: unknown;
@@ -101,6 +102,18 @@ function LoginContent() {
       if (profileData && profileData.parking_lots && (profileData.parking_lots as ParkingLotData).is_suspended) {
         await supabase.auth.signOut();
         setError("La plataforma está suspendida para este parqueadero. Por favor renueva tu suscripción.");
+        setLoading(false);
+        return;
+      }
+
+      const subscriptionEndDate = (profileData?.parking_lots as ParkingLotData | null)
+        ?.subscription_end_date;
+      if (
+        subscriptionEndDate &&
+        new Date(subscriptionEndDate).getTime() < Date.now()
+      ) {
+        await supabase.auth.signOut();
+        setError("Tu suscripción ha expirado. Por favor, contacta a ventas o actualiza tu suscripción.");
         setLoading(false);
         return;
       }

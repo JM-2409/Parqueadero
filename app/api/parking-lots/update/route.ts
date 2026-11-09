@@ -11,11 +11,8 @@ export async function POST(req: Request) {
       process.env.SUPABASE_URL ||
       ""
     ).trim();
-    let supabaseServiceKey = (
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
-      ""
-    ).trim();
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || "";
 
     const body = await req.json();
     const { parkingLotId, updateData } = body;
@@ -27,7 +24,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
       return NextResponse.json(
         { error: "Configuración de base de datos incompleta" },
         { status: 500 },
@@ -35,17 +32,18 @@ export async function POST(req: Request) {
     }
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    const bearerMatch = authHeader?.match(/^Bearer\s+(\S+)$/i);
+    if (!bearerMatch) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     const userClient = createClient(
       supabaseUrl,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseServiceKey,
+      supabaseAnonKey,
       {
         global: {
           headers: {
-            Authorization: authHeader,
+            Authorization: `Bearer ${bearerMatch[1]}`,
           },
         },
       },
@@ -54,7 +52,7 @@ export async function POST(req: Request) {
     const {
       data: { user },
       error: authError,
-    } = await userClient.auth.getUser(authHeader.replace("Bearer ", ""));
+    } = await userClient.auth.getUser(bearerMatch[1]);
 
     if (authError || !user) {
       return NextResponse.json(

@@ -13,7 +13,7 @@ export function VersionIndicator() {
 
   return (
     <div className="text-xs text-slate-500 text-center py-4 bg-slate-50 border-t border-slate-100 mt-auto">
-      <p>NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.0.0"}</p>
+      <p>NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.1.0"}</p>
     </div>
   );
 }

@@ -6,23 +6,29 @@ import { Check, X, Trash2, MonitorSmartphone } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/Spinner";
 import { getErrorMessage } from "@/lib/error";
+import { fetchSuperadminData } from "@/lib/superadmin-data";
+
+interface DeviceRecord {
+  id: string;
+  user_agent: string | null;
+  ip_address: string | null;
+  status: "pending" | "approved" | "rejected";
+  expires_at: string | null;
+  profiles: { email: string; role: string } | null;
+  parking_lots: { name: string } | null;
+}
 
 export default function DeviceManagement() {
-  const [devices, setDevices] = useState<any[]>([]);
+  const [devices, setDevices] = useState<DeviceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchDevices = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/superadmin/data?type=devices");
-      const result = await res.json();
-      if (!result.success) throw new Error(result.error);
-      const data = result.data || [];
-
-      // Filter out non-admin results since inner join isn't explicitly used for eq
-      const adminDevices = (data || []).filter((d: any) => d.profiles?.role === "admin");
-      setDevices(adminDevices);
+      setError("");
+      const data = await fetchSuperadminData<DeviceRecord[]>("devices");
+      setDevices(data);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
@@ -31,7 +37,22 @@ export default function DeviceManagement() {
   };
 
   useEffect(() => {
-    fetchDevices();
+    let cancelled = false;
+    const loadDevices = async () => {
+      try {
+        const data = await fetchSuperadminData<DeviceRecord[]>("devices");
+        if (!cancelled) setDevices(data);
+      } catch (err: unknown) {
+        if (!cancelled) setError(getErrorMessage(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadDevices();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleAction = async (id: string, action: 'approve_perm' | 'approve_temp' | 'reject' | 'delete') => {
@@ -40,23 +61,31 @@ export default function DeviceManagement() {
         const { error } = await supabase.from("device_approvals").delete().eq("id", id);
         if (error) throw error;
       } else {
-        const payload: any = { status: action.startsWith('approve') ? 'approved' : 'rejected' };
+        const payload: {
+          status: "approved" | "rejected";
+          expires_at?: string | null;
+        } = { status: action.startsWith('approve') ? 'approved' : 'rejected' };
         if (action === 'approve_perm') {
           payload.expires_at = null;
         } else if (action === 'approve_temp') {
           const days = window.prompt("¿Por cuántos días autorizar?", "1");
-          if (!days || isNaN(Number(days))) return;
+          if (days === null) return;
+          const durationDays = Number(days);
+          if (!Number.isInteger(durationDays) || durationDays < 1) {
+            setError("Ingresa una cantidad de días entera mayor que cero.");
+            return;
+          }
           const expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + Number(days));
+          expiresAt.setDate(expiresAt.getDate() + durationDays);
           payload.expires_at = expiresAt.toISOString();
         }
 
         const { error } = await supabase.from("device_approvals").update(payload).eq("id", id);
         if (error) throw error;
       }
-      fetchDevices();
+      await fetchDevices();
     } catch (err: unknown) {
-      alert("Error: " + getErrorMessage(err));
+      setError(getErrorMessage(err));
     }
   };
 

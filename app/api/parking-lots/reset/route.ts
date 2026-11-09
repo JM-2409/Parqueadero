@@ -11,11 +11,7 @@ export async function POST(req: Request) {
       process.env.SUPABASE_URL ||
       ""
     ).trim();
-    const supabaseServiceKey = (
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
-      ""
-    ).trim();
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
 
     const body = await req.json();
     const { parkingLotId } = body;
@@ -35,18 +31,26 @@ export async function POST(req: Request) {
     }
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    const bearerMatch = authHeader?.match(/^Bearer\s+(\S+)$/i);
+    if (!bearerMatch) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const token = authHeader.replace("Bearer ", "");
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+    if (!anonKey) {
+      return NextResponse.json(
+        { error: "Configuración de autenticación incompleta" },
+        { status: 500 },
+      );
+    }
+
     const userClient = createClient(
       supabaseUrl,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseServiceKey,
+      anonKey,
       {
         global: {
           headers: {
-            Authorization: authHeader,
+            Authorization: `Bearer ${bearerMatch[1]}`,
           },
         },
       },
@@ -55,7 +59,7 @@ export async function POST(req: Request) {
     const {
       data: { user },
       error: authError,
-    } = await userClient.auth.getUser(token);
+    } = await userClient.auth.getUser(bearerMatch[1]);
 
     if (authError || !user) {
       return NextResponse.json(
@@ -79,69 +83,30 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Delete parking sessions
-    const { error: sessionError } = await supabaseAdmin
-      .from("parking_sessions")
-      .delete()
-      .eq("parking_lot_id", parkingLotId);
+    const { data: resetResult, error: resetError } = await supabaseAdmin.rpc(
+      "reset_parking_lot_data",
+      { p_parking_lot_id: parkingLotId },
+    );
 
-    if (sessionError) {
-      console.error("Error deleting parking sessions:", sessionError);
+    if (resetError) {
+      console.error("Error resetting parking lot:", resetError);
+      return NextResponse.json(
+        { error: "No se pudieron reiniciar todos los datos del parqueadero." },
+        { status: 500 },
+      );
     }
 
-    // 2. Delete cash withdrawals
-    const { error: withdrawalError } = await supabaseAdmin
-      .from("cash_withdrawals")
-      .delete()
-      .eq("parking_lot_id", parkingLotId);
-
-    if (withdrawalError) {
-      console.error("Error deleting cash withdrawals:", withdrawalError);
-    }
-
-    // 3. Delete cash closures
-    const { error: closureError } = await supabaseAdmin
-      .from("cash_closures")
-      .delete()
-      .eq("parking_lot_id", parkingLotId);
-
-    if (closureError) {
-      console.error("Error deleting cash closures:", closureError);
-    }
-
-    // 4. Delete private parking spaces
-    const { error: privateSpacesError } = await supabaseAdmin
-      .from("private_parking_spaces")
-      .delete()
-      .eq("parking_lot_id", parkingLotId);
-
-    if (privateSpacesError) {
-      console.error("Error deleting private parking spaces:", privateSpacesError);
-    }
-
-    // 5. Delete vehicle inspections
-    const { error: inspectionsError } = await supabaseAdmin
-      .from("vehicle_inspections")
-      .delete()
-      .eq("parking_lot_id", parkingLotId);
-
-    if (inspectionsError) {
-      console.error("Error deleting vehicle inspections:", inspectionsError);
-    }
-
-    // 6. Reset receipt sequence to 0
-    const { error: resetSeqError } = await supabaseAdmin
-      .from("parking_lots")
-      .update({ receipt_sequence: 0 })
-      .eq("id", parkingLotId);
-
-    if (resetSeqError) {
-      console.error("Error resetting receipt sequence:", resetSeqError);
+    if (!resetResult?.success) {
+      console.error("Parking lot reset failed:", resetResult?.error);
+      return NextResponse.json(
+        { error: resetResult?.error || "No se pudieron reiniciar los datos." },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: "Todos los datos operativos del parqueadero se reiniciaron correctamente.",
+      message: resetResult.message || "Los datos se reiniciaron correctamente.",
     });
   } catch (error: unknown) {
     console.error("Error in /api/parking-lots/reset:", error);

@@ -3,21 +3,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Spinner } from "@/components/ui/Spinner";
-import { MessageCircle, Package, Car, Filter, Search, Calendar } from "lucide-react";
+import { MessageCircle, Car, Search } from "lucide-react";
 
 interface WaMessage {
   id: string;
   phone: string;
   message: string;
-  type: "parking" | "package" | "moving_permit" | "general";
+  type: "parking" | "general";
   sent_at: string;
   sent_by?: string;
 }
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
   parking:       { label: "Parqueadero", icon: Car,           color: "#818cf8" },
-  package:       { label: "Paquete",     icon: Package,       color: "#22d3ee" },
-  moving_permit: { label: "Trasteo",     icon: MessageCircle, color: "#fbbf24" },
   general:       { label: "General",     icon: MessageCircle, color: "#94a3b8" },
 };
 
@@ -115,7 +113,7 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
           <div className="text-center py-14" style={{ color: "#475569" }}>
             <MessageCircle size={44} className="mx-auto mb-3 opacity-30" />
             <p className="font-semibold">Sin mensajes registrados</p>
-            <p className="text-xs mt-1">Los mensajes de WhatsApp de parqueadero y paquetes aparecerán aquí</p>
+            <p className="text-xs mt-1">Los mensajes de WhatsApp del parqueadero aparecerán aquí</p>
           </div>
         ) : (
           <div className="space-y-2">

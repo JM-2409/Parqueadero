@@ -1,5 +1,6 @@
 "use client";
 import DeviceManagement from "./DeviceManagement";
+import SubscriptionManagement from "./SubscriptionManagement";
 import { Bell } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -22,6 +23,7 @@ import {
   CheckCircle2,
   Trash2,
   BarChart3,
+  CreditCard,
   Eye,
   EyeOff,
   MonitorSmartphone,
@@ -36,15 +38,62 @@ import { ImageCropper } from "@/components/ui/ImageCropper";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { getErrorMessage } from "@/lib/error";
 import { downloadClosureReport } from "@/lib/reports";
+import { fetchSuperadminData } from "@/lib/superadmin-data";
+
+interface ParkingLotFeatures {
+  [key: string]: boolean | undefined;
+  require_device_approval?: boolean;
+  whatsapp_receipts?: boolean;
+  monthly_subscribers?: boolean;
+  multiple_employees?: boolean;
+  reports?: boolean;
+  pdf_exports?: boolean;
+}
+
+interface ParkingLot {
+  id: string;
+  name: string;
+  nit: string;
+  address: string;
+  capacity: number;
+  created_at: string;
+  is_active?: boolean;
+  is_suspended?: boolean;
+  subscription_end_date: string | null;
+  features: ParkingLotFeatures | null;
+}
+
+interface SuperadminProfile {
+  id: string;
+  email: string;
+  parking_lot_id: string | null;
+  parking_lots: { name: string } | null;
+}
+
+interface CashClosure {
+  id: string;
+  closed_at: string;
+  parking_lot_id: string;
+  amount: number | null;
+  expected_amount: number | null;
+  expected_revenue: number | null;
+  withdrawn_amount: number | null;
+  total_revenue: number | null;
+  base_amount: number | null;
+  closed_by: string | null;
+  profiles: { full_name: string | null; email: string } | null;
+  parking_lots: { name: string } | null;
+}
 
 export default function SuperAdminPage() {
   const router = useRouter();
+  const [currentTime] = useState(() => Date.now());
   const [activeTab, setActiveTab] = useState("lots"); // lots, admins, settings
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const [parkingLots, setParkingLots] = useState<any[]>([]);
-  const [admins, setAdmins] = useState<any[]>([]);
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [parkingLots, setParkingLots] = useState<ParkingLot[]>([]);
+  const [admins, setAdmins] = useState<SuperadminProfile[]>([]);
+  const [employees, setEmployees] = useState<SuperadminProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingDevicesCount, setPendingDevicesCount] = useState(0);
   const [showDeviceAlert, setShowDeviceAlert] = useState(false);
@@ -59,7 +108,7 @@ export default function SuperAdminPage() {
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [subscriptionFilter, setSubscriptionFilter] = useState("all"); // 'all', 'active', 'suspended'
+  const [subscriptionFilter, setSubscriptionFilter] = useState("all");
 
   // Delete modal state
   const [deleteModal, setDeleteModal] = useState<{
@@ -91,7 +140,7 @@ export default function SuperAdminPage() {
   const [newLot, setNewLot] = useState({ name: "", nit: "", address: "" });
   const [isCreatingLot, setIsCreatingLot] = useState(false);
 
-  const [editingLot, setEditingLot] = useState<any>(null);
+  const [editingLot, setEditingLot] = useState<ParkingLot | null>(null);
   const [isEditingLot, setIsEditingLot] = useState(false);
 
   const [newAdmin, setNewAdmin] = useState({
@@ -222,34 +271,45 @@ export default function SuperAdminPage() {
       .select("*")
       .limit(1)
       .maybeSingle();
+    if (error) {
+      console.error("Error fetching app settings:", error);
+      setError("Error al cargar la configuración global: " + error.message);
+      return;
+    }
     if (data) {
       setAppSettings(data);
     }
   }, []);
 
-  const [metrics, setMetrics] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<CashClosure[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
   const fetchMetrics = useCallback(async () => {
     setLoadingMetrics(true);
-    // Fetch last 30 days of closures for all parking lots
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const { data, error } = await supabase
-      .from("cash_closures")
-      .select("*, parking_lots(name)")
-      .gte("closed_at", thirtyDaysAgo.toISOString())
-      .order("closed_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("cash_closures")
+        .select(
+          "*, parking_lots(name), profiles!cash_closures_closed_by_fkey(full_name, email)",
+        )
+        .gte("closed_at", thirtyDaysAgo.toISOString())
+        .order("closed_at", { ascending: false });
 
-    if (!error && data) {
-      setMetrics(data);
+      if (error) throw error;
+      setMetrics(data || []);
+    } catch (error: unknown) {
+      console.error("Error fetching superadmin metrics:", error);
+      setError("Error al cargar métricas: " + getErrorMessage(error));
+    } finally {
+      setLoadingMetrics(false);
     }
-    setLoadingMetrics(false);
   }, []);
 
-  const handleDownloadReport = async (closure: any) => {
+  const handleDownloadReport = async (closure: CashClosure) => {
     try {
       setIsExporting(closure.id);
       await downloadClosureReport(closure);
@@ -264,11 +324,11 @@ export default function SuperAdminPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("parking_lots")
-      .select("*, name")
+      .select("*")
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Error fetching parking lots:", error);
-      setError("Error al cargar parqueaderos");
+      setError("Error al cargar parqueaderos: " + error.message);
     } else {
       setParkingLots(data || []);
     }
@@ -277,14 +337,8 @@ export default function SuperAdminPage() {
 
   const fetchAdmins = useCallback(async () => {
     try {
-      const res = await fetch("/api/superadmin/data?type=admins");
-      const result = await res.json();
-      if (result.success) {
-        setAdmins(result.data || []);
-      } else {
-        console.error("Error fetching admins:", result.error);
-        setError(result.error);
-      }
+      const data = await fetchSuperadminData<SuperadminProfile[]>("admins");
+      setAdmins(data);
     } catch (error: unknown) {
       console.error("Error fetching admins:", error);
       setError(getErrorMessage(error));
@@ -293,14 +347,8 @@ export default function SuperAdminPage() {
 
   const fetchEmployees = useCallback(async () => {
     try {
-      const res = await fetch("/api/superadmin/data?type=employees");
-      const result = await res.json();
-      if (result.success) {
-        setEmployees(result.data || []);
-      } else {
-        console.error("Error fetching employees:", result.error);
-        setError(result.error);
-      }
+      const data = await fetchSuperadminData<SuperadminProfile[]>("employees");
+      setEmployees(data);
     } catch (error: unknown) {
       console.error("Error fetching employees:", error);
       setError(getErrorMessage(error));
@@ -309,15 +357,11 @@ export default function SuperAdminPage() {
 
   const fetchPendingDevicesCount = useCallback(async () => {
     try {
-      const res = await fetch("/api/superadmin/data?type=pendingDevices");
-      const result = await res.json();
-      if (result.success) {
-        setPendingDevicesCount(result.data || 0);
-      } else {
-        console.error("Error fetching pending devices count:", result.error);
-      }
+      const count = await fetchSuperadminData<number>("pendingDevices");
+      setPendingDevicesCount(count);
     } catch (err: unknown) {
       console.error("Error fetching pending devices count:", getErrorMessage(err));
+      setError(getErrorMessage(err));
     }
   }, []);
 
@@ -420,32 +464,38 @@ export default function SuperAdminPage() {
     setError("");
     setSuccess("");
 
-    if (appSettings.id) {
-      const { error } = await supabase
-        .from("app_settings")
-        .update({
-          app_name: appSettings.app_name,
-          logo_url: appSettings.logo_url,
-        })
-        .eq("id", appSettings.id);
+    try {
+      if (appSettings.id) {
+        const { error } = await supabase
+          .from("app_settings")
+          .update({
+            app_name: appSettings.app_name,
+            logo_url: appSettings.logo_url,
+          })
+          .eq("id", appSettings.id);
 
-      if (error) setError("Error al guardar configuración");
-      else setSuccess("Configuración guardada exitosamente");
-    } else {
-      const { error } = await supabase
-        .from("app_settings")
-        .insert([
-          { app_name: appSettings.app_name, logo_url: appSettings.logo_url },
-        ]);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("app_settings")
+          .insert({
+            app_name: appSettings.app_name,
+            logo_url: appSettings.logo_url,
+          })
+          .select()
+          .single();
 
-      if (error) setError("Error al guardar configuración");
-      else {
-        setSuccess("Configuración guardada exitosamente");
-        fetchAppSettings();
+        if (error) throw error;
+        setAppSettings(data);
       }
+      setSuccess("Configuración guardada exitosamente");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error: unknown) {
+      console.error("Error saving app settings:", error);
+      setError("Error al guardar configuración: " + getErrorMessage(error));
+    } finally {
+      setSavingSettings(false);
     }
-    setSavingSettings(false);
-    setTimeout(() => setSuccess(""), 3000);
   };
 
   const handleUpdateParkingLot = async (e: React.FormEvent) => {
@@ -514,13 +564,26 @@ export default function SuperAdminPage() {
       return;
     }
 
-    const { data, error: insertError } = await supabase
-      .from("parking_lots")
-      .insert([
-        {
+    try {
+      const { data: defaultPlan, error: planError } = await supabase
+        .from("subscription_plans")
+        .select("id")
+        .eq("name", "Básico")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (planError) throw planError;
+      if (!defaultPlan) {
+        throw new Error("No existe un plan Básico activo para asignar.");
+      }
+
+      const { error: insertError } = await supabase
+        .from("parking_lots")
+        .insert({
           name: sanitizeInput(newLot.name),
           nit: sanitizeInput(newLot.nit),
           address: sanitizeInput(newLot.address),
+          plan_id: defaultPlan.id,
           allowed_vehicles: ["motos", "carros", "bicicletas"],
           capacity: 100,
           show_revenue: false,
@@ -532,20 +595,19 @@ export default function SuperAdminPage() {
             reports: false,
             pdf_exports: false,
           },
-        },
-      ])
-      .select();
+        });
 
-    if (insertError) {
-      setError(insertError.message);
-    } else {
+      if (insertError) throw insertError;
       setSuccess("Parqueadero creado exitosamente");
       setNewLot({ name: "", nit: "", address: "" });
       await fetchParkingLots();
       setActiveTab("lots");
       setTimeout(() => setSuccess(""), 3000);
+    } catch (error: unknown) {
+      setError("Error al crear el parqueadero: " + getErrorMessage(error));
+    } finally {
+      setIsCreatingLot(false);
     }
-    setIsCreatingLot(false);
   };
 
   const handleCreateAdmin = async (e: React.FormEvent) => {
@@ -565,11 +627,17 @@ export default function SuperAdminPage() {
     const email = `${sanitizeInput(trimmedUsername).toLowerCase()}@parkingapp.local`;
 
     // Validar que el email no exista en profiles
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile, error: profileLookupError } = await supabase
       .from("profiles")
       .select("id")
       .eq("email", email.trim())
       .maybeSingle();
+
+    if (profileLookupError) {
+      setError("Error al comprobar el usuario: " + profileLookupError.message);
+      setIsCreatingAdmin(false);
+      return;
+    }
 
     if (existingProfile) {
       setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
@@ -816,6 +884,20 @@ export default function SuperAdminPage() {
           </button>
           <button
               onClick={() => {
+                setActiveTab("subscriptions");
+                setIsMobileMenuOpen(false);
+              }}
+              className={
+                activeTab === "subscriptions"
+                  ? `${styles.navItem} ${styles.navItemActive}`
+                  : styles.navItem
+              }
+          >
+            <CreditCard size={20} />
+            <span className="font-bold">Suscripciones</span>
+          </button>
+          <button
+              onClick={() => {
                 setActiveTab("devices");
                 setIsMobileMenuOpen(false);
               }}
@@ -883,6 +965,16 @@ export default function SuperAdminPage() {
               exit={{ opacity: 0, y: -10 }}
             >
               <DeviceManagement />
+            </motion.div>
+          )}
+          {activeTab === "subscriptions" && (
+            <motion.div
+              key="subscriptions"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <SubscriptionManagement />
             </motion.div>
           )}
           {/* TAB: PARQUEADEROS */}
@@ -974,6 +1066,7 @@ export default function SuperAdminPage() {
                     >
                       <option value="all">Todas las suscripciones</option>
                       <option value="active">Activas</option>
+                      <option value="expired">Vencidas</option>
                       <option value="suspended">Suspendidas</option>
                     </select>
                     <div className="relative w-full sm:w-64">
@@ -1001,8 +1094,23 @@ export default function SuperAdminPage() {
                       )
                       .filter((lot) => {
                         if (subscriptionFilter === "all") return true;
-                        if (subscriptionFilter === "active")
-                          return !lot.is_suspended;
+                        const expiry = lot.subscription_end_date
+                          ? new Date(lot.subscription_end_date).getTime()
+                          : null;
+                        if (subscriptionFilter === "active") {
+                          return (
+                            !lot.is_suspended &&
+                            (expiry === null || expiry >= currentTime)
+                          );
+                        }
+                        if (subscriptionFilter === "expired") {
+                          return (
+                            !lot.is_suspended &&
+                            expiry !== null &&
+                            !Number.isNaN(expiry) &&
+                            expiry < currentTime
+                          );
+                        }
                         if (subscriptionFilter === "suspended")
                           return lot.is_suspended;
                         return true;
@@ -1450,13 +1558,13 @@ export default function SuperAdminPage() {
                             Parqueadero
                           </th>
                           <th className="py-3 px-5 text-sm font-extrabold text-slate-600 ">
-                            Monto Calculado
+                            Ingresos esperados
                           </th>
                           <th className="py-3 px-5 text-sm font-extrabold text-slate-600 ">
-                            Monto Base
+                            Retiros de caja
                           </th>
                           <th className="py-3 px-5 text-sm font-extrabold text-slate-600 ">
-                            Total + Base
+                            Total neto
                           </th>
                           <th className="py-3 px-5 text-sm font-extrabold text-slate-600 ">
                             Cierre Por
@@ -1488,25 +1596,42 @@ export default function SuperAdminPage() {
                               {new Intl.NumberFormat("es-CO", {
                                 style: "currency",
                                 currency: "COP",
-                              }).format(m.expected_amount || m.total_amount)}
+                              }).format(
+                                Number(
+                                  m.expected_revenue ??
+                                    m.expected_amount ??
+                                    m.amount ??
+                                    0,
+                                ),
+                              )}
                             </td>
                             <td className="py-3 px-5 text-sm text-slate-600">
                               {new Intl.NumberFormat("es-CO", {
                                 style: "currency",
                                 currency: "COP",
-                              }).format(m.base_amount || 0)}
+                              }).format(Number(m.withdrawn_amount ?? 0))}
                             </td>
                             <td className="py-3 px-5 text-sm text-slate-800  font-bold">
                               {new Intl.NumberFormat("es-CO", {
                                 style: "currency",
                                 currency: "COP",
                               }).format(
-                                (m.expected_amount || m.total_amount) +
-                                  (m.base_amount || 0),
+                                Number(
+                                  m.total_revenue ??
+                                    Number(
+                                      m.expected_revenue ??
+                                        m.expected_amount ??
+                                        m.amount ??
+                                        0,
+                                    ) -
+                                      Number(m.withdrawn_amount ?? 0),
+                                ),
                               )}
                             </td>
                             <td className="py-3 px-5 text-sm text-slate-600">
-                              {m.closed_by || "Sistema"}
+                              {m.profiles?.full_name ||
+                                m.profiles?.email ||
+                                "Sistema"}
                             </td>
                             <td className="py-3 px-5 text-sm text-center">
                               <button

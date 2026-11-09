@@ -1,4 +1,6 @@
 -- FUNCIONALIDADES AVANZADAS DE GESTIÓN RESIDENCIAL
+-- OBSOLETO para gestión residencial: no volver a ejecutar tras retirarla.
+-- La migración de revistas sigue siendo independiente y debe conservarse.
 
 -- 1. Ventanas de Tiempo para Actualización de Documentos (Sorteos/Rotación)
 ALTER TABLE parking_lots ADD COLUMN IF NOT EXISTS doc_update_start TIMESTAMP WITH TIME ZONE;
