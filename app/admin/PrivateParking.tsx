@@ -616,7 +616,7 @@ export default function PrivateParking({
                 .maybeSingle();
 
             if (sessionData?.vehicle) {
-                foundData = sessionData.vehicle.custom_fields_data || {};
+                foundData = sessionData.vehicle[0]?.custom_fields_data || {};
                 sourceMessage = "vehículos activos";
             }
         }

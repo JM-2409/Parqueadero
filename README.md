@@ -53,7 +53,7 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
 
 3. Aplica en orden las migraciones versionadas de `supabase/migrations`, verificando primero cuáles ya aparecen en el historial del proyecto. No ejecutes todos los archivos SQL de `sql_scripts` ni repitas scripts antiguos: varios son correcciones manuales históricas y no forman una secuencia segura de migraciones. Para habilitar caja menor, asegúrate de que `20261108190000_caja_menor.sql` ya se haya aplicado.
 
-   En la instancia Parqueadero, caja menor ya está creada, pero esa migración no figura en el historial remoto. Antes de usar `supabase db push`, registra la migración existente como aplicada con `supabase migration repair 20261108190000 --status applied`; no la vuelvas a ejecutar manualmente.
+   En la instancia Parqueadero, la migración de caja menor ya existe en la base y está registrada como aplicada en el historial remoto. No la vuelvas a ejecutar manualmente.
 4. Inicia el servidor de desarrollo:
 
    ```bash
