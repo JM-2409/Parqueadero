@@ -12,6 +12,7 @@ const withPWA = withPWAInit({
   fallbacks: {},
   workboxOptions: {
     skipWaiting: true,
+    clientsClaim: true,
     exclude: [
       ({ url }: { url: URL }) => {
         if (!url || !url.pathname) return false;

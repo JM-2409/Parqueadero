@@ -27,7 +27,8 @@ import {
   Car,
   MonitorSmartphone,
   Upload,
-  Camera
+  Camera,
+  Wallet
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -35,6 +36,7 @@ import TariffSettings from "./TariffSettings";
 import SpecialTariffs from "./SpecialTariffs";
 import AdminHistory from "./AdminHistory";
 import CashClosuresHistory from "./CashClosuresHistory";
+import CashMinorManagement from "./CashMinorManagement";
 import ManualEntry from "./ManualEntry";
 import CustomRoles from "./CustomRoles";
 import PrivateParking from "./PrivateParking";
@@ -246,7 +248,7 @@ export default function AdminPage() {
       .eq("parking_lot_id", parkingLotId)
       .gte("entry_time", today.toISOString());
 
-    // OcupaciÃ³n actual: vehÃ­culos activos
+    // Ocupación actual: vehículos activos
     try {
       const { count: activeCount } = await supabase
         .from("parking_sessions")
@@ -255,10 +257,10 @@ export default function AdminPage() {
         .eq("status", "active");
       setCurrentOccupancy(activeCount || 0);
     } catch (e) {
-      console.error("Error al obtener ocupaciÃ³n actual", e);
+      console.error("Error al obtener ocupación actual", e);
     }
 
-    // Abonados que vencen en los prÃ³ximos 7 dÃ­as o ya vencidos
+    // Abonados que vencen en los próximos 7 días o ya vencidos
     try {
       const proximo = new Date();
       proximo.setDate(proximo.getDate() + 7);
@@ -399,7 +401,7 @@ export default function AdminPage() {
     checkUser();
   }, [checkUser]);
 
-  // Realtime: sesiones de parqueo (estadÃ­sticas del dÃ­a)
+  // Realtime: sesiones de parqueo (estadísticas del día)
   useEffect(() => {
     if (!parkingLot?.id) return;
 
@@ -425,9 +427,9 @@ export default function AdminPage() {
   }, [parkingLot?.id, fetchTodayStats]);
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Realtime: dispositivos pendientes de aprobaciÃ³n
-  // Cuando un empleado inicia sesiÃ³n en un dispositivo nuevo,
-  // el admin recibe una notificaciÃ³n inmediata sin refrescar.
+  // Realtime: dispositivos pendientes de aprobación
+  // Cuando un empleado inicia sesión en un dispositivo nuevo,
+  // el admin recibe una notificación inmediata sin refrescar.
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!parkingLot?.id) return;
@@ -459,7 +461,7 @@ export default function AdminPage() {
           filter: `parking_lot_id=eq.${parkingLot.id}`,
         },
         () => {
-          // Refrescar el conteo cuando cambia el estado de algÃºn dispositivo
+          // Refrescar el conteo cuando cambia el estado de algún dispositivo
           fetchPendingDevicesCount(parkingLot.id);
         },
       )
@@ -546,17 +548,17 @@ export default function AdminPage() {
         ) {
           setShowSqlAlert(true);
           setError(
-            "Falta una configuraciÃ³n en la base de datos para guardar estas preferencias.",
+            "Falta una configuración en la base de datos para guardar estas preferencias.",
           );
         } else {
-          setError(result.error || "Error al actualizar configuraciÃ³n");
+          setError(result.error || "Error al actualizar configuración");
         }
       } else {
-        setSuccess("ConfiguraciÃ³n actualizada exitosamente");
+        setSuccess("Configuración actualizada exitosamente");
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (err: unknown) {
-      setError("Error de red al actualizar configuraciÃ³n: " + getErrorMessage(err));
+      setError("Error de red al actualizar configuración: " + getErrorMessage(err));
     }
     setIsUpdatingSettings(false);
   };
@@ -589,7 +591,7 @@ export default function AdminPage() {
         .maybeSingle();
 
       if (existingProfile) {
-        setError("Este email ya estÃ¡ registrado en el sistema. Intenta con otro correo.");
+        setError("Este email ya está registrado en el sistema. Intenta con otro correo.");
         setIsCreatingEmployee(false);
         return;
       }
@@ -616,11 +618,11 @@ export default function AdminPage() {
       const message = getErrorMessage(err) || "Error al crear usuario";
 
       if (message.includes("already registered") || message.includes("already exists")) {
-        setError("Este usuario ya existe en autenticaciÃ³n. Por favor, elige otro correo.");
+        setError("Este usuario ya existe en autenticación. Por favor, elige otro correo.");
       } else if (message.includes("invalid email")) {
-        setError("El formato del email no es vÃ¡lido.");
+        setError("El formato del email no es válido.");
       } else if (message.includes("password")) {
-        setError("La contraseÃ±a es muy dÃ©bil. Debe tener al menos 6 caracteres.");
+        setError("La contraseña es muy débil. Debe tener al menos 6 caracteres.");
       } else {
         setError(`Error de red o servidor: ${message}`);
       }
@@ -749,7 +751,7 @@ export default function AdminPage() {
           <Settings size={36} className="text-indigo-600" />
         </div>
         <div className="text-center">
-          <p className="font-bold text-lg text-slate-900">Cargando panel de administraciÃ³n</p>
+          <p className="font-bold text-lg text-slate-900">Cargando panel de administración</p>
           <p className="text-sm mt-1 text-slate-600">Un momento por favor...</p>
         </div>
         <Spinner size={24} className="text-indigo-600" />
@@ -913,6 +915,18 @@ export default function AdminPage() {
             <DollarSign size={20} />
             <span className="font-bold whitespace-nowrap text-left">
               Caja
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              handleTabChange("cash_minor");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`${styles.navItem} ${activeTab === "cash_minor" ? styles.navItemActive : ""}`}
+          >
+            <Wallet size={20} />
+            <span className="font-bold whitespace-nowrap text-left">
+              Caja Menor
             </span>
           </button>
           <button
@@ -1236,8 +1250,8 @@ export default function AdminPage() {
                     <h3 className="text-slate-700  font-extrabold break-words">
                       Ingresos Acumulados (
                       {statPeriod === "7days"
-                        ? "Ãšltimos 7 DÃ­as"
-                        : "Ãšltimos 30 DÃ­as"}
+                        ? "Últimos 7 Días"
+                        : "Últimos 30 Días"}
                       ):
                       <span className="sm:ml-2 text-emerald-600 font-bold">
                         {new Intl.NumberFormat("es-CO", {
@@ -1261,8 +1275,8 @@ export default function AdminPage() {
                       }}
                       className="px-3 py-1.5 border border-slate-200  text-sm rounded-3xl outline-none focus:ring-2 focus:ring-indigo-500"
                     >
-                      <option value="7days">Ãšltimos 7 dÃ­as</option>
-                      <option value="30days">Ãšltimos 30 dÃ­as</option>
+                      <option value="7days">Últimos 7 días</option>
+                      <option value="30days">Últimos 30 días</option>
                     </select>
                   </div>
                   <div className="h-64 mt-6 [&_.recharts-wrapper]:outline-none [&_.recharts-surface]:outline-none [&_*:focus]:outline-none">
@@ -1365,6 +1379,12 @@ export default function AdminPage() {
             </div>
           )}
 
+          {activeTab === "cash_minor" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CashMinorManagement parkingLotId={parkingLot.id} />
+            </div>
+          )}
+
           {/* TAB: REPORTES */}
           {activeTab === "reports" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1448,7 +1468,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* TAB: CONFIGURACIÃ“N */}
+          {/* TAB: CONFIGURACIÓN */}
           {/* TAB: INSPECTIONS */}
           {activeTab === "inspections" && parkingLot && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1465,7 +1485,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <h2 className={styles.sectionTitle}>
-                      ConfiguraciÃ³n del Parqueadero
+                      Configuración del Parqueadero
                     </h2>
                     <p className={styles.sectionSubtitle}>
                       Ajustes generales y campos personalizados
@@ -1501,7 +1521,7 @@ export default function AdminPage() {
                           />
                         </label>
                         <p className="text-xs text-slate-500 text-center sm:text-left">
-                          Formatos recomendados: PNG o JPG. TamaÃ±o mÃ¡x: 2MB.
+                          Formatos recomendados: PNG o JPG. Tamaño máx.: 2MB.
                         </p>
                       </div>
                     </div>
@@ -1523,7 +1543,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <label className={styles.inputLabel}>
-                        DirecciÃ³n Comercial
+                        Dirección Comercial
                       </label>
                       <input
                         type="text"
@@ -1549,7 +1569,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <label className={styles.inputLabel}>
-                        Minutos de CortesÃ­a (Entrada Gratis) *
+                        Minutos de Cortesía (Entrada Gratis) *
                       </label>
                       <input
                         type="number"
@@ -1566,7 +1586,7 @@ export default function AdminPage() {
                         min="0"
                       />
                       <p className="text-xs text-slate-500 mt-1">
-                        Si estÃ¡ en 0, se empieza a cobrar acorde a la tabla
+                        Si está en 0, se empieza a cobrar acorde a la tabla
                         desde el minuto 1.
                       </p>
                     </div>
@@ -1620,11 +1640,11 @@ export default function AdminPage() {
                       <label className={styles.checkboxContainer}>
                         <div>
                           <span className={styles.checkboxLabel}>
-                            ImpresiÃ³n AutomÃ¡tica
+                            Impresión Automática
                           </span>
                           <span className={styles.checkboxDesc}>
                             Abre el recibo sin preguntar al ingresar un
-                            vehÃ­culo.
+                            vehículo.
                           </span>
                         </div>
                         <input
@@ -1643,7 +1663,7 @@ export default function AdminPage() {
                       <label className={styles.checkboxContainer}>
                         <div>
                           <span className={styles.checkboxLabel}>
-                            ConfirmaciÃ³n de Ingreso
+                            Confirmación de Ingreso
                           </span>
                           <span className={styles.checkboxDesc}>
                             Muestra un aviso intermedio para evitar
@@ -1689,10 +1709,10 @@ export default function AdminPage() {
                         <label className={`${styles.checkboxContainer} animate-in fade-in slide-in-from-top-3`}>
                           <div>
                             <span className={styles.checkboxLabel}>
-                              Exigir Foto de ObservaciÃ³n
+                              Exigir Foto de Observación
                             </span>
                             <span className={styles.checkboxDesc}>
-                              Obliga a tomar una foto con la cÃ¡mara si hay
+                              Obliga a tomar una foto con la cámara si hay
                               observaciones.
                             </span>
                           </div>
@@ -1714,11 +1734,11 @@ export default function AdminPage() {
                         <label className={styles.checkboxContainer}>
                           <div>
                             <span className={styles.checkboxLabel}>
-                              EnvÃ­o AutomÃ¡tico de WhatsApp
+                              Envío Automático de WhatsApp
                             </span>
                             <span className={styles.checkboxDesc}>
                               Si el parqueadero tiene WhatsApp activado, enviar
-                              el recibo de forma automÃ¡tica al registrar salida.
+                              el recibo de forma automática al registrar salida.
                             </span>
                           </div>
                           <input
@@ -1743,7 +1763,7 @@ export default function AdminPage() {
                         Revista
                       </span>
                       <span className="text-sm text-slate-600 block mt-1">
-                        Habilita la capacidad para que los empleados registren revistas fotogrÃ¡ficas de los vehÃ­culos.
+                        Habilita la capacidad para que los empleados registren revistas fotográficas de los vehículos.
                       </span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1756,7 +1776,7 @@ export default function AdminPage() {
                           try {
                             await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
                             fetchParkingLot(parkingLot.id);
-                            setSuccess("ConfiguraciÃ³n de revistas actualizada.");
+                            setSuccess("Configuración de revistas actualizada.");
                             setTimeout(() => setSuccess(""), 3000);
                           } catch (err) {
                             console.error(err);
@@ -1786,7 +1806,7 @@ export default function AdminPage() {
                           try {
                             await supabase.from("parking_lots").update({ inspection_settings: newSettings }).eq("id", parkingLot.id);
                             fetchParkingLot(parkingLot.id);
-                            setSuccess("ConfiguraciÃ³n de revistas actualizada.");
+                            setSuccess("Configuración de revistas actualizada.");
                             setTimeout(() => setSuccess(""), 3000);
                           } catch (err) {
                             console.error(err);
@@ -1803,7 +1823,7 @@ export default function AdminPage() {
                         Seguridad de Equipos
                       </span>
                       <span className="text-sm text-slate-600 block mt-1">
-                        Esta opciÃ³n determina si los empleados deben aprobar sus equipos antes de ingresar.{" "}
+                        Esta opción determina si los empleados deben aprobar sus equipos antes de ingresar.{" "}
                         {parkingLot?.features?.require_device_approval ? (
                           <span className="text-emerald-600 font-bold">Actualmente ACTIVADA</span>
                         ) : (
@@ -1816,7 +1836,7 @@ export default function AdminPage() {
 
                   <div>
                     <label className={`${styles.inputLabel} mb-3`}>
-                      Tipos de VehÃ­culos Permitidos
+                      Tipos de Vehículos Permitidos
                     </label>
                     <div className="flex flex-wrap gap-3">
                       {vehicleTypes.map((type) => (
@@ -1839,7 +1859,7 @@ export default function AdminPage() {
                           Estado del Software y Plan
                         </h3>
                         <p className={styles.sectionSubtitle}>
-                          InformaciÃ³n sobre su plan actual y capacidades
+                          Información sobre su plan actual y capacidades
                         </p>
                       </div>
                     </div>
@@ -1847,14 +1867,14 @@ export default function AdminPage() {
                       <div className="space-y-4">
                         <div>
                           <label className={styles.inputLabel}>
-                            Fecha de ExpiraciÃ³n
+                            Fecha de Expiración
                           </label>
                           <div className="w-full p-3.5 border border-slate-200  rounded-3xl bg-white  text-slate-600  font-mono text-sm cursor-not-allowed">
                             {parkingLot?.subscription_end_date
                               ? new Date(
                                   parkingLot.subscription_end_date,
                                 ).toLocaleDateString()
-                              : "No especificada (SuscripciÃ³n Ilimitada o Pendiente)"}
+                              : "No especificada (Suscripción Ilimitada o Pendiente)"}
                           </div>
                           <p className="text-xs text-slate-500 mt-1">
                             Contacte al proveedor para renovar.
@@ -1908,7 +1928,7 @@ export default function AdminPage() {
                           </div>
                         ) : (
                           <div className="p-3 border border-amber-200 bg-amber-50 rounded-3xl text-sm text-amber-700">
-                            Sin plan especÃ­fico configurado.
+                            Sin plan específico configurado.
                           </div>
                         )}
                       </div>
@@ -1922,8 +1942,8 @@ export default function AdminPage() {
                           Campos Personalizados (Visitantes)
                         </h3>
                         <p className={styles.sectionSubtitle}>
-                          Datos extra a pedir al ingresar un vehÃ­culo (Ej.
-                          Casco, TelÃ©fono)
+                          Datos extra a pedir al ingresar un vehículo (Ej.
+                          Casco, Teléfono)
                         </p>
                       </div>
                       <button
@@ -1932,7 +1952,7 @@ export default function AdminPage() {
                         className="flex items-center gap-3 text-sm font-bold text-slate-800 bg-slate-100 hover:bg-indigo-100 px-3 py-3 rounded-3xl transition-colors"
                       >
                         <Plus size={16} />
-                        AÃ±adir Campo
+                        Añadir Campo
                       </button>
                     </div>
 
@@ -2024,7 +2044,7 @@ export default function AdminPage() {
                         </h3>
                         <p className={styles.sectionSubtitle}>
                           Datos extra a pedir o mostrar para los registros de
-                          parqueo privado (Ej. Placa, TelÃ©fono)
+                          parqueo privado (Ej. Placa, Teléfono)
                         </p>
                       </div>
                       <button
@@ -2033,7 +2053,7 @@ export default function AdminPage() {
                         className="flex items-center gap-3 text-sm font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-3 rounded-3xl transition-colors"
                       >
                         <Plus size={16} />
-                        AÃ±adir Campo Privado
+                        Añadir Campo Privado
                       </button>
                     </div>
 
@@ -2155,8 +2175,8 @@ export default function AdminPage() {
                           Comando de Base de Datos Requerido
                         </h4>
                         <p className="text-red-700 text-sm">
-                          Para guardar las nuevas preferencias de impresiÃ³n y
-                          opciones, debes aÃ±adir la columna{" "}
+                          Para guardar las nuevas preferencias de impresión y
+                          opciones, debes añadir la columna{" "}
                           <code>settings</code> jsonb en tu base de datos
                           mediante el editor SQL de Supabase:
                         </p>

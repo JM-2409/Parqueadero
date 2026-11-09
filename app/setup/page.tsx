@@ -13,6 +13,19 @@ import {
 export default function VersionsPage() {
   const versions = [
     {
+      version: "v2.0.0",
+      date: "8 Noviembre 2026",
+      title: "PWA, Caja Menor y Gestión Administrativa",
+      type: "feature",
+      changes: [
+        "Persistencia del operador de turno entre recargas y cierres de la PWA.",
+        "Legalización de asignaciones con varias facturas y devolución automática del saldo.",
+        "Control administrativo de saldos, asignaciones y anulaciones de caja menor.",
+        "Cierre de caja reservado al perfil administrador.",
+        "Actualización de la activación del service worker y medición opcional con Google Analytics 4.",
+      ],
+    },
+    {
       version: "v1.2.0",
       date: "23 Marzo 2026",
       title: "Actualización Mayor: Landing Page y Mejoras UI",

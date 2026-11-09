@@ -172,7 +172,7 @@ export default function Home() {
             <p
               className="text-lg sm:text-xl mb-10 max-w-2xl leading-relaxed text-slate-700 font-medium"
             >
-              Control vehicular, tickets digitales, tarifas por minuto u hora, mensualidades, cierres de caja y reportes en tiempo real desde cualquier dispositivo.
+              Administra el parqueadero desde una PWA: controla vehículos, asigna y legaliza caja menor con varias facturas, gestiona tu equipo y consulta la operación en tiempo real desde cualquier dispositivo.
             </p>
 
             {/* CTAs */}
@@ -240,23 +240,23 @@ export default function Home() {
                 },
                 {
                   icon: BarChart3,
-                  title: "Cierres de Caja Precisos",
-                  desc: "Arqueos de caja automáticos, reporte de ingresos en vivo y trazabilidad inalterable de dinero.",
+                  title: "Control de Caja Menor",
+                  desc: "Asigna fondos, registra varias facturas por entrega y devuelve saldos con historial de movimientos y anulaciones.",
                 },
                 {
                   icon: Smartphone,
-                  title: "Compatibilidad Total",
-                  desc: "Funciona en teléfonos móviles, computadoras e impresoras térmicas sin instalaciones complejas.",
+                  title: "PWA siempre actualizada",
+                  desc: "Instálala en el móvil o computador y recibe las nuevas versiones sin depender de una instalación tradicional.",
                 },
                 {
                   icon: Lock,
-                  title: "Seguridad y Roles",
-                  desc: "Perfiles independientes para administradores y operarios con registros detallados de actividad.",
+                  title: "Gestión Administrativa",
+                  desc: "Administra operarios, roles, tarifas, cierres de caja y reportes con permisos diferenciados para cada perfil.",
                 },
                 {
                   icon: Globe,
-                  title: "Información en la Nube",
-                  desc: "Tus registros están respaldados constantemente y son accesibles en todo momento.",
+                  title: "Operación de Parqueadero",
+                  desc: "Registra entradas y salidas, calcula tarifas, controla la ocupación y consulta el historial de cada sede.",
                 },
               ].map((feat) => {
                 const Icon = feat.icon;
@@ -558,8 +558,8 @@ export default function Home() {
               <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-indigo-700 text-white">
                 <Car size={16} />
               </div>
-              <span className="font-bold text-slate-900">NexoPark</span>
-              <span>— Sistema de Administración de Parqueaderos</span>
+              <span className="font-bold text-slate-900">NexoPark v2.0.0</span>
+              <span>— Gestión administrativa y operación de parqueaderos</span>
             </div>
             <p className="text-xs text-slate-500">© 2026 NexoPark. Todos los derechos reservados.</p>
           </div>

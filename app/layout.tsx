@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ConnectionBanner } from "@/components/ui/ConnectionBanner";
 import { VersionIndicator } from "@/components/ui/VersionIndicator";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -12,10 +13,11 @@ const poppins = Poppins({
 });
 
 const appName = process.env.NEXT_PUBLIC_APP_NAME || "NexoPark";
+const googleAnalyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
 
 export const metadata: Metadata = {
   title: `${appName} · Gestión Inteligente de Parqueaderos`,
-  description: "Sistema avanzado de gestión, facturación y control de parqueaderos. Rápido, seguro y accesible desde cualquier dispositivo.",
+  description: "Gestión administrativa y operación de parqueaderos con PWA, control de caja menor y acceso desde cualquier dispositivo.",
   keywords: ["parqueadero", "parking", "gestión", "facturación", "sistema"],
   appleWebApp: {
     capable: true,
@@ -39,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className="scroll-smooth">
       <head>
+        <meta charSet="utf-8" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body
@@ -49,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ConnectionBanner />
         {children}
         <VersionIndicator />
+        {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
       </body>
     </html>
   );

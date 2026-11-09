@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Printer,
   ChevronDown,
+  ReceiptText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
@@ -32,14 +33,14 @@ import ReceiptModal from "./ReceiptModal";
 import ExitConfirmModal from "./ExitConfirmModal";
 import Image from "next/image";
 import InspectionsTab from "./InspectionsTab";
+import CashMinorLegalization from "./CashMinorLegalization";
 import { calculateFee, formatDateKey } from "@/lib/pricing";
 
 import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
 import { SuccessMessage } from "@/components/ui/SuccessMessage";
 import { getErrorMessage } from "@/lib/error";
-import { downloadClosureReport } from "@/lib/reports";
-import { cashFields, closeCashRegister, fetchCashSummary, fetchIsCashPaused } from "@/lib/cash";
+import { cashFields, fetchCashSummary, fetchIsCashPaused } from "@/lib/cash";
 import { OccupancyGauge } from "@/components/ui/OccupancyGauge";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 
@@ -95,7 +96,6 @@ export default function EmployeePage() {
   const [success, setSuccess] = useState("");
   const [showConfirmEntry, setShowConfirmEntry] = useState(false);
   const [confirmExitSession, setConfirmExitSession] = useState<any | null>(null);
-  const [showConfirmCloseRegister, setShowConfirmCloseRegister] = useState(false);
 
   // Search in Active Sessions
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
@@ -139,7 +139,6 @@ export default function EmployeePage() {
   const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
   const [isSubmittingExit, setIsSubmittingExit] = useState<string | null>(null);
   const [accumulatedRevenue, setAccumulatedRevenue] = useState(0);
-  const [isClosingRegister, setIsClosingRegister] = useState(false);
 
   const fetchRevenue = useCallback(async (id: string) => {
     try {
@@ -149,41 +148,6 @@ export default function EmployeePage() {
       console.error("No se pudo calcular el recaudo del turno", err);
     }
   }, []);
-
-  const handleCloseRegister = async () => {
-    setShowConfirmCloseRegister(true);
-  };
-
-  const executeCloseRegister = async () => {
-    setShowConfirmCloseRegister(false);
-    setIsClosingRegister(true);
-    try {
-      // El total se calcula y guarda en la base de datos en una sola operación,
-      // así el cierre coincide siempre con el reporte.
-      const newClosure = await closeCashRegister(
-        parkingLot.id,
-        `Cierre de caja - ${shiftName || "Operario"}`,
-      );
-
-      playBeep("success");
-      setSuccess("Caja cerrada exitosamente.");
-
-      if (newClosure) {
-        downloadClosureReport(newClosure, parkingLot?.name).catch((err: unknown) => {
-          setError(getErrorMessage(err));
-        });
-      }
-
-      setTimeout(() => setSuccess(""), 3000);
-      await fetchRevenue(parkingLot.id);
-    } catch (err: unknown) {
-      console.error("Error cerrado caja", err);
-      playBeep("error");
-      setError("No se pudo cerrar la caja: " + getErrorMessage(err));
-    } finally {
-      setIsClosingRegister(false);
-    }
-  };
 
   const fetchParkingLot = useCallback(
     async (id: string) => {
@@ -389,10 +353,16 @@ export default function EmployeePage() {
   }, []);
 
   useEffect(() => {
-    const savedShift = sessionStorage.getItem("shiftName");
-    if (savedShift && !isShiftSet) {
-      setShiftName(savedShift);
-      setIsShiftSet(true);
+    try {
+      const savedShift = localStorage.getItem("shiftName") || sessionStorage.getItem("shiftName");
+      if (savedShift) {
+        localStorage.setItem("shiftName", savedShift);
+        sessionStorage.removeItem("shiftName");
+        setShiftName(savedShift);
+        setIsShiftSet(true);
+      }
+    } catch {
+      setError("No se pudo recuperar el operador guardado en este dispositivo.");
     }
 
     setPrefAutoPrint(getSecurePref("pref_autoPrint", false));
@@ -401,7 +371,7 @@ export default function EmployeePage() {
     setPrefShowNotes(getSecurePref("pref_showNotes", false));
 
     checkUser();
-  }, [checkUser, isShiftSet]);
+  }, [checkUser]);
 
   useEffect(() => {
     if (!parkingLot?.id) return;
@@ -583,11 +553,31 @@ export default function EmployeePage() {
 
   const handleStartShift = (e: React.FormEvent) => {
     e.preventDefault();
-    if (shiftName.trim()) {
-      sessionStorage.setItem("shiftName", shiftName.trim());
-      setIsShiftSet(true);
-      logShiftAction("login", shiftName.trim());
+    const name = shiftName.trim();
+    if (!name) return;
+    try {
+      localStorage.setItem("shiftName", name);
+      sessionStorage.removeItem("shiftName");
+    } catch {
+      setError("No se pudo guardar el operador en este dispositivo. Revisa el almacenamiento del navegador.");
+      return;
     }
+    setShiftName(name);
+    setIsShiftSet(true);
+    void logShiftAction("login", name);
+  };
+
+  const handleEndShift = async () => {
+    await logShiftAction("logout", shiftName);
+    try {
+      localStorage.removeItem("shiftName");
+      sessionStorage.removeItem("shiftName");
+    } catch {
+      setError("No se pudo limpiar el operador guardado en este dispositivo.");
+    }
+    setIsShiftSet(false);
+    setShiftName("");
+    setActiveTab("operation");
   };
 
   const handleSearchPlate = (searchPlate: string) => {
@@ -1062,8 +1052,7 @@ export default function EmployeePage() {
   };
 
   const handleLogout = async () => {
-    await logShiftAction("logout", shiftName);
-    sessionStorage.removeItem("shiftName");
+    await handleEndShift();
     await supabase.auth.signOut();
     router.push("/");
   };
@@ -1108,6 +1097,7 @@ export default function EmployeePage() {
           <p className="text-center text-slate-600 mb-6 text-sm">
             Por favor, ingresa tu nombre para registrar quién está operando el sistema.
           </p>
+          {error && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p>}
 
           <form onSubmit={handleStartShift}>
             <input
@@ -1229,15 +1219,10 @@ export default function EmployeePage() {
               Turno Actual
             </p>
             <button
-              onClick={() => {
-                logShiftAction("logout", shiftName);
-                sessionStorage.removeItem("shiftName");
-                setIsShiftSet(false);
-                setShiftName("");
-              }}
-              className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded border border-slate-300 transition-colors font-bold"
+              onClick={() => void handleEndShift()}
+              className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded border border-slate-300 transition-colors font-bold"
             >
-              Cambiar
+              Terminar Turno / Cambiar Operador
             </button>
           </div>
           <div className="flex items-center gap-3 text-slate-900 bg-indigo-50 border border-indigo-200 p-3 rounded-2xl shadow-sm">
@@ -1268,6 +1253,16 @@ export default function EmployeePage() {
           >
             <History size={20} className="text-indigo-700" />
             <span className="whitespace-nowrap">Historial</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("cash_minor");
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "cash_minor" ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
+          >
+            <ReceiptText size={20} className="text-indigo-700" />
+            <span className="whitespace-nowrap">Legalizar caja menor</span>
           </button>
           <button
             onClick={() => {
@@ -1317,21 +1312,14 @@ export default function EmployeePage() {
           {parkingLot?.show_revenue && (
             <div className="mb-4 px-1">
               <p className="text-xs text-slate-600 mb-1 font-semibold">Recaudo del Turno</p>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-emerald-800 block mb-2">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
+                <span className="text-xl font-black text-emerald-800">
                   {new Intl.NumberFormat("es-CO", {
                     style: "currency",
                     currency: "COP",
                     minimumFractionDigits: 0,
                   }).format(accumulatedRevenue)}
                 </span>
-                <button
-                  onClick={handleCloseRegister}
-                  disabled={isClosingRegister || accumulatedRevenue === 0}
-                  className="w-full px-3 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-colors truncate shadow-sm"
-                >
-                  {isClosingRegister ? "Cerrando..." : "Cerrar Caja"}
-                </button>
               </div>
             </div>
           )}
@@ -1946,6 +1934,12 @@ export default function EmployeePage() {
             </div>
           )}
 
+          {activeTab === "cash_minor" && parkingLot && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CashMinorLegalization parkingLotId={parkingLot.id} employeeName={shiftName} />
+            </div>
+          )}
+
           {/* TAB: INSPECTIONS */}
           {activeTab === "inspections" && parkingLot && profile && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -2147,45 +2141,6 @@ export default function EmployeePage() {
               onCancel={() => setConfirmExitSession(null)}
               onConfirm={() => executeExit(confirmExitSession.id)}
             />
-          )}
-
-          {showConfirmCloseRegister && (
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-6 text-center">
-                  <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 shadow-md">
-                    <DollarSign size={32} />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-xl mb-2">
-                    Confirmar Cierre de Caja
-                  </h3>
-                  <p className="text-sm text-slate-600 font-bold">
-                    ¿Está seguro que desea cerrar la caja? El recaudo del turno volverá a $0.
-                  </p>
-                </div>
-                <div className="p-5 bg-slate-50 border-t border-slate-200 flex gap-3 justify-center">
-                  <button
-                    onClick={() => setShowConfirmCloseRegister(false)}
-                    className={`${styles.btnSecondary} w-full`}
-                    disabled={isClosingRegister}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={executeCloseRegister}
-                    className={`${styles.btnPrimary} w-full flex items-center justify-center gap-2 active:scale-95 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl`}
-                    disabled={isClosingRegister}
-                  >
-                    {isClosingRegister ? (
-                      <Spinner size={18} className="text-white" />
-                    ) : (
-                      <CheckCircle2 size={18} />
-                    )}
-                    Confirmar Cierre
-                  </button>
-                </div>
-              </div>
-            </div>
           )}
 
           {showConfirmEntry && (
