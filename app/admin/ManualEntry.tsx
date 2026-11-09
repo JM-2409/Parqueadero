@@ -62,6 +62,7 @@ export default function ManualEntry({
         const { data } = await supabase
           .from("vehicles")
           .select("*")
+          .eq("parking_lot_id", parkingLotId)
           .eq("plate", debouncedPlate.toUpperCase())
           .maybeSingle();
 
@@ -245,6 +246,7 @@ export default function ManualEntry({
       const { data: existingVehicle } = await supabase
         .from("vehicles")
         .select("id, brand, color, owner_name, custom_fields_data")
+        .eq("parking_lot_id", parkingLotId)
         .eq("plate", sanitizeInput(plate.toUpperCase()))
         .maybeSingle();
 
@@ -288,6 +290,7 @@ export default function ManualEntry({
           .from("vehicles")
           .insert([
             {
+              parking_lot_id: parkingLotId,
               plate: sanitizeInput(plate.toUpperCase()),
               type,
               brand: sanitizeInput(

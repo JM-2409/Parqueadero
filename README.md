@@ -51,7 +51,9 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
 
    `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` es opcional; usa el identificador de medición de Google Analytics 4, por ejemplo `G-XXXXXXXXXX`.
 
-3. En el editor SQL de Supabase, aplica las migraciones del directorio `supabase/migrations` que todavía no estén ejecutadas. Para habilitar caja menor, aplica `20261108190000_caja_menor.sql`.
+3. Aplica en orden las migraciones versionadas de `supabase/migrations`, verificando primero cuáles ya aparecen en el historial del proyecto. No ejecutes todos los archivos SQL de `sql_scripts` ni repitas scripts antiguos: varios son correcciones manuales históricas y no forman una secuencia segura de migraciones. Para habilitar caja menor, asegúrate de que `20261108190000_caja_menor.sql` ya se haya aplicado.
+
+   En la instancia Parqueadero, caja menor ya está creada, pero esa migración no figura en el historial remoto. Antes de usar `supabase db push`, registra la migración existente como aplicada con `supabase migration repair 20261108190000 --status applied`; no la vuelvas a ejecutar manualmente.
 4. Inicia el servidor de desarrollo:
 
    ```bash
@@ -72,9 +74,11 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
 
 ## Base de datos y seguridad
 
-La aplicación utiliza Supabase y políticas de seguridad por fila. La migración de caja menor crea saldos por parqueadero, asignaciones, facturas múltiples e historial con estado `activo` o `anulado`. Los cambios de saldo y la legalización se realizan mediante funciones transaccionales de PostgreSQL para evitar saldos negativos y registrar cada movimiento en una sola operación.
+La aplicación utiliza Supabase y políticas de seguridad por fila para limitar los registros al parqueadero del usuario. La migración de caja menor crea saldos por parqueadero, asignaciones, facturas múltiples e historial con estado `activo` o `anulado`. Los cambios de saldo y la legalización se realizan mediante funciones transaccionales de PostgreSQL para evitar saldos negativos y registrar cada movimiento en una sola operación.
 
 El saldo inicial de caja menor es cero y debe cargarse desde el panel administrativo. Las operaciones de fondos, asignaciones y anulaciones validan el rol y el parqueadero en la base de datos. El personal de portería puede consultar las asignaciones de su turno y enviar legalizaciones, pero no puede administrar el saldo ni cerrar la caja general.
+
+Las funciones transaccionales de caja menor usan `SECURITY DEFINER` y sólo permiten ejecución a usuarios autenticados; sus validaciones de rol y parqueadero son obligatorias. No concedas su ejecución a `anon` ni a `public`. Para quitar el aviso de contraseñas filtradas, activa la [protección de contraseñas filtradas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) en la configuración de autenticación de Supabase.
 
 No publiques `SUPABASE_SERVICE_ROLE_KEY` ni la guardes en código cliente. Configura los secretos únicamente en el entorno de servidor.
 

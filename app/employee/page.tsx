@@ -412,6 +412,7 @@ export default function EmployeePage() {
         const { data: vehicleData } = await supabase
           .from("vehicles")
           .select("*")
+          .eq("parking_lot_id", parkingLot.id)
           .eq("plate", debouncedPlate.toUpperCase())
           .maybeSingle();
 
@@ -659,6 +660,7 @@ export default function EmployeePage() {
         .from("vehicles")
         .insert([
           {
+            parking_lot_id: parkingLot.id,
             plate: sanitizeInput(plate.toUpperCase()),
             type,
             brand: sanitizeInput(
@@ -686,6 +688,7 @@ export default function EmployeePage() {
       const { data: existingVehicle } = await supabase
         .from("vehicles")
         .select("id, brand, color, owner_name, custom_fields_data")
+        .eq("parking_lot_id", parkingLot.id)
         .eq("plate", plate.toUpperCase())
         .maybeSingle();
 

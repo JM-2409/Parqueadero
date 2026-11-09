@@ -605,18 +605,18 @@ export default function PrivateParking({
 
         // 2. Check in public vehicles if not found in active spaces
         if (!foundData) {
-            const { data: vehicleData } = await supabase
-                .from("vehicles")
-                .select("*")
+            const { data: sessionData } = await supabase
+                .from("parking_sessions")
+                .select("entry_time, vehicle:vehicles!inner(custom_fields_data)")
                 .eq("parking_lot_id", parkingLotId)
-                .eq("plate", plateUpper)
                 .eq("status", "active")
+                .eq("vehicle.plate", plateUpper)
                 .order("entry_time", { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
-            if (vehicleData) {
-                foundData = vehicleData.custom_fields_data || {};
+            if (sessionData?.vehicle) {
+                foundData = sessionData.vehicle.custom_fields_data || {};
                 sourceMessage = "vehículos activos";
             }
         }

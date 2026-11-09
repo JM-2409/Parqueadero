@@ -51,6 +51,7 @@ export default function MonthlySubscribers({
         const { data } = await supabase
           .from("vehicles")
           .select("*")
+          .eq("parking_lot_id", parkingLotId)
           .eq("plate", debouncedSubPlate.toUpperCase())
           .maybeSingle();
 
