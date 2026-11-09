@@ -1,9 +1,13 @@
 import { expect, test, describe } from "vitest";
-import { calculateFee, TariffRule, PricingSettings, SpecialTariff } from "./pricing";
+import { calculateFee, formatDateKey, TariffRule, PricingSettings, SpecialTariff } from "./pricing";
 
 describe("calculateFee", () => {
-  const entryTime = new Date("2024-05-20T10:00:00Z"); // Lunes, 10 AM UTC
-  const exitTime = new Date("2024-05-20T11:00:00Z"); // Lunes, 11 AM UTC
+  const entryTime = new Date("2024-05-20T10:00:00-05:00");
+  const exitTime = new Date("2024-05-20T11:00:00-05:00");
+
+  test("interpreta los días de facturación en la zona horaria del parqueadero", () => {
+    expect(formatDateKey(new Date("2025-03-01T02:00:00Z"))).toBe("2025-02-28");
+  });
 
   test("should return 0 when rules is an empty array", () => {
     const rules: TariffRule[] = [];
@@ -45,7 +49,7 @@ describe("calculateFee", () => {
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "minuto", amount: 50 }
     ];
-    const exitMins = new Date("2024-05-20T10:30:00Z"); // 30 minutos
+    const exitMins = new Date("2024-05-20T10:30:00-05:00"); // 30 minutos
     const result = calculateFee(entryTime, exitMins, rules);
     expect(result).toBe(1500); // 30 mins * 50
   });
@@ -55,7 +59,7 @@ describe("calculateFee", () => {
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "segundo", amount: 1 }
     ];
-    const exitSecs = new Date("2024-05-20T10:05:00Z"); // 5 minutos = 300 segundos
+    const exitSecs = new Date("2024-05-20T10:05:00-05:00"); // 5 minutos = 300 segundos
     const result = calculateFee(entryTime, exitSecs, rules);
     expect(result).toBe(300); // 300 segundos * 1
   });
@@ -66,7 +70,7 @@ describe("calculateFee", () => {
       { vehicle_type: "car", rate_type: "hora", amount: 1000 }
     ];
     const settings: PricingSettings = { entry_grace_period_mins: 15 };
-    const earlyExit = new Date("2024-05-20T10:14:00Z"); // 14 mins (< 15 mins)
+    const earlyExit = new Date("2024-05-20T10:14:00-05:00"); // 14 mins (< 15 mins)
     const result = calculateFee(entryTime, earlyExit, rules, settings);
     expect(result).toBe(0);
   });
@@ -76,7 +80,7 @@ describe("calculateFee", () => {
       { vehicle_type: "car", rate_type: "hora", amount: 1000 }
     ];
     const settings: PricingSettings = { entry_grace_period_mins: 15 };
-    const lateExit = new Date("2024-05-20T10:16:00Z"); // 16 mins (> 15 mins)
+    const lateExit = new Date("2024-05-20T10:16:00-05:00"); // 16 mins (> 15 mins)
     const result = calculateFee(entryTime, lateExit, rules, settings);
     expect(result).toBe(1000); // Se cobra 1 hora completa
   });
@@ -84,8 +88,8 @@ describe("calculateFee", () => {
   // Pruebas de topes de turnos (Día y Noche) sin tiempos de gracia (para simplificar)
   test("should apply day shift limit (tope de día)", () => {
     // Entra a las 8 AM, sale a las 4 PM (8 horas)
-    const entryDay = new Date("2024-05-20T08:00:00Z");
-    const exitDay = new Date("2024-05-20T16:00:00Z");
+    const entryDay = new Date("2024-05-20T08:00:00-05:00");
+    const exitDay = new Date("2024-05-20T16:00:00-05:00");
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "hora", amount: 1000 },
       { vehicle_type: "car", rate_type: "dia", amount: 5000 } // Tope de día 5000
@@ -97,8 +101,8 @@ describe("calculateFee", () => {
 
   test("should apply night shift limit (tope de noche)", () => {
     // Entra a las 8 PM, sale a las 2 AM (6 horas)
-    const entryNight = new Date("2024-05-20T20:00:00Z");
-    const exitNight = new Date("2024-05-21T02:00:00Z");
+    const entryNight = new Date("2024-05-20T20:00:00-05:00");
+    const exitNight = new Date("2024-05-21T02:00:00-05:00");
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "hora", amount: 1000 },
       { vehicle_type: "car", rate_type: "noche", amount: 4000 } // Tope de noche 4000
@@ -113,8 +117,8 @@ describe("calculateFee", () => {
     // Turno día por defecto es 6:00 a 18:00
     // Entra a las 14:00 (4 horas del turno día)
     // Sale a las 22:00 (4 horas del turno noche)
-    const crossEntry = new Date("2024-05-20T14:00:00Z");
-    const crossExit = new Date("2024-05-20T22:00:00Z");
+    const crossEntry = new Date("2024-05-20T14:00:00-05:00");
+    const crossExit = new Date("2024-05-20T22:00:00-05:00");
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "hora", amount: 1000 },
       { vehicle_type: "car", rate_type: "dia", amount: 3000 },
@@ -131,8 +135,8 @@ describe("calculateFee", () => {
   // Pruebas de bloque de 12 horas
   test("should calculate block of 12h accurately", () => {
     // El bloque evalúa intervalos de 12h. Si entra 10 AM y sale 25 horas después (11 AM sig dia).
-    const entryBlock = new Date("2024-05-20T10:00:00Z");
-    const exitBlock = new Date("2024-05-21T11:00:00Z"); // 25 horas
+    const entryBlock = new Date("2024-05-20T10:00:00-05:00");
+    const exitBlock = new Date("2024-05-21T11:00:00-05:00"); // 25 horas
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "hora", amount: 1000 },
       { vehicle_type: "car", rate_type: "bloque_12h", amount: 5000 }
@@ -151,8 +155,8 @@ describe("calculateFee", () => {
     // Turno día empieza a las 06:00
     // Entra 05:45 (dentro del grace period de 15 min), sale a las 10:00.
     // Se debería ajustar la entrada a las 06:00
-    const entryEarly = new Date("2024-05-20T05:45:00Z");
-    const exitShift = new Date("2024-05-20T10:00:00Z");
+    const entryEarly = new Date("2024-05-20T05:45:00-05:00");
+    const exitShift = new Date("2024-05-20T10:00:00-05:00");
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "hora", amount: 1000 },
       { vehicle_type: "car", rate_type: "dia", amount: 5000, start_time: "06:00", end_time: "18:00" },
@@ -170,8 +174,8 @@ describe("calculateFee", () => {
     // Turno de día termina (y noche empieza) a las 18:00.
     // Entra 15:00, sale 18:10 (dentro del grace period de 15 min de salida para noche).
     // Se debería ajustar la salida a las 18:00.
-    const entryShift = new Date("2024-05-20T15:00:00Z");
-    const exitLate = new Date("2024-05-20T18:10:00Z");
+    const entryShift = new Date("2024-05-20T15:00:00-05:00");
+    const exitLate = new Date("2024-05-20T18:10:00-05:00");
     const rules: TariffRule[] = [
       { vehicle_type: "car", rate_type: "hora", amount: 1000 },
       { vehicle_type: "car", rate_type: "dia", amount: 5000, start_time: "06:00" },
@@ -190,14 +194,14 @@ describe("calculateFee", () => {
     ];
 
     test("debe aplicar tarifa especial diaria ($5.000) dentro del rango de vigencia", () => {
-      const entry = new Date("2025-03-01T08:00:00Z");
-      const exit = new Date("2025-03-01T18:00:00Z");
+      const entry = new Date("2025-03-01T08:00:00-05:00");
+      const exit = new Date("2025-03-01T18:00:00-05:00");
       const specialTariffs: SpecialTariff[] = [
         {
           plate: "ABC123",
           rate_type: "dia",
           amount: 5000,
-          start_date: "2025-03-01T00:00:00Z",
+          start_date: "2025-03-01T00:00:00-05:00",
           is_active: true
         }
       ];
@@ -207,14 +211,14 @@ describe("calculateFee", () => {
     });
 
     test("debe cobrar $0 en segundo ingreso el mismo día si la fecha ya fue pagada previa", () => {
-      const entry = new Date("2025-03-01T14:00:00Z");
-      const exit = new Date("2025-03-01T16:00:00Z");
+      const entry = new Date("2025-03-01T14:00:00-05:00");
+      const exit = new Date("2025-03-01T16:00:00-05:00");
       const specialTariffs: SpecialTariff[] = [
         {
           plate: "ABC123",
           rate_type: "dia",
           amount: 5000,
-          start_date: "2025-03-01T00:00:00Z",
+          start_date: "2025-03-01T00:00:00-05:00",
           is_active: true
         }
       ];
@@ -227,14 +231,14 @@ describe("calculateFee", () => {
     test("debe realizar cálculo mixto (tarifa normal antes de fecha especial + tarifa especial)", () => {
       // Ingresa el 28 de Feb a las 18:00 (6 horas antes del 1 de marzo)
       // Sale el 1 de Marzo a las 12:00
-      const entry = new Date("2025-02-28T18:00:00Z");
-      const exit = new Date("2025-03-01T12:00:00Z");
+      const entry = new Date("2025-02-28T18:00:00-05:00");
+      const exit = new Date("2025-03-01T12:00:00-05:00");
       const specialTariffs: SpecialTariff[] = [
         {
           plate: "ABC123",
           rate_type: "dia",
           amount: 5000,
-          start_date: "2025-03-01T00:00:00Z",
+          start_date: "2025-03-01T00:00:00-05:00",
           is_active: true
         }
       ];

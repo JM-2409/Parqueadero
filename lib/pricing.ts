@@ -23,6 +23,73 @@ export interface SpecialTariff {
   is_active?: boolean;
 }
 
+const PARKING_TIME_ZONE = "America/Bogota";
+const parkingDateTimeFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: PARKING_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23"
+});
+
+interface ParkingDateParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+function getParkingDateParts(timestamp: number): ParkingDateParts {
+  const parts = parkingDateTimeFormatter.formatToParts(new Date(timestamp));
+  const values = Object.fromEntries(parts.map(part => [part.type, Number(part.value)]));
+  return {
+    year: values.year,
+    month: values.month,
+    day: values.day,
+    hour: values.hour,
+    minute: values.minute,
+    second: values.second
+  };
+}
+
+function addCalendarDays(date: Pick<ParkingDateParts, "year" | "month" | "day">, days: number) {
+  const nextDate = new Date(Date.UTC(date.year, date.month - 1, date.day + days));
+  return {
+    year: nextDate.getUTCFullYear(),
+    month: nextDate.getUTCMonth() + 1,
+    day: nextDate.getUTCDate()
+  };
+}
+
+function getParkingTimestamp(
+  date: Pick<ParkingDateParts, "year" | "month" | "day">,
+  hour: number,
+  minute: number
+): number {
+  const targetAsUtc = Date.UTC(date.year, date.month - 1, date.day, hour, minute);
+  let timestamp = targetAsUtc;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const local = getParkingDateParts(timestamp);
+    const localAsUtc = Date.UTC(
+      local.year,
+      local.month - 1,
+      local.day,
+      local.hour,
+      local.minute,
+      local.second
+    );
+    timestamp = targetAsUtc - (localAsUtc - timestamp);
+  }
+
+  return timestamp;
+}
+
 function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule[]): number {
   let currentMs = startMs;
   let totalFee = 0;
@@ -52,32 +119,28 @@ function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule
 
   while (currentMs < endMs && iterations < maxIterations) {
     iterations++;
-    const currentDate = new Date(currentMs);
-    
-    const dayShiftStart = new Date(currentDate);
-    dayShiftStart.setHours(dayStartHour, dayStartMin, 0, 0);
-    
-    const nightShiftStart = new Date(currentDate);
-    nightShiftStart.setHours(nightStartHour, nightStartMin, 0, 0);
-    
-    if (nightShiftStart.getTime() <= dayShiftStart.getTime()) {
-      nightShiftStart.setDate(nightShiftStart.getDate() + 1);
+    const currentDate = getParkingDateParts(currentMs);
+    const dayShiftStart = getParkingTimestamp(currentDate, dayStartHour, dayStartMin);
+    const nightShiftDate = getParkingTimestamp(currentDate, nightStartHour, nightStartMin);
+    let nightShiftStart = nightShiftDate;
+
+    if (nightShiftStart <= dayShiftStart) {
+      nightShiftStart = getParkingTimestamp(addCalendarDays(currentDate, 1), nightStartHour, nightStartMin);
     }
-    
-    const nextDayShiftStart = new Date(dayShiftStart);
-    nextDayShiftStart.setDate(nextDayShiftStart.getDate() + 1);
+
+    const nextDayShiftStart = getParkingTimestamp(addCalendarDays(currentDate, 1), dayStartHour, dayStartMin);
 
     let currentShiftEndMs = 0;
     let isDayShift = true;
 
-    if (currentMs < dayShiftStart.getTime()) {
-      currentShiftEndMs = dayShiftStart.getTime();
+    if (currentMs < dayShiftStart) {
+      currentShiftEndMs = dayShiftStart;
       isDayShift = false;
-    } else if (currentMs >= dayShiftStart.getTime() && currentMs < nightShiftStart.getTime()) {
-      currentShiftEndMs = nightShiftStart.getTime();
+    } else if (currentMs >= dayShiftStart && currentMs < nightShiftStart) {
+      currentShiftEndMs = nightShiftStart;
       isDayShift = true;
     } else {
-      currentShiftEndMs = nextDayShiftStart.getTime();
+      currentShiftEndMs = nextDayShiftStart;
       isDayShift = false;
     }
 
@@ -129,10 +192,8 @@ function calculateIntervalCost(startMs: number, endMs: number, rules: TariffRule
 }
 
 export function formatDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const { year, month, day } = getParkingDateParts(date.getTime());
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 export function calculateFee(
@@ -181,17 +242,15 @@ export function calculateFee(
           let currentCursor = specialStartMs;
 
           while (currentCursor < specialEndMs) {
-            const currentDate = new Date(currentCursor);
-            const dateKey = formatDateKey(currentDate);
+            const currentDate = getParkingDateParts(currentCursor);
+            const dateKey = formatDateKey(new Date(currentCursor));
 
             if (!paidSet.has(dateKey)) {
               totalFee += Number(activeSpecial.amount) || 0;
             }
 
             // Move cursor to start of next day (00:00:00)
-            const nextDay = new Date(currentDate);
-            nextDay.setHours(24, 0, 0, 0);
-            currentCursor = nextDay.getTime();
+            currentCursor = getParkingTimestamp(addCalendarDays(currentDate, 1), 0, 0);
           }
         } else if (rateType === 'hora') {
           const durationMins = Math.ceil((specialEndMs - specialStartMs) / 60000);
@@ -250,35 +309,39 @@ export function calculateFee(
       nightStartMin = parseInt(m, 10) || 0;
     }
 
-    const checkAndAdjustEntryToShift = (baseDate: Date, targetHour: number, targetMin: number) => {
-      let shiftDate = new Date(baseDate);
-      shiftDate.setHours(targetHour, targetMin, 0, 0);
-      let diff = shiftDate.getTime() - entryMs;
+    const checkAndAdjustEntryToShift = (
+      baseDate: Pick<ParkingDateParts, "year" | "month" | "day">,
+      targetHour: number,
+      targetMin: number
+    ) => {
+      const shiftTimestamp = getParkingTimestamp(baseDate, targetHour, targetMin);
+      const diff = shiftTimestamp - entryMs;
       // If entry was BEFORE shift starts (within grace period), and exit is AFTER shift starts
-      if (diff > 0 && diff <= shiftGraceMs && exitMs >= shiftDate.getTime()) {
-        entryMs = shiftDate.getTime();
+      if (diff > 0 && diff <= shiftGraceMs && exitMs >= shiftTimestamp) {
+        entryMs = shiftTimestamp;
       }
     };
 
-    const checkAndAdjustExitToShift = (baseDate: Date, targetHour: number, targetMin: number) => {
-      let shiftDate = new Date(baseDate);
-      shiftDate.setHours(targetHour, targetMin, 0, 0);
-      let diff = exitMs - shiftDate.getTime();
+    const checkAndAdjustExitToShift = (
+      baseDate: Pick<ParkingDateParts, "year" | "month" | "day">,
+      targetHour: number,
+      targetMin: number
+    ) => {
+      const shiftTimestamp = getParkingTimestamp(baseDate, targetHour, targetMin);
+      const diff = exitMs - shiftTimestamp;
       // If exit was AFTER shift ends (within grace period), and entry is explicitly BEFORE shift ends
-      if (diff > 0 && diff <= shiftGraceMs && entryMs < shiftDate.getTime()) {
-        exitMs = shiftDate.getTime();
+      if (diff > 0 && diff <= shiftGraceMs && entryMs < shiftTimestamp) {
+        exitMs = shiftTimestamp;
       }
     };
 
     // Check yesterday, today, and tomorrow for shifts relative to entry/exit
     for (let offset = -1; offset <= 1; offset++) {
-      let tempEntryDate = new Date(entryMs);
-      tempEntryDate.setDate(tempEntryDate.getDate() + offset);
+      const tempEntryDate = addCalendarDays(getParkingDateParts(entryMs), offset);
       checkAndAdjustEntryToShift(tempEntryDate, dayStartHour, dayStartMin);
       checkAndAdjustEntryToShift(tempEntryDate, nightStartHour, nightStartMin);
       
-      let tempExitDate = new Date(exitMs);
-      tempExitDate.setDate(tempExitDate.getDate() + offset);
+      const tempExitDate = addCalendarDays(getParkingDateParts(exitMs), offset);
       checkAndAdjustExitToShift(tempExitDate, dayStartHour, dayStartMin);
       checkAndAdjustExitToShift(tempExitDate, nightStartHour, nightStartMin);
     }
