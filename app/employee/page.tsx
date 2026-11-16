@@ -76,7 +76,7 @@ const setSecurePref = (key: string, value: boolean): void => {
 export default function EmployeePage() {
   const router = useRouter();
   const offline = useOfflineQueue();
-  const [activeTab, setActiveTab] = useState("entry");
+  const [activeTab, setActiveTab] = useState("operation");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Shift state
@@ -579,7 +579,7 @@ export default function EmployeePage() {
     }
     setIsShiftSet(false);
     setShiftName("");
-    setActiveTab("entry");
+    setActiveTab("operation");
   };
 
   const handleSearchPlate = (searchPlate: string) => {
@@ -1242,28 +1242,14 @@ export default function EmployeePage() {
         <nav className="p-4 flex flex-col gap-2.5 flex-1 overflow-y-auto">
           <button
             onClick={() => {
-              setActiveTab("entry");
+              setActiveTab("operation");
               setIsMobileMenuOpen(false);
             }}
-            aria-current={activeTab === "entry" ? "page" : undefined}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "entry" ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
+            aria-current={["operation", "entry", "exit"].includes(activeTab) ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${["operation", "entry", "exit"].includes(activeTab) ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
           >
-            <LogIn size={20} className="text-indigo-700" />
-            <span className="whitespace-nowrap">Entrada</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("exit");
-              setIsMobileMenuOpen(false);
-            }}
-            aria-current={activeTab === "exit" ? "page" : undefined}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold ${activeTab === "exit" ? "bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-sm" : "hover:bg-slate-100 text-slate-700"}`}
-          >
-            <LogOut size={20} className="text-indigo-700" />
-            <span className="whitespace-nowrap">Salida</span>
-            <span className="ml-auto rounded-full bg-slate-200 px-2 py-0.5 text-xs font-extrabold text-slate-700">
-              {activeSessions.length}
-            </span>
+            <Car size={20} className="text-indigo-700" />
+            <span className="whitespace-nowrap">Operación</span>
           </button>
           <button
             onClick={() => {
@@ -1375,6 +1361,65 @@ export default function EmployeePage() {
 
           {success && <SuccessMessage message={success} />}
 
+          {activeTab === "operation" && (
+            <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="mb-6">
+                <p className="text-sm font-bold uppercase tracking-wider text-indigo-700">
+                  Panel de operación
+                </p>
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">
+                  ¿Qué deseas hacer?
+                </h1>
+                <p className="mt-2 text-slate-600">
+                  Selecciona una acción para continuar con la atención de vehículos.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("entry")}
+                  className="group flex min-h-48 flex-col items-start justify-between rounded-3xl border-2 border-indigo-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-500 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-200"
+                >
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
+                    <LogIn size={30} />
+                  </span>
+                  <span className="mt-5">
+                    <span className="block text-2xl font-black text-slate-900">
+                      Registrar entrada
+                    </span>
+                    <span className="mt-1 block text-sm text-slate-600">
+                      Ingresar un vehículo al parqueadero
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("exit")}
+                  className="group flex min-h-48 flex-col items-start justify-between rounded-3xl border-2 border-emerald-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-500 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <LogOut size={30} />
+                  </span>
+                  <span className="mt-5 flex w-full items-end justify-between gap-3">
+                    <span>
+                      <span className="block text-2xl font-black text-slate-900">
+                        Registrar salida
+                      </span>
+                      <span className="mt-1 block text-sm text-slate-600">
+                        Buscar un vehículo que está dentro
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-extrabold text-emerald-800">
+                      {activeSessions.length}
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </section>
+          )}
+
           {/* TAB: OPERATION */}
           {(activeTab === "entry" || activeTab === "exit") && (() => {
             const totalCap = parkingLot?.capacity || 100;
@@ -1402,6 +1447,14 @@ export default function EmployeePage() {
 
             return (
               <div className="flex flex-col gap-4 lg:gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("operation")}
+                  className="w-fit rounded-xl px-3 py-2 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  ← Volver a operaciones
+                </button>
+
                 {/* Offline & Queue Status Banner */}
                 {(!offline.isOnline || offline.pendingCount > 0) && (
                   <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
