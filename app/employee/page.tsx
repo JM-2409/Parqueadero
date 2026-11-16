@@ -543,6 +543,7 @@ export default function EmployeePage() {
       await supabase.from("employee_logs").insert([
         {
           parking_lot_id: parkingLot.id,
+          user_id: profile?.id,
           employee_name: name,
           action: action,
         },
@@ -819,6 +820,7 @@ export default function EmployeePage() {
           {
             parking_lot_id: parkingLot.id,
             vehicle_id: vehicleId,
+            entry_employee_id: profile?.id,
             status: "active",
             entry_employee_name: shiftName,
             extra_data: sanitizedExtraData,
@@ -989,6 +991,7 @@ export default function EmployeePage() {
         total_charged: finalFee,
         receipt_number: receiptNumber,
         duration_minutes: durationMinutes,
+        exit_employee_id: profile?.id,
         exit_employee_name: shiftName,
         ...cash,
       })
@@ -1170,9 +1173,9 @@ export default function EmployeePage() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row w-full overflow-hidden font-sans">
+    <div className="h-[100dvh] min-h-[100svh] bg-slate-50 text-slate-900 flex flex-col md:flex-row w-full overflow-hidden font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-white text-slate-900 p-4 flex justify-between items-center shadow-sm border-b border-slate-200 z-30 shrink-0">
+      <div className="md:hidden bg-white text-slate-900 p-3 sm:p-4 flex justify-between items-center shadow-sm border-b border-slate-200 z-30 shrink-0">
         <div className="flex items-center gap-3 font-bold text-lg">
           <Car size={24} className="text-indigo-700" />
           <span className="truncate max-w-[200px] font-extrabold text-slate-900">
@@ -1182,6 +1185,8 @@ export default function EmployeePage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={isMobileMenuOpen}
             className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl transition-colors active:scale-95 border border-slate-300"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -1346,7 +1351,7 @@ export default function EmployeePage() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 relative">
-        <div className="max-w-7xl mx-auto w-full p-4 lg:p-6 pb-24 md:pb-8">
+        <div className="max-w-7xl mx-auto w-full px-3 py-4 sm:p-5 lg:p-6 pb-24 md:pb-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-3xl flex items-center gap-3">
               <X size={20} className="flex-shrink-0" />
@@ -1424,7 +1429,7 @@ export default function EmployeePage() {
 
               <div className="flex flex-col xl:flex-row gap-4 lg:gap-6">
                 {/* Entry Form */}
-                <div className="xl:w-[380px] shrink-0 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 h-fit">
+                <div className="order-2 xl:order-1 xl:w-[380px] shrink-0 bg-white p-4 sm:p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 h-fit">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="p-3.5 bg-indigo-50 text-indigo-700 rounded-2xl border border-indigo-200">
                       <LogIn size={24} />
@@ -1675,7 +1680,7 @@ export default function EmployeePage() {
                 </div>
 
                 {/* Active Sessions */}
-                <div className="flex-1 bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 min-w-0">
+                <div className="order-1 xl:order-2 flex-1 bg-white p-4 sm:p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-200 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-4">
                       <div className="p-3.5 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-200">
@@ -1695,7 +1700,7 @@ export default function EmployeePage() {
                             placeholder="Buscar placa activa..."
                             value={activeSearchQuery}
                             onChange={(e) => setActiveSearchQuery(e.target.value.toUpperCase())}
-                            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
+                            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-base sm:text-sm font-bold"
                         />
                     </div>
                   </div>
