@@ -17,11 +17,14 @@ import {
   Zap,
   BarChart3,
   Smartphone,
-  Image as ImageIcon,
   MessageCircle,
   Star,
-  Lock,
   Globe,
+  Wallet,
+  Users,
+  Shield,
+  Camera,
+  FileCheck2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -156,6 +159,8 @@ export default function Home() {
           <button
             className="md:hidden p-2 rounded-xl transition-colors text-slate-800 bg-slate-100"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={isMobileMenuOpen}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -197,7 +202,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════
             HERO
         ═══════════════════════════════════════════════ */}
-        <section className="relative py-20 lg:py-28 bg-white border-b border-slate-200">
+        <section className="relative overflow-hidden py-20 lg:py-28 bg-gradient-to-br from-indigo-50 via-white to-cyan-50 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
             {/* Badge */}
             <div
@@ -221,7 +226,7 @@ export default function Home() {
             <p
               className="text-lg sm:text-xl mb-10 max-w-2xl leading-relaxed text-slate-700 font-medium"
             >
-              Administra el parqueadero desde una PWA: controla vehículos, asigna y legaliza caja menor con varias facturas, gestiona tu equipo y consulta la operación en tiempo real desde cualquier dispositivo.
+              Controla ingresos, tarifas, caja, equipo y sedes desde una sola plataforma. Consulta la operación en tiempo real y trabaja desde el computador, el celular o la aplicación web instalable.
             </p>
 
             {/* CTAs */}
@@ -242,15 +247,15 @@ export default function Home() {
               </a>
             </div>
 
-            {/* Métricas rápidas */}
-            <div className="mt-16 grid grid-cols-3 gap-6 sm:gap-12">
+            {/* Resumen de capacidades */}
+            <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
               {[
-                { value: "PWA", label: "Acceso móvil y escritorio" },
-                { value: "En vivo", label: "Actualizaciones operativas" },
-                { value: "Por sede", label: "Planes según tu operación" },
+                { value: "En un solo lugar", label: "Vehículos, caja y reportes" },
+                { value: "En tiempo real", label: "Cambios en espacios privados" },
+                { value: "A tu medida", label: "Planes y funciones por sede" },
               ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <p className="text-2xl sm:text-3xl font-black text-indigo-700">
+                <div key={stat.label} className="rounded-2xl border border-white bg-white/80 px-5 py-4 shadow-sm text-center">
+                  <p className="text-xl sm:text-2xl font-black text-indigo-700">
                     {stat.value}
                   </p>
                   <p className="text-xs sm:text-sm mt-1 font-semibold text-slate-600">{stat.label}</p>
@@ -278,34 +283,64 @@ export default function Home() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  icon: MapPin,
-                  title: "Planes escalables",
-                  desc: "Elige un plan para una sede o para administrar varias ubicaciones, según las capacidades contratadas.",
+                  icon: Car,
+                  title: "Control de vehículos",
+                  desc: "Registra entradas y salidas, calcula el valor de permanencia y consulta los vehículos activos.",
                 },
                 {
                   icon: Clock,
-                  title: "Tarifas Personalizables",
-                  desc: "Configura cobros por minuto, fracción, hora, día o mensualidad según el tipo de vehículo.",
+                  title: "Tarifas configurables",
+                  desc: "Define tarifas por tipo de vehículo, tiempo de permanencia, horarios y condiciones especiales.",
+                },
+                {
+                  icon: Wallet,
+                  title: "Caja y retiros",
+                  desc: "Consulta cierres, movimientos y retiros en un flujo organizado para facilitar el control diario.",
+                },
+                {
+                  icon: FileCheck2,
+                  title: "Caja menor trazable",
+                  desc: "Asigna fondos, registra varias facturas por entrega y devuelve saldos con historial de movimientos.",
+                },
+                {
+                  icon: MapPin,
+                  title: "Sedes y espacios privados",
+                  desc: "Administra varias sedes y consulta los cambios de los espacios privados en tiempo real.",
+                },
+                {
+                  icon: Users,
+                  title: "Abonados y equipo",
+                  desc: "Gestiona mensualidades, operarios, turnos y roles de acuerdo con las funciones de cada usuario.",
+                },
+                {
+                  icon: Star,
+                  title: "Planes y suscripciones",
+                  desc: "Consulta las opciones activas y administra la vigencia de cada parqueadero desde la plataforma.",
+                },
+                {
+                  icon: Shield,
+                  title: "Acceso por perfiles",
+                  desc: "Controla permisos y, si está habilitado, solicita aprobación antes de usar un dispositivo nuevo.",
+                },
+                {
+                  icon: Camera,
+                  title: "Inspecciones con evidencia",
+                  desc: "Registra revisiones de vehículos y consulta el historial con soporte fotográfico.",
                 },
                 {
                   icon: BarChart3,
-                  title: "Control de Caja Menor",
-                  desc: "Asigna fondos, registra varias facturas por entrega y devuelve saldos con historial de movimientos y anulaciones.",
+                  title: "Reportes e indicadores",
+                  desc: "Revisa ocupación, ingresos, actividad e historial para dar seguimiento a la operación.",
                 },
                 {
                   icon: Smartphone,
-                  title: "PWA siempre actualizada",
-                  desc: "Instálala en el móvil o computador y recibe las nuevas versiones sin depender de una instalación tradicional.",
+                  title: "Instalable en tus dispositivos",
+                  desc: "Usa NexoPark desde el navegador o instálalo como aplicación web progresiva en móviles y computadores.",
                 },
                 {
-                  icon: Lock,
-                  title: "Gestión Administrativa",
-                  desc: "Administra operarios, roles, tarifas, caja y reportes desde un menú organizado por áreas y con permisos por perfil.",
-                },
-                {
-                  icon: Globe,
-                  title: "Operación de Parqueadero",
-                  desc: "Registra entradas y salidas, calcula tarifas, controla la ocupación y consulta los cambios operativos en tiempo real.",
+                  icon: MessageCircle,
+                  title: "Recibos por WhatsApp",
+                  desc: "Comparte comprobantes con los clientes por WhatsApp cuando esta función esté habilitada.",
                 },
               ].map((feat) => {
                 const Icon = feat.icon;
@@ -334,31 +369,31 @@ export default function Home() {
         <section id="updates" className="py-20 bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.2.0</span>
+              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.3.0</span>
               <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 text-slate-900">
-                Una operación más clara y conectada
+                Una experiencia más completa, de principio a fin
               </h2>
               <p className="text-lg max-w-2xl mx-auto text-slate-600">
-                Mejoras recientes para agilizar la administración y mantener al equipo al tanto de la operación.
+                Consulta lo que ofrece NexoPark y trabaja con una navegación más clara, un acceso mejorado y una sesión que permanece activa al volver atrás.
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {[
                 {
-                  icon: BarChart3,
-                  title: "Administración organizada",
-                  desc: "El menú reúne las opciones por áreas para que caja, tarifas, equipo y reportes sean más fáciles de encontrar.",
+                  icon: Globe,
+                  title: "Inicio renovado",
+                  desc: "Una página más clara y completa para conocer las herramientas, novedades y planes disponibles.",
                 },
                 {
-                  icon: Zap,
-                  title: "Actualizaciones en vivo",
-                  desc: "Las vistas compatibles de parqueaderos privados reciben los cambios sin tener que recargar la página.",
+                  icon: ShieldCheck,
+                  title: "Acceso más cómodo",
+                  desc: "Formulario de ingreso más legible, con mejor manejo de errores y opción para mostrar u ocultar la contraseña.",
                 },
                 {
-                  icon: ImageIcon,
-                  title: "Imágenes optimizadas",
-                  desc: "Las fotos de historiales, recibos e inspecciones se cargan con optimización para mejorar la experiencia.",
+                  icon: ArrowRight,
+                  title: "Sesión conservada al volver",
+                  desc: "Al ingresar, la pantalla de acceso se reemplaza en el historial para evitar que el botón Atrás parezca cerrar la sesión.",
                 },
               ].map((update) => {
                 const Icon = update.icon;
@@ -391,18 +426,19 @@ export default function Home() {
                 <div>
                   <span className="badge-glow badge-emerald mb-4 inline-block">Flujo Operativo</span>
                   <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 text-slate-900">
-                    Procesos ultrarrápidos para evitar filas
+                    De la entrada al cierre, con cada dato en su lugar
                   </h2>
                   <p className="text-lg text-slate-600">
-                    Una interfaz limpia pensada para operarios en punto de pago e ingreso.
+                    Un flujo sencillo para registrar la operación y mantener informado al equipo.
                   </p>
                 </div>
 
                 <div className="space-y-5">
                   {[
-                    { n: 1, title: "Registro de Placa", desc: "Ingreso en menos de 3 segundos registrando placa, tipo de vehículo y casilla asignada." },
-                    { n: 2, title: "Emisión de Ticket", desc: "Comprobante impreso o enviado directamente por WhatsApp al cliente." },
-                    { n: 3, title: "Liquidación Automática", desc: "El sistema calcula el valor exacto según el tiempo de permanencia y la tarifa activa." },
+                    { n: 1, title: "Registra la entrada", desc: "Anota la placa, el tipo de vehículo y los datos requeridos por el parqueadero." },
+                    { n: 2, title: "Entrega el comprobante", desc: "Imprime el recibo o compártelo por WhatsApp si la función está habilitada." },
+                    { n: 3, title: "Liquida la salida", desc: "Consulta el valor calculado con base en el tiempo y la tarifa configurada." },
+                    { n: 4, title: "Revisa la operación", desc: "Administra cierres, movimientos, ocupación e historial desde el panel." },
                   ].map((step) => (
                     <div key={step.n} className="flex gap-4">
                       <div
@@ -425,7 +461,7 @@ export default function Home() {
                   className="rounded-2xl p-6 bg-slate-50 border border-slate-300 shadow-sm"
                 >
                   <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
-                    <span className="font-bold text-sm text-slate-800">Monitoreo de Vehículos Activos</span>
+                    <span className="font-bold text-sm text-slate-800">Vista de ejemplo · Vehículos activos</span>
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                       En Operación
                     </span>
@@ -589,29 +625,32 @@ export default function Home() {
             >
               <div className="grid md:grid-cols-5">
                 <div
-                  className="md:col-span-2 p-8 flex flex-col justify-between bg-slate-50 border-r border-slate-200"
+                  className="md:col-span-2 p-8 flex flex-col justify-between bg-gradient-to-br from-indigo-950 to-slate-900 text-white"
                 >
                   <div>
-                    <h3 className="text-2xl font-extrabold mb-3 text-slate-900">Contacto Directo</h3>
-                    <p className="text-sm mb-6 text-slate-600">
-                      Escríbenos para una demostración o asesoría en la implementación para tu parqueadero.
+                    <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-indigo-100">
+                      <MessageCircle size={14} /> Hablemos de tu operación
+                    </span>
+                    <h3 className="text-2xl font-extrabold mb-3 text-white">Encuentra el plan ideal</h3>
+                    <p className="text-sm mb-6 leading-relaxed text-indigo-100">
+                      Cuéntanos cómo funciona tu parqueadero y te ayudamos con una demostración o asesoría de implementación.
                     </p>
                   </div>
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-sm text-slate-700">
-                      <Mail size={18} className="text-indigo-700" />
-                      <span>Atención Inmediata</span>
+                    <div className="flex items-center gap-3 text-sm text-indigo-100">
+                      <Mail size={18} className="text-cyan-300" />
+                      <span>Asesoría según tus necesidades</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-slate-700">
-                      <ShieldCheck size={18} className="text-emerald-700" />
-                      <span>Plataforma Garantizada</span>
+                    <div className="flex items-center gap-3 text-sm text-indigo-100">
+                      <ShieldCheck size={18} className="text-emerald-300" />
+                      <span>Información sobre funciones y planes</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <a
                         href="https://wa.me/573014310093?text=Hola%20NexoPark%2C%20quisiera%20mas%20informacion"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-900"
+                        className="flex items-center gap-2 text-sm font-semibold text-emerald-300 hover:text-emerald-200"
                       >
                         <MessageCircle size={18} />
                         WhatsApp: +57 301 431 0093
@@ -621,53 +660,65 @@ export default function Home() {
                 </div>
 
                 {/* Formulario */}
-                <div className="md:col-span-3 p-8">
+                <div className="md:col-span-3 p-8 sm:p-10">
+                  <div className="mb-6">
+                    <p className="text-xs font-bold uppercase tracking-widest text-indigo-700">Solicita información</p>
+                    <p className="mt-1 text-sm text-slate-600">Completa tus datos y cuéntanos qué necesitas.</p>
+                  </div>
                   <form
                     action="https://formspree.io/f/xyzpjjdy"
                     method="POST"
-                    className="space-y-4"
+                    className="space-y-5"
                   >
                     <div>
-                      <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider text-slate-700">
+                      <label htmlFor="contact-name" className="block text-xs font-bold mb-1.5 uppercase tracking-wider text-slate-700">
                         Nombre
                       </label>
                       <input
+                        id="contact-name"
                         type="text"
                         name="name"
                         required
+                        maxLength={100}
+                        autoComplete="name"
                         className="input-dark"
                         placeholder="Tu nombre completo"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider text-slate-700">
-                        Email
+                      <label htmlFor="contact-email" className="block text-xs font-bold mb-1.5 uppercase tracking-wider text-slate-700">
+                        Correo electrónico
                       </label>
                       <input
+                        id="contact-email"
                         type="email"
                         name="email"
                         required
+                        maxLength={254}
+                        autoComplete="email"
                         className="input-dark"
                         placeholder="tu@email.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider text-slate-700">
+                      <label htmlFor="contact-message" className="block text-xs font-bold mb-1.5 uppercase tracking-wider text-slate-700">
                         Mensaje
                       </label>
                       <textarea
+                        id="contact-message"
                         name="message"
                         required
                         rows={4}
+                        maxLength={1000}
                         className="input-dark resize-none"
-                        placeholder="¿Cuántos espacios o sedes manejas?"
+                        placeholder="¿Cuántas sedes manejas y qué te gustaría mejorar?"
                       />
                     </div>
                     <button
                       type="submit"
                       className="btn-primary-glow w-full mt-2"
                     >
-                      Enviar Mensaje <ArrowRight size={18} />
+                      Enviar mensaje <ArrowRight size={18} />
                     </button>
                   </form>
                 </div>
@@ -690,7 +741,7 @@ export default function Home() {
                 <Car size={16} />
               </div>
               <span className="font-bold text-slate-900">
-                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.2.0"}
+                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.3.0"}
               </span>
               <span>— Gestión administrativa y operación de parqueaderos</span>
             </div>

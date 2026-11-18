@@ -13,6 +13,18 @@ import {
 export default function VersionsPage() {
   const versions = [
     {
+      version: "v2.3.0",
+      date: "18 Noviembre 2026",
+      title: "Página de inicio renovada y acceso más cómodo",
+      type: "feature",
+      changes: [
+        "Actualización visual de la página principal con información ampliada sobre las funciones, novedades y planes de NexoPark.",
+        "Mejoras de legibilidad, validación y accesibilidad en los formularios de contacto e inicio de sesión.",
+        "El ingreso reemplaza la pantalla de acceso en el historial del navegador para conservar la sesión al volver atrás.",
+        "Correcciones de presentación adaptable en las páginas públicas para computadores y dispositivos móviles.",
+      ],
+    },
+    {
       version: "v2.2.0",
       date: "18 Noviembre 2026",
       title: "Administración más clara y operación conectada",

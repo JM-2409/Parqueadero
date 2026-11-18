@@ -1,6 +1,13 @@
-# NexoPark v2.2.0
+# NexoPark v2.3.0
 
 Plataforma web para operar y administrar parqueaderos desde computadores, teléfonos y dispositivos instalados como aplicación web progresiva (PWA).
+
+## Novedades de la versión 2.3.0
+
+- Página principal actualizada con información ampliada sobre las funciones, novedades y planes activos.
+- Formularios de contacto e inicio de sesión renovados con mejoras de legibilidad y accesibilidad.
+- Al ingresar, la pantalla de acceso se reemplaza en el historial del navegador; al volver atrás, la sesión autenticada se conserva.
+- Diseño adaptable de las páginas públicas mejorado para computadores y dispositivos móviles.
 
 ## Novedades de la versión 2.2.0
 
@@ -61,7 +68,7 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    SUPABASE_SERVICE_ROLE_KEY=
    NEXT_PUBLIC_APP_NAME=NexoPark
-   NEXT_PUBLIC_APP_VERSION=2.2.0
+   NEXT_PUBLIC_APP_VERSION=2.3.0
    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=
    ```
 
@@ -103,4 +110,4 @@ No publiques `SUPABASE_SERVICE_ROLE_KEY` ni la guardes en código cliente. Confi
 
 ## Despliegue
 
-Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. En Vercel, actualiza `NEXT_PUBLIC_APP_VERSION` a `2.2.0` en los entornos correspondientes para que la página pública y las vistas internas muestren la versión correcta. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.
+Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. En Vercel, actualiza `NEXT_PUBLIC_APP_VERSION` a `2.3.0` en los entornos correspondientes para que la página pública y las vistas internas muestren la versión correcta. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.
