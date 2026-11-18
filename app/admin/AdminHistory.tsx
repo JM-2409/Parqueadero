@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import {
   History,
@@ -1222,9 +1223,12 @@ export default function AdminHistory({
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                               >
-                                                <img
+                                                <Image
                                                   src={v as string}
                                                   alt="Observación"
+                                                  width={320}
+                                                  height={240}
+                                                  sizes="160px"
                                                   className="h-24 w-auto rounded-3xl border border-slate-100 object-cover"
                                                 />
                                               </a>

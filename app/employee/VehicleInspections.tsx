@@ -1,5 +1,6 @@
 "use client";
 
+import NextImage from "next/image";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { Search, Camera, Save, X, ImageIcon, Loader2, PlayCircle, CheckCircle } from "lucide-react";
@@ -494,7 +495,13 @@ export default function VehicleInspections({
                   <div className="flex flex-wrap gap-4">
                     {images.map((img, idx) => (
                       <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden group border-2 border-slate-200">
-                        <img src={img} alt="Evidencia" className="w-full h-full object-cover" />
+                        <NextImage
+                          src={img}
+                          alt="Evidencia"
+                          fill
+                          sizes="96px"
+                          className="object-cover"
+                        />
                         <button
                           type="button"
                           onClick={() => removeImage(idx)}

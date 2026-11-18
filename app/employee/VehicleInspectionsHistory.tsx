@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -370,10 +371,12 @@ export default function VehicleInspectionsHistory({
                                       rel="noreferrer"
                                       className="block relative group aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm hover:shadow-md transition-all"
                                     >
-                                      <img
+                                      <Image
                                         src={img}
                                         alt={`Evidencia ${idx + 1}`}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        fill
+                                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                                       />
                                     </a>
                                   ))

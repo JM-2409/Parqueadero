@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { publicExtraData } from "@/lib/cash";
 import { getSessionVehicle } from "@/lib/utils";
 import { Receipt, Printer, X, Car, Send, QrCode } from "lucide-react";
@@ -219,9 +220,12 @@ export default function ReceiptModal({
                           rel="noopener noreferrer"
                           className="block max-h-48 overflow-hidden rounded-2xl border border-slate-200"
                         >
-                          <img
+                          <Image
                             src={value as string}
                             alt="Observación"
+                            width={640}
+                            height={360}
+                            sizes="(max-width: 640px) 100vw, 640px"
                             className="w-full object-cover"
                           />
                         </a>
