@@ -1,6 +1,14 @@
-# NexoPark v2.1.0
+# NexoPark v2.2.0
 
 Plataforma web para operar y administrar parqueaderos desde computadores, teléfonos y dispositivos instalados como aplicación web progresiva (PWA).
+
+## Novedades de la versión 2.2.0
+
+- Menú administrativo agrupado por áreas para encontrar más rápido las funciones de operación y configuración.
+- Caja y retiros en un solo flujo; los retiros se registran desde el módulo Caja.
+- Actualizaciones en tiempo real para las vistas compatibles de parqueaderos privados.
+- Carga optimizada de imágenes en historiales, recibos e inspecciones.
+- Validaciones y correcciones para mejorar la confiabilidad de las conexiones y del código.
 
 ## Módulos
 
@@ -8,7 +16,8 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
 
 - Consulta de actividad, ingresos, ocupación e historial.
 - Gestión de tarifas, operarios, roles, abonados, vehículos y ajustes del parqueadero.
-- Control de caja y caja menor.
+- Control de caja y caja menor desde una navegación agrupada por áreas.
+- Registro de retiros desde Caja, sin una acción duplicada en el menú.
 - Creación de asignaciones de caja menor, inyección de fondos, ampliación de asignaciones y anulación auditada de movimientos.
 - Revisión del historial de movimientos y legalizaciones.
 
@@ -52,15 +61,16 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    SUPABASE_SERVICE_ROLE_KEY=
    NEXT_PUBLIC_APP_NAME=NexoPark
-   NEXT_PUBLIC_APP_VERSION=2.1.0
+   NEXT_PUBLIC_APP_VERSION=2.2.0
    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=
    ```
 
    `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` es opcional; usa el identificador de medición de Google Analytics 4, por ejemplo `G-XXXXXXXXXX`.
 
-3. Aplica en orden las migraciones versionadas de `supabase/migrations`, verificando primero cuáles ya aparecen en el historial del proyecto. No ejecutes todos los archivos SQL de `sql_scripts` ni repitas scripts antiguos: varios son correcciones manuales históricas y no forman una secuencia segura de migraciones. Para habilitar caja menor, asegúrate de que `20261108190000_caja_menor.sql` ya se haya aplicado.
+3. Aplica en orden las migraciones versionadas de `supabase/migrations`, verificando primero cuáles ya aparecen en el historial del proyecto. No ejecutes todos los archivos SQL de `sql_scripts` ni repitas scripts antiguos: varios son correcciones manuales históricas y no forman una secuencia segura de migraciones. Para habilitar caja menor, asegúrate de que `20261108190000_caja_menor.sql` ya se haya aplicado. Para las actualizaciones en tiempo real de parqueaderos privados, revisa también `20261118142000_habilitar_realtime_parqueadero_privado.sql`.
 
    En la instancia Parqueadero, la migración de caja menor ya existe en la base y está registrada como aplicada en el historial remoto. No la vuelvas a ejecutar manualmente.
+   La migración de actualizaciones en tiempo real también fue aplicada en esa instancia. Verifica el historial antes de aplicarla en otros proyectos.
 4. Inicia el servidor de desarrollo:
 
    ```bash
@@ -93,4 +103,4 @@ No publiques `SUPABASE_SERVICE_ROLE_KEY` ni la guardes en código cliente. Confi
 
 ## Despliegue
 
-Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.
+Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. En Vercel, actualiza `NEXT_PUBLIC_APP_VERSION` a `2.2.0` en los entornos correspondientes para que la página pública y las vistas internas muestren la versión correcta. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.

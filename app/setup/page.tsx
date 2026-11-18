@@ -13,6 +13,18 @@ import {
 export default function VersionsPage() {
   const versions = [
     {
+      version: "v2.2.0",
+      date: "18 Noviembre 2026",
+      title: "Administración más clara y operación conectada",
+      type: "feature",
+      changes: [
+        "Navegación administrativa agrupada por áreas para facilitar el acceso a cada módulo.",
+        "Actualizaciones en tiempo real para los datos de parqueaderos privados.",
+        "Carga optimizada de imágenes en historiales, recibos e inspecciones.",
+        "Mejoras de validación de configuración y correcciones de calidad del código.",
+      ],
+    },
+    {
       version: "v2.1.0",
       date: "9 Noviembre 2026",
       title: "Planes y control de suscripciones",

@@ -17,6 +17,7 @@ import {
   Zap,
   BarChart3,
   Smartphone,
+  Image as ImageIcon,
   MessageCircle,
   Star,
   Lock,
@@ -27,6 +28,14 @@ import {
   formatSubscriptionPrice,
   type SubscriptionPlan,
 } from "@/lib/subscriptions";
+
+const navigationItems = [
+  { label: "Características", href: "#features" },
+  { label: "Novedades", href: "#updates" },
+  { label: "Cómo Funciona", href: "#how-it-works" },
+  { label: "Precios", href: "#pricing" },
+  { label: "Contacto", href: "#contact" },
+];
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -103,16 +112,16 @@ export default function Home() {
 
           {/* Nav escritorio */}
           <nav className="hidden md:flex items-center gap-8">
-            {["Características", "Cómo Funciona", "Precios", "Contacto"].map((item, i) => (
+            {navigationItems.map((item) => (
               <a
-                key={item}
-                href={`#${["features", "how-it-works", "pricing", "contact"][i]}`}
+                key={item.href}
+                href={item.href}
                 className="text-sm font-semibold transition-colors"
                 style={{ color: "#334155" }}
                 onMouseEnter={e => ((e.target as HTMLElement).style.color = "#4338ca")}
                 onMouseLeave={e => ((e.target as HTMLElement).style.color = "#334155")}
               >
-                {item}
+                {item.label}
               </a>
             ))}
           </nav>
@@ -159,14 +168,14 @@ export default function Home() {
             style={{ borderTop: "1px solid #e2e8f0", background: "#ffffff" }}
           >
             <div className="px-4 py-5 space-y-3 flex flex-col">
-              {["Características", "Cómo Funciona", "Precios", "Contacto"].map((item, i) => (
+              {navigationItems.map((item) => (
                 <a
-                  key={item}
-                  href={`#${["features", "how-it-works", "pricing", "contact"][i]}`}
+                  key={item.href}
+                  href={item.href}
                   className="text-base font-semibold py-2 text-slate-800"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item}
+                  {item.label}
                 </a>
               ))}
               <div className="border-t pt-3" style={{ borderColor: "#e2e8f0" }}>
@@ -236,9 +245,9 @@ export default function Home() {
             {/* Métricas rápidas */}
             <div className="mt-16 grid grid-cols-3 gap-6 sm:gap-12">
               {[
-                { value: "99.9%", label: "Disponibilidad" },
-                { value: "<1s", label: "Tiempo de registro" },
-                { value: "24/7", label: "Control en la nube" },
+                { value: "PWA", label: "Acceso móvil y escritorio" },
+                { value: "En vivo", label: "Actualizaciones operativas" },
+                { value: "Por sede", label: "Planes según tu operación" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <p className="text-2xl sm:text-3xl font-black text-indigo-700">
@@ -291,12 +300,12 @@ export default function Home() {
                 {
                   icon: Lock,
                   title: "Gestión Administrativa",
-                  desc: "Administra operarios, roles, tarifas, cierres de caja y reportes con permisos diferenciados para cada perfil.",
+                  desc: "Administra operarios, roles, tarifas, caja y reportes desde un menú organizado por áreas y con permisos por perfil.",
                 },
                 {
                   icon: Globe,
                   title: "Operación de Parqueadero",
-                  desc: "Registra entradas y salidas, calcula tarifas, controla la ocupación y consulta el historial de cada sede.",
+                  desc: "Registra entradas y salidas, calcula tarifas, controla la ocupación y consulta los cambios operativos en tiempo real.",
                 },
               ].map((feat) => {
                 const Icon = feat.icon;
@@ -313,6 +322,57 @@ export default function Home() {
                     <h3 className="text-lg font-bold mb-2 text-slate-900">{feat.title}</h3>
                     <p className="text-sm leading-relaxed text-slate-600">{feat.desc}</p>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════
+            NOVEDADES
+        ═══════════════════════════════════════════════ */}
+        <section id="updates" className="py-20 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.2.0</span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 text-slate-900">
+                Una operación más clara y conectada
+              </h2>
+              <p className="text-lg max-w-2xl mx-auto text-slate-600">
+                Mejoras recientes para agilizar la administración y mantener al equipo al tanto de la operación.
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {[
+                {
+                  icon: BarChart3,
+                  title: "Administración organizada",
+                  desc: "El menú reúne las opciones por áreas para que caja, tarifas, equipo y reportes sean más fáciles de encontrar.",
+                },
+                {
+                  icon: Zap,
+                  title: "Actualizaciones en vivo",
+                  desc: "Las vistas compatibles de parqueaderos privados reciben los cambios sin tener que recargar la página.",
+                },
+                {
+                  icon: ImageIcon,
+                  title: "Imágenes optimizadas",
+                  desc: "Las fotos de historiales, recibos e inspecciones se cargan con optimización para mejorar la experiencia.",
+                },
+              ].map((update) => {
+                const Icon = update.icon;
+                return (
+                  <article
+                    key={update.title}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-6"
+                  >
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-800">
+                      <Icon size={24} />
+                    </div>
+                    <h3 className="mb-2 text-lg font-bold text-slate-900">{update.title}</h3>
+                    <p className="text-sm leading-relaxed text-slate-600">{update.desc}</p>
+                  </article>
                 );
               })}
             </div>
@@ -630,7 +690,7 @@ export default function Home() {
                 <Car size={16} />
               </div>
               <span className="font-bold text-slate-900">
-                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.1.0"}
+                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.2.0"}
               </span>
               <span>— Gestión administrativa y operación de parqueaderos</span>
             </div>
