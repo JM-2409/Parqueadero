@@ -83,6 +83,15 @@ describe('Supabase Client Configuration', () => {
     );
   });
 
+  it('requires an anonymous key when the project URL is configured', async () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://valid-project.supabase.co';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = '';
+
+    const { isSupabaseConfigured } = await import('./supabase');
+
+    expect(isSupabaseConfigured).toBe(false);
+  });
+
   it('sets isSupabaseConfigured to false if url is the placeholder', async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://placeholder.supabase.co';
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'placeholder_key';

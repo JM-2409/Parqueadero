@@ -70,7 +70,7 @@ export default function MonthlySubscribers({
       }
     };
     searchVehicleForSub();
-  }, [debouncedSubPlate]);
+  }, [debouncedSubPlate, parkingLotId]);
 
   const fetchSubscribers = useCallback(async () => {
     setLoading(true);

@@ -28,7 +28,8 @@ import {
   MonitorSmartphone,
   Upload,
   Camera,
-  Wallet
+  Wallet,
+  ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -87,20 +88,81 @@ function SortableItem({ id, children }: { id: string; children: React.ReactNode 
   return <div ref={setNodeRef} style={style} {...attributes} {...listeners}>{children}</div>;
 }
 
+const adminNavGroups = [
+  {
+    id: "inicio",
+    label: "Inicio",
+    items: [
+      { id: "dashboard", label: "Resumen", icon: LayoutDashboard },
+      { id: "history", label: "Historial", icon: History },
+    ],
+  },
+  {
+    id: "finanzas",
+    label: "Finanzas y operación",
+    items: [
+      { id: "cash_closures", label: "Caja y retiros", icon: DollarSign },
+      { id: "cash_minor", label: "Caja menor", icon: Wallet },
+      { id: "reports", label: "Reportes", icon: BarChart2 },
+      { id: "manual_entry", label: "Ingreso forzado", icon: FileEdit },
+    ],
+  },
+  {
+    id: "gestion",
+    label: "Gestión del parqueadero",
+    items: [
+      { id: "tariffs", label: "Tarifas", icon: DollarSign },
+      { id: "special_tariffs", label: "Tarifas especiales", icon: Tag },
+      { id: "private_parking", label: "Privados", icon: Home },
+      { id: "subscribers", label: "Abonados", icon: Users },
+      { id: "blacklist", label: "Lista negra", icon: Shield },
+    ],
+  },
+  {
+    id: "equipo",
+    label: "Equipo y dispositivos",
+    items: [
+      { id: "employees", label: "Operarios", icon: Users },
+      { id: "roles", label: "Roles", icon: Shield },
+      { id: "employee_logs", label: "Registro de turnos", icon: Activity },
+      { id: "devices", label: "Equipos", icon: MonitorSmartphone },
+      { id: "inspections", label: "Revista", icon: Camera },
+    ],
+  },
+  {
+    id: "sistema",
+    label: "Sistema",
+    items: [
+      { id: "settings", label: "Configuración", icon: Settings },
+    ],
+  },
+];
+
 export default function AdminPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, settings, tariffs, employees
+  const [expandedNavGroup, setExpandedNavGroup] = useState("inicio");
 
   useEffect(() => {
     const savedTab = sessionStorage.getItem('adminActiveTab');
-    if (savedTab) {
+    const savedGroup = adminNavGroups.find((group) =>
+      group.items.some((item) => item.id === savedTab),
+    );
+    if (savedTab && savedGroup) {
+      // Se restaura luego de hidratar porque sessionStorage no existe en el servidor.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(savedTab);
+      setExpandedNavGroup(savedGroup.id);
     }
   }, []);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     sessionStorage.setItem('adminActiveTab', tab);
+    const activeGroup = adminNavGroups.find((group) =>
+      group.items.some((item) => item.id === tab),
+    );
+    if (activeGroup) setExpandedNavGroup(activeGroup.id);
   };
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -397,6 +459,8 @@ export default function AdminPage() {
 
 
   useEffect(() => {
+    // Verifica la sesión y carga los datos iniciales del panel administrativo.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkUser();
   }, [checkUser]);
 
@@ -879,212 +943,61 @@ export default function AdminPage() {
             {parkingLot?.name}
           </p>
         </div>
-        <nav className={styles.nav}>
-          <button
-            onClick={() => {
-              handleTabChange("dashboard");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "dashboard" ? styles.navItemActive : ""}`}
-          >
-            <LayoutDashboard size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Resumen
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("history");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "history" ? styles.navItemActive : ""}`}
-          >
-            <History size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Historial
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("cash_closures");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "cash_closures" ? styles.navItemActive : ""}`}
-          >
-            <DollarSign size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Caja
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("cash_minor");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "cash_minor" ? styles.navItemActive : ""}`}
-          >
-            <Wallet size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Caja Menor
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("reports");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "reports" ? styles.navItemActive : ""}`}
-          >
-            <BarChart2 size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Reportes
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("manual_entry");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "manual_entry" ? styles.navItemActive : ""}`}
-          >
-            <FileEdit size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Ingreso Forzado
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("tariffs");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "tariffs" ? styles.navItemActive : ""}`}
-          >
-            <DollarSign size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Tarifas
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("special_tariffs");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "special_tariffs" ? styles.navItemActive : ""}`}
-          >
-            <Tag size={20} className="text-amber-500" />
-            <span className="font-bold whitespace-nowrap text-left">
-              Tarifas Especiales
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("employees");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "employees" ? styles.navItemActive : ""}`}
-          >
-            <Users size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Operarios
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("roles");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "roles" ? styles.navItemActive : ""}`}
-          >
-            <Shield size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Roles
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("employee_logs");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "employee_logs" ? styles.navItemActive : ""}`}
-          >
-            <Activity size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Registro Turnos
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("private_parking");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "private_parking" ? styles.navItemActive : ""}`}
-          >
-            <Home size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Privados
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("subscribers");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "subscribers" ? styles.navItemActive : ""}`}
-          >
-            <Users size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Abonados
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("blacklist");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "blacklist" ? styles.navItemActive : ""}`}
-          >
-            <Shield size={20} className="text-red-400" />
-            <span className="font-bold whitespace-nowrap text-left">
-              Lista Negra
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("devices");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "devices" ? styles.navItemActive : ""}`}
-          >
-            <MonitorSmartphone size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Equipos
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("inspections");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "inspections" ? styles.navItemActive : ""}`}
-          >
-            <Camera size={20} className="text-slate-600" />
-            <span className="font-bold whitespace-nowrap text-left">
-              Revista
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              handleTabChange("settings");
-              setIsMobileMenuOpen(false);
-            }}
-            className={`${styles.navItem} ${activeTab === "settings" ? styles.navItemActive : ""}`}
-          >
-            <Settings size={20} />
-            <span className="font-bold whitespace-nowrap text-left">
-              Configuración
-            </span>
-          </button>
+        <nav className={styles.nav} aria-label="Navegación administrativa">
+          {adminNavGroups.map((group) => {
+            const isExpanded = expandedNavGroup === group.id;
+            const containsActiveTab = group.items.some(
+              (item) => item.id === activeTab,
+            );
 
+            return (
+              <section className={styles.navGroup} key={group.id}>
+                <button
+                  type="button"
+                  className={`${styles.navGroupToggle} ${containsActiveTab ? styles.navGroupActive : ""}`}
+                  aria-expanded={isExpanded}
+                  aria-controls={`admin-nav-${group.id}`}
+                  onClick={() =>
+                    setExpandedNavGroup(isExpanded ? "" : group.id)
+                  }
+                >
+                  <span>{group.label}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`${styles.navGroupChevron} ${isExpanded ? styles.navGroupChevronOpen : ""}`}
+                  />
+                </button>
+                <div
+                  className={styles.navGroupItems}
+                  id={`admin-nav-${group.id}`}
+                  hidden={!isExpanded}
+                >
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        aria-current={isActive ? "page" : undefined}
+                        onClick={() => {
+                          handleTabChange(item.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+                      >
+                        <Icon size={19} />
+                        <span className="font-bold whitespace-nowrap text-left">
+                          {item.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </nav>
 
         <div className={styles.logoutContainer}>

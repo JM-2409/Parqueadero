@@ -29,12 +29,16 @@ export function useOfflineQueue() {
   }, [isOnline, isSyncing, refreshQueue]);
 
   useEffect(() => {
+    // Lee la cola persistida al montar el consumidor del hook.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshQueue();
   }, [refreshQueue]);
 
   // Sincronizar automáticamente cuando vuelve la conexión a internet
   useEffect(() => {
     if (isOnline) {
+      // Sincroniza acciones locales con Supabase cuando vuelve la conexión.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       triggerSync();
     }
   }, [isOnline, triggerSync]);

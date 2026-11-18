@@ -358,6 +358,8 @@ export default function EmployeePage() {
       if (savedShift) {
         localStorage.setItem("shiftName", savedShift);
         sessionStorage.removeItem("shiftName");
+        // Restaura el operador guardado únicamente después de hidratar en el navegador.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShiftName(savedShift);
         setIsShiftSet(true);
       }
@@ -535,7 +537,7 @@ export default function EmployeePage() {
       }
     };
     searchVehicle();
-  }, [debouncedPlate, parkingLot?.id]);
+  }, [debouncedPlate, parkingLot?.id, parkingLot?.private_custom_fields, specialTariffs]);
 
   const logShiftAction = async (action: "login" | "logout", name: string) => {
     if (!parkingLot) return;

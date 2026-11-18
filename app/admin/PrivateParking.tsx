@@ -118,6 +118,8 @@ export default function PrivateParking({
   }, [parkingLotId]);
 
   useEffect(() => {
+    // Carga espacios e historial desde Supabase para el parqueadero activo.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSpaces();
     fetchHistory();
   }, [fetchSpaces, fetchHistory]);

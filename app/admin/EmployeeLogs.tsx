@@ -116,11 +116,8 @@ export default function EmployeeLogs({
   }, [parkingLotId, fechaDesde, fechaHasta, paginaActual, busquedaOperario]);
 
   useEffect(() => {
-    // Reiniciar página al cambiar filtros
-    setPaginaActual(1);
-  }, [busquedaOperario, fechaDesde, fechaHasta]);
-
-  useEffect(() => {
+    // La carga remota actualiza los registros y el indicador de carga.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLogs();
   }, [fetchLogs]);
 
@@ -197,7 +194,10 @@ export default function EmployeeLogs({
               <input
                 type="text"
                 value={busquedaOperario}
-                onChange={(e) => setBusquedaOperario(e.target.value)}
+                onChange={(e) => {
+                  setPaginaActual(1);
+                  setBusquedaOperario(e.target.value);
+                }}
                 placeholder="Buscar por nombre o usuario..."
                 className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               />
@@ -217,7 +217,10 @@ export default function EmployeeLogs({
               <input
                 type="date"
                 value={fechaDesde}
-                onChange={(e) => setFechaDesde(e.target.value)}
+                onChange={(e) => {
+                  setPaginaActual(1);
+                  setFechaDesde(e.target.value);
+                }}
                 className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               />
             </div>
@@ -236,7 +239,10 @@ export default function EmployeeLogs({
               <input
                 type="date"
                 value={fechaHasta}
-                onChange={(e) => setFechaHasta(e.target.value)}
+                onChange={(e) => {
+                  setPaginaActual(1);
+                  setFechaHasta(e.target.value);
+                }}
                 className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               />
             </div>

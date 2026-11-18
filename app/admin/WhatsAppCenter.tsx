@@ -48,7 +48,11 @@ export default function WhatsAppCenter({ parkingLotId }: Props) {
     setLoading(false);
   }, [parkingLotId, typeFilter, dateFilter]);
 
-  useEffect(() => { fetchMessages(); }, [fetchMessages]);
+  useEffect(() => {
+    // Consulta mensajes al cambiar filtros o parqueadero.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchMessages();
+  }, [fetchMessages]);
 
   const filtered = search
     ? messages.filter(m => m.phone.includes(search) || m.message.toLowerCase().includes(search.toLowerCase()))

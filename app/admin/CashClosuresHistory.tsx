@@ -151,7 +151,7 @@ export default function CashClosuresHistory({
       }
     }
     setLoading(false);
-  }, [parkingLotId]);
+  }, [fetchParkingLotConfig, parkingLotId]);
 
   const handleDeleteWithdrawal = async (id: string) => {
     if (!confirm("¿Está seguro que desea revertir este retiro? El dinero volverá a sumarse a la caja.")) return;

@@ -65,6 +65,8 @@ export default function CashMinorLegalization({
   }, [employeeName, parkingLotId]);
 
   useEffect(() => {
+    // Carga las asignaciones disponibles para el operario y parqueadero actuales.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAssignments();
   }, [loadAssignments]);
 

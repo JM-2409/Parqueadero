@@ -297,6 +297,8 @@ export default function VehicleInspections({
   // Effect to automatically end session if all vehicles are inspected
   useEffect(() => {
       if (sessionId && pendingVehicles.length === 0 && vehicles.length > 0) {
+          // Finaliza la sesión cuando ya se inspeccionaron todos los vehículos.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           endSession();
       }
   }, [pendingVehicles, sessionId, vehicles]);

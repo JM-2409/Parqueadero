@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Shield, Play, Square, Camera, CheckCircle, AlertCircle } from "lucide-react";
 
@@ -15,11 +15,16 @@ export default function PatrolModule({ parkingLotId, employeeId }: PatrolModuleP
   const [newLog, setNewLog] = useState({ plate: "", space: "", observation: "" });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    checkActivePatrol();
+  const fetchLogs = useCallback(async (patrolId: string) => {
+    const { data } = await supabase
+      .from("patrol_logs")
+      .select("*")
+      .eq("patrol_id", patrolId)
+      .order("verified_at", { ascending: false });
+    setLogs(data || []);
   }, []);
 
-  const checkActivePatrol = async () => {
+  const checkActivePatrol = useCallback(async () => {
     const { data } = await supabase
       .from("security_patrols")
       .select("*")
@@ -31,16 +36,13 @@ export default function PatrolModule({ parkingLotId, employeeId }: PatrolModuleP
       setActivePatrol(data);
       fetchLogs(data.id);
     }
-  };
+  }, [fetchLogs, parkingLotId]);
 
-  const fetchLogs = async (patrolId: string) => {
-    const { data } = await supabase
-      .from("patrol_logs")
-      .select("*")
-      .eq("patrol_id", patrolId)
-      .order("verified_at", { ascending: false });
-    setLogs(data || []);
-  };
+  useEffect(() => {
+    // Consulta la patrulla activa al montar el módulo.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void checkActivePatrol();
+  }, [checkActivePatrol]);
 
   const startPatrol = async () => {
     setLoading(true);

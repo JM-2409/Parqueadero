@@ -60,6 +60,8 @@ export default function SpecialTariffs({
   }, [parkingLotId]);
 
   useEffect(() => {
+    // Carga la configuración remota de tarifas especiales.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSpecialTariffs();
   }, [fetchSpecialTariffs]);
 

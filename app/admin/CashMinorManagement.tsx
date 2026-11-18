@@ -72,6 +72,8 @@ export default function CashMinorManagement({ parkingLotId }: { parkingLotId: st
   }, [parkingLotId]);
 
   useEffect(() => {
+    // Esta consulta remota carga el saldo, las asignaciones y sus movimientos.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadData();
   }, [loadData]);
 

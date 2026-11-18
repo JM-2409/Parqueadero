@@ -55,6 +55,8 @@ export default function VehicleInspectionsHistory({
   }, [parkingLotId, isAdmin]);
 
   useEffect(() => {
+    // Consulta el historial de revistas del parqueadero activo.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchInspections();
   }, [fetchInspections]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, X, Trash2, MonitorSmartphone } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -12,7 +12,7 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
     try {
       setLoading(true);
       // Fetch devices for employees in this parking lot
@@ -36,11 +36,13 @@ export default function AdminDeviceManagement({ parkingLotId }: { parkingLotId: 
     } finally {
       setLoading(false);
     }
-  };
+  }, [parkingLotId]);
 
   useEffect(() => {
+    // Carga los equipos pendientes del parqueadero seleccionado.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (parkingLotId) fetchDevices();
-  }, [parkingLotId]);
+  }, [fetchDevices, parkingLotId]);
 
   const handleAction = async (id: string, action: 'approve_perm' | 'approve_temp' | 'reject' | 'delete') => {
     try {

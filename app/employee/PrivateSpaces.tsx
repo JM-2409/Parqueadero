@@ -54,6 +54,8 @@ export default function PrivateSpaces({
   }, [parkingLotId]);
 
   useEffect(() => {
+    // Carga los espacios privados disponibles desde Supabase.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSpaces();
   }, [fetchSpaces]);
 

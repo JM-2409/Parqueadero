@@ -99,6 +99,8 @@ export default function CustomRoles({
   }, [parkingLotId]);
 
   useEffect(() => {
+    // Sincroniza los roles remotos al cambiar el parqueadero.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRoles();
   }, [fetchRoles]);
 

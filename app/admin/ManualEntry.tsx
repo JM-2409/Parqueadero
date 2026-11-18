@@ -92,7 +92,7 @@ export default function ManualEntry({
       }
     };
     searchVehicle();
-  }, [debouncedPlate, allowedVehicles]);
+  }, [debouncedPlate, allowedVehicles, parkingLotId]);
 
   useEffect(() => {
     const fetchTariffs = async () => {
@@ -127,6 +127,8 @@ export default function ManualEntry({
     const exit = new Date(`${exitDate}T${exitTime}`);
 
     if (isNaN(entry.getTime()) || isNaN(exit.getTime()) || exit <= entry) {
+      // El valor calculado depende de campos controlados que el usuario puede ajustar.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTotalFee("");
       return;
     }

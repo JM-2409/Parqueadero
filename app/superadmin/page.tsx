@@ -365,36 +365,41 @@ export default function SuperAdminPage() {
     }
   }, []);
 
-  const checkUser = useCallback(async () => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) {
-        router.push("/login");
-        return;
-      }
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError || !user) {
+          router.push("/login");
+          return;
+        }
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
 
-      if (profileError || !profile || profile.role !== "superadmin") {
-        router.push("/");
-      } else {
-        fetchParkingLots();
-        fetchAppSettings();
-        fetchAdmins();
-        fetchEmployees();
-        fetchMetrics();
-        fetchPendingDevicesCount();
+        if (profileError || !profile || profile.role !== "superadmin") {
+          router.push("/");
+        } else {
+          fetchParkingLots();
+          fetchAppSettings();
+          fetchAdmins();
+          fetchEmployees();
+          fetchMetrics();
+          fetchPendingDevicesCount();
+        }
+      } catch (err) {
+        console.error("Error checking user:", err);
+        router.push("/login");
       }
-    } catch (err) {
-      console.error("Error checking user:", err);
-      router.push("/login");
-    }
+    };
+
+    // Verifica la sesión y obtiene los datos iniciales del superadministrador.
+    void checkUser();
   }, [
     router,
     fetchParkingLots,
@@ -404,10 +409,6 @@ export default function SuperAdminPage() {
     fetchMetrics,
     fetchPendingDevicesCount,
   ]);
-
-  useEffect(() => {
-    checkUser();
-  }, [checkUser]);
 
   // ──────────────────────────────────────────────────────
   // Realtime: dispositivos pendientes (superadmin ve todos)

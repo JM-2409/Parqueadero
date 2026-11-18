@@ -214,6 +214,8 @@ export default function AdminHistory({
   ]);
 
   useEffect(() => {
+    // Esta consulta sincroniza la vista con los datos remotos y actualiza su estado de carga.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
 
@@ -240,10 +242,8 @@ export default function AdminHistory({
   }, [parkingLotId, fetchData]);
 
   useEffect(() => {
-    setFilterStatus(initialFilterStatus);
-  }, [initialFilterStatus]);
-
-  useEffect(() => {
+    // Al cambiar filtros, vuelve a consultar desde la primera página.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchTerm, employeeSearchTerm, filterStatus, receiptFilterMode, receiptUnique, receiptStart, receiptEnd]);
 

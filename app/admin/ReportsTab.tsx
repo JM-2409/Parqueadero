@@ -164,6 +164,8 @@ export default function ReportsTab({
   }, [parkingLotId, periodo, fechaDesde, fechaHasta]);
 
   useEffect(() => {
+    // Actualiza el reporte cuando cambian su rango o período.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchReportes();
   }, [fetchReportes]);
 

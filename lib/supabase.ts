@@ -11,7 +11,11 @@ if (supabaseUrl && !supabaseUrl.startsWith('http')) {
   supabaseUrl = `https://${supabaseUrl}`;
 }
 
-export const isSupabaseConfigured = supabaseUrl.length > 0 && supabaseUrl !== 'https://placeholder.supabase.co';
+export const isSupabaseConfigured =
+  supabaseUrl.length > 0 &&
+  supabaseUrl !== "https://placeholder.supabase.co" &&
+  supabaseAnonKey.length > 0 &&
+  supabaseAnonKey !== "placeholder_key";
 
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
