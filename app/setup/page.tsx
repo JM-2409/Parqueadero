@@ -13,6 +13,17 @@ import {
 export default function VersionsPage() {
   const versions = [
     {
+      version: "v2.5.0",
+      date: "25 Noviembre 2026",
+      title: "Panel del dueño más claro y rápido",
+      type: "feature",
+      changes: [
+        "Resumen visual de parqueaderos activos, vencidos y suspendidos.",
+        "Carga diferida de los módulos de equipos y suscripciones para acelerar el inicio del panel.",
+        "Las métricas se consultan al abrir su sección para reducir las solicitudes iniciales.",
+      ],
+    },
+    {
       version: "v2.4.0",
       date: "25 Noviembre 2026",
       title: "Caja unificada con fondo para gastos",

@@ -22,6 +22,7 @@ import {
   Globe,
   Wallet,
   Users,
+  Building2,
   Shield,
   Camera,
   FileCheck2,
@@ -369,31 +370,31 @@ export default function Home() {
         <section id="updates" className="py-20 bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.4.0</span>
+              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.5.0</span>
               <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 text-slate-900">
-                Caja más sencilla, con saldos claros
+                El panel del dueño, más claro y rápido
               </h2>
               <p className="text-lg max-w-2xl mx-auto text-slate-600">
-                Recaudo y fondo para gastos conectados en una sola sección, con cada movimiento registrado de forma segura.
+                Consulta el estado de tus sedes y accede a cada herramienta cuando la necesites.
               </p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {[
                 {
-                  icon: Wallet,
-                  title: "Una sola sección de Caja",
-                  desc: "Consulta el recaudo, realiza transferencias al fondo para gastos y revisa cierres desde un solo lugar.",
+                  icon: Building2,
+                  title: "Resumen de sedes",
+                  desc: "Revisa de un vistazo cuántos parqueaderos están activos, vencidos o suspendidos.",
                 },
                 {
-                  icon: ShieldCheck,
-                  title: "Transferencia sincronizada",
-                  desc: "El monto se descuenta del recaudo y se suma al fondo para gastos en una sola operación, sin duplicar movimientos.",
+                  icon: Zap,
+                  title: "Módulos a demanda",
+                  desc: "Los módulos de equipos y suscripciones se cargan al abrirlos para iniciar el panel más rápido.",
                 },
                 {
-                  icon: FileCheck2,
-                  title: "Historial consistente",
-                  desc: "Las transferencias y sus reversos quedan vinculados en los registros de Caja y del fondo para gastos.",
+                  icon: BarChart3,
+                  title: "Métricas cuando las necesitas",
+                  desc: "Los datos de cierres se consultan al entrar a métricas, sin solicitudes innecesarias al iniciar.",
                 },
               ].map((update) => {
                 const Icon = update.icon;
@@ -741,7 +742,7 @@ export default function Home() {
                 <Car size={16} />
               </div>
               <span className="font-bold text-slate-900">
-                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.4.0"}
+                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.5.0"}
               </span>
               <span>— Gestión administrativa y operación de parqueaderos</span>
             </div>

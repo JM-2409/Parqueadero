@@ -1,12 +1,11 @@
 "use client";
-import DeviceManagement from "./DeviceManagement";
-import SubscriptionManagement from "./SubscriptionManagement";
+import dynamic from "next/dynamic";
 import { Bell } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 import styles from "./superadmin.module.css";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { createUser, deleteEmployee } from "@/app/actions/auth";
 import {
@@ -39,6 +38,24 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import { getErrorMessage } from "@/lib/error";
 import { downloadClosureReport } from "@/lib/reports";
 import { fetchSuperadminData } from "@/lib/superadmin-data";
+
+const DeviceManagement = dynamic(() => import("./DeviceManagement"), {
+  loading: () => (
+    <div className="flex justify-center rounded-3xl bg-white p-12">
+      <Spinner size={32} className="text-indigo-600" />
+    </div>
+  ),
+});
+const SubscriptionManagement = dynamic(
+  () => import("./SubscriptionManagement"),
+  {
+    loading: () => (
+      <div className="flex justify-center rounded-3xl bg-white p-12">
+        <Spinner size={32} className="text-indigo-600" />
+      </div>
+    ),
+  },
+);
 
 interface ParkingLotFeatures {
   [key: string]: boolean | undefined;
@@ -109,6 +126,80 @@ export default function SuperAdminPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [subscriptionFilter, setSubscriptionFilter] = useState("all");
+
+  const lotSummary = useMemo(() => {
+    return parkingLots.reduce(
+      (summary, lot) => {
+        if (lot.is_suspended) {
+          summary.suspended += 1;
+          return summary;
+        }
+
+        const expiry = lot.subscription_end_date
+          ? new Date(lot.subscription_end_date).getTime()
+          : null;
+        if (expiry === null || expiry >= currentTime) {
+          summary.active += 1;
+        } else if (!Number.isNaN(expiry)) {
+          summary.expired += 1;
+        }
+
+        return summary;
+      },
+      { active: 0, expired: 0, suspended: 0 },
+    );
+  }, [parkingLots, currentTime]);
+
+  const filteredParkingLots = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLocaleLowerCase("es");
+
+    return parkingLots.filter((lot) => {
+      if (!lot.name.toLocaleLowerCase("es").includes(normalizedSearch)) {
+        return false;
+      }
+
+      if (subscriptionFilter === "all") return true;
+      if (subscriptionFilter === "suspended") return lot.is_suspended;
+
+      const expiry = lot.subscription_end_date
+        ? new Date(lot.subscription_end_date).getTime()
+        : null;
+      if (subscriptionFilter === "active") {
+        return !lot.is_suspended && (expiry === null || expiry >= currentTime);
+      }
+      if (subscriptionFilter === "expired") {
+        return (
+          !lot.is_suspended &&
+          expiry !== null &&
+          !Number.isNaN(expiry) &&
+          expiry < currentTime
+        );
+      }
+
+      return true;
+    });
+  }, [parkingLots, searchTerm, subscriptionFilter, currentTime]);
+
+  const profilesByParkingLot = useMemo(() => {
+    const adminsByLot = new Map<string, SuperadminProfile[]>();
+    const employeesByLot = new Map<string, SuperadminProfile[]>();
+
+    for (const admin of admins) {
+      if (!admin.parking_lot_id) continue;
+      const lotAdmins = adminsByLot.get(admin.parking_lot_id) || [];
+      lotAdmins.push(admin);
+      adminsByLot.set(admin.parking_lot_id, lotAdmins);
+    }
+
+    for (const employee of employees) {
+      if (!employee.parking_lot_id) continue;
+      const lotEmployees = employeesByLot.get(employee.parking_lot_id) || [];
+      lotEmployees.push(employee);
+      employeesByLot.set(employee.parking_lot_id, lotEmployees);
+    }
+
+    return { adminsByLot, employeesByLot };
+  }, [admins, employees]);
 
   // Delete modal state
   const [deleteModal, setDeleteModal] = useState<{
@@ -195,7 +286,6 @@ export default function SuperAdminPage() {
 
       setSuccess(`Los datos de "${name}" se han reiniciado desde cero exitosamente.`);
       fetchParkingLots();
-      fetchMetrics();
       setTimeout(() => setSuccess(""), 4000);
     } catch (err: unknown) {
       setError("Error al reiniciar parqueadero: " + getErrorMessage(err));
@@ -312,6 +402,7 @@ export default function SuperAdminPage() {
   const handleDownloadReport = async (closure: CashClosure) => {
     try {
       setIsExporting(closure.id);
+      const { downloadClosureReport } = await import("@/lib/reports");
       await downloadClosureReport(closure);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
@@ -389,7 +480,6 @@ export default function SuperAdminPage() {
           fetchAppSettings();
           fetchAdmins();
           fetchEmployees();
-          fetchMetrics();
           fetchPendingDevicesCount();
         }
       } catch (err) {
@@ -406,7 +496,6 @@ export default function SuperAdminPage() {
     fetchAppSettings,
     fetchAdmins,
     fetchEmployees,
-    fetchMetrics,
     fetchPendingDevicesCount,
   ]);
 
@@ -873,7 +962,9 @@ export default function SuperAdminPage() {
               onClick={() => {
                 setActiveTab("metrics");
                 setIsMobileMenuOpen(false);
+                void fetchMetrics();
               }}
+              aria-current={activeTab === "metrics" ? "page" : undefined}
               className={
                 activeTab === "metrics"
                   ? `${styles.navItem} ${styles.navItemActive}`
@@ -981,6 +1072,43 @@ export default function SuperAdminPage() {
           {/* TAB: PARQUEADEROS */}
           {activeTab === "lots" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <section className={styles.overview} aria-label="Resumen de parqueaderos">
+                <div className={styles.overviewHeading}>
+                  <div>
+                    <p className={styles.overviewEyebrow}>Panel de control</p>
+                    <h1 className={styles.overviewTitle}>Tus parqueaderos, de un vistazo</h1>
+                    <p className={styles.overviewDescription}>
+                      Administra sedes y revisa rápidamente el estado de sus suscripciones.
+                    </p>
+                  </div>
+                  <div className={styles.overviewTotal}>
+                    <Building2 size={18} aria-hidden="true" />
+                    <span>{parkingLots.length} sedes registradas</span>
+                  </div>
+                </div>
+                <div className={styles.overviewCards}>
+                  <article className={styles.overviewCard}>
+                    <span className={styles.overviewCardLabel}>Activas</span>
+                    <strong className={styles.overviewCardValue}>{lotSummary.active}</strong>
+                    <span className={styles.overviewCardNote}>Con servicio vigente</span>
+                  </article>
+                  <article className={styles.overviewCard}>
+                    <span className={styles.overviewCardLabel}>Vencidas</span>
+                    <strong className={`${styles.overviewCardValue} ${styles.overviewCardWarning}`}>
+                      {lotSummary.expired}
+                    </strong>
+                    <span className={styles.overviewCardNote}>Requieren revisión</span>
+                  </article>
+                  <article className={styles.overviewCard}>
+                    <span className={styles.overviewCardLabel}>Suspendidas</span>
+                    <strong className={`${styles.overviewCardValue} ${styles.overviewCardMuted}`}>
+                      {lotSummary.suspended}
+                    </strong>
+                    <span className={styles.overviewCardNote}>Acceso pausado</span>
+                  </article>
+                </div>
+              </section>
+
               <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100">
@@ -1085,44 +1213,17 @@ export default function SuperAdminPage() {
                   <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-3xl border border-dashed border-slate-200 font-semibold">
                     No hay parqueaderos registrados aún.
                   </p>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {parkingLots
-                      .filter((lot) =>
-                        lot.name
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase()),
-                      )
-                      .filter((lot) => {
-                        if (subscriptionFilter === "all") return true;
-                        const expiry = lot.subscription_end_date
-                          ? new Date(lot.subscription_end_date).getTime()
-                          : null;
-                        if (subscriptionFilter === "active") {
-                          return (
-                            !lot.is_suspended &&
-                            (expiry === null || expiry >= currentTime)
-                          );
-                        }
-                        if (subscriptionFilter === "expired") {
-                          return (
-                            !lot.is_suspended &&
-                            expiry !== null &&
-                            !Number.isNaN(expiry) &&
-                            expiry < currentTime
-                          );
-                        }
-                        if (subscriptionFilter === "suspended")
-                          return lot.is_suspended;
-                        return true;
-                      })
-                      .map((lot) => {
-                        const lotAdmins = admins.filter(
-                          (a) => a.parking_lot_id === lot.id,
-                        );
-                        const lotEmployees = employees.filter(
-                          (e) => e.parking_lot_id === lot.id,
-                        );
+                ) : filteredParkingLots.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-3xl border border-dashed border-slate-200 font-semibold">
+                      No hay parqueaderos que coincidan con los filtros seleccionados.
+                    </p>
+                  ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredParkingLots.map((lot) => {
+                        const lotAdmins =
+                          profilesByParkingLot.adminsByLot.get(lot.id) || [];
+                        const lotEmployees =
+                          profilesByParkingLot.employeesByLot.get(lot.id) || [];
 
                         return (
                           <div
@@ -1374,9 +1475,9 @@ export default function SuperAdminPage() {
                             </div>
                           </div>
                         );
-                      })}
-                  </div>
-                )}
+                    })}
+                    </div>
+                  )}
               </div>
             </div>
           )}
