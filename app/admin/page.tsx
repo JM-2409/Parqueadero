@@ -101,8 +101,7 @@ const adminNavGroups = [
     id: "finanzas",
     label: "Finanzas y operación",
     items: [
-      { id: "cash_closures", label: "Caja y retiros", icon: DollarSign },
-      { id: "cash_minor", label: "Caja menor", icon: Wallet },
+      { id: "cash_closures", label: "Caja", icon: Wallet },
       { id: "reports", label: "Reportes", icon: BarChart2 },
       { id: "manual_entry", label: "Ingreso forzado", icon: FileEdit },
     ],
@@ -142,16 +141,18 @@ export default function AdminPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, settings, tariffs, employees
   const [expandedNavGroup, setExpandedNavGroup] = useState("inicio");
+  const [cashMinorRefreshKey, setCashMinorRefreshKey] = useState(0);
 
   useEffect(() => {
     const savedTab = sessionStorage.getItem('adminActiveTab');
+    const restoredTab = savedTab === "cash_minor" ? "cash_closures" : savedTab;
     const savedGroup = adminNavGroups.find((group) =>
-      group.items.some((item) => item.id === savedTab),
+      group.items.some((item) => item.id === restoredTab),
     );
     if (savedTab && savedGroup) {
       // Se restaura luego de hidratar porque sessionStorage no existe en el servidor.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveTab(savedTab);
+      setActiveTab(restoredTab!);
       setExpandedNavGroup(savedGroup.id);
     }
   }, []);
@@ -1287,13 +1288,16 @@ export default function AdminPage() {
                 currentShiftRevenue={currentShiftRevenue}
                 shiftWithdrawals={shiftWithdrawals}
                 onRegisterClosed={() => fetchEmployees(parkingLot.id)}
+                onCashTransfer={() =>
+                  setCashMinorRefreshKey((current) => current + 1)
+                }
               />
-            </div>
-          )}
-
-          {activeTab === "cash_minor" && parkingLot && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <CashMinorManagement parkingLotId={parkingLot.id} />
+              <div className="mt-10 border-t border-slate-200 pt-8">
+                <CashMinorManagement
+                  parkingLotId={parkingLot.id}
+                  refreshKey={cashMinorRefreshKey}
+                />
+              </div>
             </div>
           )}
 

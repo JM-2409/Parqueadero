@@ -16,12 +16,14 @@ export default function CashClosuresHistory({
   currentShiftRevenue,
   shiftWithdrawals = 0,
   onRegisterClosed,
+  onCashTransfer,
 }: {
   parkingLotId: string;
   parkingLotName?: string;
   currentShiftRevenue?: number;
   shiftWithdrawals?: number;
   onRegisterClosed?: () => void;
+  onCashTransfer?: () => void;
 }) {
   const [isCashPaused, setIsCashPaused] = useState(false);
   const [isTogglingPause, setIsTogglingPause] = useState(false);
@@ -154,17 +156,27 @@ export default function CashClosuresHistory({
   }, [fetchParkingLotConfig, parkingLotId]);
 
   const handleDeleteWithdrawal = async (id: string) => {
-    if (!confirm("¿Está seguro que desea revertir este retiro? El dinero volverá a sumarse a la caja.")) return;
+    const withdrawal = currentWithdrawals.find((item) => item.id === id);
+    const isTransfer = Boolean(withdrawal?.cash_minor_history_id);
+    if (!confirm(
+      isTransfer
+        ? "¿Reversar esta transferencia? El dinero saldrá de caja menor y volverá a Caja."
+        : "¿Está seguro que desea revertir este retiro? El dinero volverá a sumarse a Caja.",
+    )) return;
 
     try {
-      const { error } = await supabase
-        .from("cash_withdrawals")
-        .delete()
-        .eq("id", id);
-
+      const { error } = await supabase.rpc(
+        "cash_minor_reverse_register_transfer",
+        { p_withdrawal_id: id },
+      );
       if (error) throw error;
+      if (isTransfer) onCashTransfer?.();
 
-      setSuccess("Retiro revertido exitosamente.");
+      setSuccess(
+        isTransfer
+          ? "Transferencia reversada; el dinero volvió a Caja."
+          : "Retiro revertido exitosamente.",
+      );
       setTimeout(() => setSuccess(""), 3000);
 
       if (onRegisterClosed) {
@@ -201,16 +213,16 @@ export default function CashClosuresHistory({
     const rawWithdrawAmount = withdrawAmount.replace(/\D/g, "");
 
     if (!rawWithdrawAmount || !withdrawReason) {
-      setError("Ingrese un monto y un motivo para el retiro.");
+      setError("Ingrese un monto y un motivo para la transferencia.");
       return;
     }
     const amount = parseInt(rawWithdrawAmount, 10);
     if (amount <= 0) {
-      setError("El monto a retirar debe ser mayor a 0.");
+      setError("El monto a transferir debe ser mayor a 0.");
       return;
     }
     if (amount > currentRegisterCash) {
-      setError("No hay suficiente dinero en caja para este retiro.");
+      setError("No hay suficiente dinero disponible en Caja para esta transferencia.");
       return;
     }
 
@@ -218,22 +230,18 @@ export default function CashClosuresHistory({
     setError("");
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const { error: insertError } = await supabase.from("cash_withdrawals").insert([
+      const { error: insertError } = await supabase.rpc(
+        "cash_minor_transfer_from_register",
         {
-          parking_lot_id: parkingLotId,
-          amount: amount,
-          reason: sanitizeInput(withdrawReason),
-          withdrawn_by: session?.user?.id,
+          p_parking_lot_id: parkingLotId,
+          p_amount: amount,
+          p_reason: sanitizeInput(withdrawReason),
         },
-      ]);
+      );
 
       if (insertError) throw insertError;
 
-      setSuccess("Dinero retirado exitosamente.");
+      setSuccess("Transferencia registrada: se descontó de Caja y se sumó a caja menor.");
       setTimeout(() => setSuccess(""), 3000);
 
       setShowWithdrawModal(false);
@@ -244,9 +252,11 @@ export default function CashClosuresHistory({
       if (onRegisterClosed) {
         onRegisterClosed();
       }
+      onCashTransfer?.();
+      fetchClosures();
     } catch (err: unknown) {
-      console.error("Error al retirar dinero", err);
-      setError("No se pudo retirar el dinero: " + getErrorMessage(err));
+      console.error("Error al transferir dinero a caja menor", err);
+      setError("No se pudo transferir el dinero: " + getErrorMessage(err));
     } finally {
       setIsWithdrawing(false);
     }
@@ -416,7 +426,7 @@ export default function CashClosuresHistory({
                   className="w-full sm:w-auto px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                 >
                   <HandCoins size={16} />
-                  Retirar
+                  Pasar a caja menor
                 </button>
                 <button
                   onClick={handleCloseRegister}
@@ -437,7 +447,7 @@ export default function CashClosuresHistory({
             onClick={() => setIsWithdrawalsOpen(!isWithdrawalsOpen)}
             className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-3xl border border-slate-200 transition-colors mb-4"
           >
-            <h2 className="text-lg font-bold text-slate-800">Ver Retiros del Turno Actual ({currentWithdrawals.length})</h2>
+            <h2 className="text-lg font-bold text-slate-800">Retiros y transferencias de Caja ({currentWithdrawals.length})</h2>
             {isWithdrawalsOpen ? <ChevronUp size={20} className="text-slate-600" /> : <ChevronDown size={20} className="text-slate-600" />}
           </button>
 
@@ -478,7 +488,7 @@ export default function CashClosuresHistory({
                         <button
                           onClick={() => handleDeleteWithdrawal(withdrawal.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                          title="Revertir retiro"
+                          title={withdrawal.cash_minor_history_id ? "Reversar transferencia" : "Revertir retiro"}
                         >
                           <X size={20} />
                         </button>
@@ -499,7 +509,7 @@ export default function CashClosuresHistory({
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <HandCoins className="text-indigo-600" />
-                Retirar Dinero
+                Transferir a caja menor
               </h2>
               <button
                 onClick={() => setShowWithdrawModal(false)}
@@ -512,7 +522,7 @@ export default function CashClosuresHistory({
             <form onSubmit={handleWithdrawCash} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Monto a retirar
+                  Monto a transferir
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -529,18 +539,19 @@ export default function CashClosuresHistory({
                   />
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Máximo disponible: {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(currentRegisterCash)}
+                  Disponible en Caja: {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(currentRegisterCash)}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Motivo / Observaciones
+                  Motivo del traslado
                 </label>
                 <textarea
                   value={withdrawReason}
                   onChange={(e) => setWithdrawReason(e.target.value)}
-                  placeholder="Ej: Pago de insumos, adelanto..."
+                  placeholder="Ej: Compra de insumos, pago de servicios..."
+                  maxLength={500}
                   className={`${styles.inputField} resize-none h-24`}
                   required
                 />
@@ -559,7 +570,7 @@ export default function CashClosuresHistory({
                   disabled={isWithdrawing}
                   className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50"
                 >
-                  {isWithdrawing ? "Retirando..." : "Confirmar Retiro"}
+                  {isWithdrawing ? "Transfiriendo..." : "Confirmar transferencia"}
                 </button>
               </div>
             </form>

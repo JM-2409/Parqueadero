@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, ArrowDownToLine, Plus, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowDownToLine, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { formatCOP } from "@/lib/cash";
 import { getErrorMessage } from "@/lib/error";
@@ -30,13 +30,20 @@ type Movement = {
 
 const movementNames: Record<string, string> = {
   funding: "Inyección de saldo",
+  cash_transfer: "Transferencia desde Caja",
   assignment: "Asignación",
   assignment_increase: "Aumento de asignación",
   return: "Devolución",
   annulment: "Anulación",
 };
 
-export default function CashMinorManagement({ parkingLotId }: { parkingLotId: string }) {
+export default function CashMinorManagement({
+  parkingLotId,
+  refreshKey = 0,
+}: {
+  parkingLotId: string;
+  refreshKey?: number;
+}) {
   const [balance, setBalance] = useState(0);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [history, setHistory] = useState<Movement[]>([]);
@@ -44,8 +51,6 @@ export default function CashMinorManagement({ parkingLotId }: { parkingLotId: st
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [fundAmount, setFundAmount] = useState("");
-  const [fundDescription, setFundDescription] = useState("");
   const [employeeName, setEmployeeName] = useState("");
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [assignmentAmount, setAssignmentAmount] = useState("");
@@ -75,7 +80,7 @@ export default function CashMinorManagement({ parkingLotId }: { parkingLotId: st
     // Esta consulta remota carga el saldo, las asignaciones y sus movimientos.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadData();
-  }, [loadData]);
+  }, [loadData, refreshKey]);
 
   const submitMovement = async (
     event: React.FormEvent<HTMLFormElement>,
@@ -125,13 +130,13 @@ export default function CashMinorManagement({ parkingLotId }: { parkingLotId: st
     <section className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900">Caja menor</h1>
-          <p className="mt-1 text-sm text-slate-600">Control de fondos, asignaciones y legalizaciones.</p>
+          <h1 className="text-2xl font-black text-slate-900">Fondo para gastos</h1>
+          <p className="mt-1 text-sm text-slate-600">El dinero transferido desde Caja queda disponible aquí para asignaciones, facturas y devoluciones.</p>
         </div>
         <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3">
           <Wallet className="text-emerald-700" size={24} />
           <div>
-            <p className="text-xs font-bold uppercase text-emerald-800">Saldo disponible</p>
+            <p className="text-xs font-bold uppercase text-emerald-800">Saldo del fondo</p>
             <p className="text-xl font-black text-emerald-900">{formatCOP(balance)}</p>
           </div>
         </div>
@@ -141,26 +146,6 @@ export default function CashMinorManagement({ parkingLotId }: { parkingLotId: st
       {success && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{success}</p>}
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <form
-          onSubmit={(event) => submitMovement(event, "cash_minor_add_funds", {
-            p_parking_lot_id: parkingLotId,
-            p_amount: Number(fundAmount),
-            p_description: fundDescription.trim() || "Inyección de saldo",
-          }, () => { setFundAmount(""); setFundDescription(""); })}
-          className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-        >
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Plus size={19} /> Inyectar saldo</h2>
-          <label className="block text-sm font-semibold text-slate-700">
-            Monto
-            <input required min="1" step="0.01" type="number" value={fundAmount} onChange={(event) => setFundAmount(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" />
-          </label>
-          <label className="block text-sm font-semibold text-slate-700">
-            Motivo
-            <input value={fundDescription} onChange={(event) => setFundDescription(event.target.value)} maxLength={200} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" placeholder="Reposición de caja" />
-          </label>
-          <button disabled={saving} className="rounded-xl bg-indigo-700 px-4 py-2 font-bold text-white disabled:opacity-50">{saving ? "Guardando..." : "Agregar saldo"}</button>
-        </form>
-
         <form
           onSubmit={(event) => submitMovement(event, "cash_minor_create_assignment", {
             p_parking_lot_id: parkingLotId,
@@ -224,7 +209,7 @@ export default function CashMinorManagement({ parkingLotId }: { parkingLotId: st
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-bold text-slate-900">Historial de caja menor</h2>
+          <h2 className="text-lg font-bold text-slate-900">Movimientos del fondo</h2>
         </div>
         {loading ? <p className="p-5 text-sm text-slate-600">Cargando...</p> : history.length === 0 ? <p className="p-5 text-sm text-slate-600">Aún no hay movimientos.</p> : (
           <div className="divide-y divide-slate-100">
@@ -242,7 +227,7 @@ export default function CashMinorManagement({ parkingLotId }: { parkingLotId: st
                     </p>
                     <p className={`text-xs font-bold ${movement.status === "activo" ? "text-emerald-700" : "text-slate-500"}`}>{movement.status}</p>
                   </div>
-                  {movement.status === "activo" && movement.movement_type !== "annulment" && (
+                  {movement.status === "activo" && movement.movement_type !== "annulment" && movement.movement_type !== "cash_transfer" && (
                     <button
                       onClick={() => void annulMovement(movement)}
                       disabled={saving}

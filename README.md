@@ -1,6 +1,13 @@
-# NexoPark v2.3.0
+# NexoPark v2.4.0
 
 Plataforma web para operar y administrar parqueaderos desde computadores, teléfonos y dispositivos instalados como aplicación web progresiva (PWA).
+
+## Novedades de la versión 2.4.0
+
+- Caja y caja menor ahora se administran desde una sola sección.
+- Transferir dinero descuenta el recaudo disponible y abona el mismo monto al fondo para gastos en una operación atómica.
+- Los reversos actualizan ambos saldos y dejan historial en Caja y en el fondo.
+- Se eliminó la opción duplicada de agregar fondos manualmente desde caja menor.
 
 ## Novedades de la versión 2.3.0
 
@@ -23,9 +30,9 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
 
 - Consulta de actividad, ingresos, ocupación e historial.
 - Gestión de tarifas, operarios, roles, abonados, vehículos y ajustes del parqueadero.
-- Control de caja y caja menor desde una navegación agrupada por áreas.
-- Registro de retiros desde Caja, sin una acción duplicada en el menú.
-- Creación de asignaciones de caja menor, inyección de fondos, ampliación de asignaciones y anulación auditada de movimientos.
+- Una sola sección de Caja para consultar el recaudo, transferir dinero al fondo para gastos y realizar cierres.
+- Cada transferencia descuenta el recaudo disponible y abona el mismo monto al fondo en una operación atómica.
+- Creación de asignaciones, ampliaciones, legalizaciones y devoluciones con historial auditable.
 - Revisión del historial de movimientos y legalizaciones.
 
 ### Portería
@@ -68,16 +75,18 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    SUPABASE_SERVICE_ROLE_KEY=
    NEXT_PUBLIC_APP_NAME=NexoPark
-   NEXT_PUBLIC_APP_VERSION=2.3.0
+   NEXT_PUBLIC_APP_VERSION=2.4.0
    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=
    ```
 
    `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` es opcional; usa el identificador de medición de Google Analytics 4, por ejemplo `G-XXXXXXXXXX`.
 
-3. Aplica en orden las migraciones versionadas de `supabase/migrations`, verificando primero cuáles ya aparecen en el historial del proyecto. No ejecutes todos los archivos SQL de `sql_scripts` ni repitas scripts antiguos: varios son correcciones manuales históricas y no forman una secuencia segura de migraciones. Para habilitar caja menor, asegúrate de que `20261108190000_caja_menor.sql` ya se haya aplicado. Para las actualizaciones en tiempo real de parqueaderos privados, revisa también `20261118142000_habilitar_realtime_parqueadero_privado.sql`.
+3. Aplica en orden las migraciones versionadas de `supabase/migrations`, verificando primero cuáles ya aparecen en el historial del proyecto. No ejecutes todos los archivos SQL de `sql_scripts` ni repitas scripts antiguos: varios son correcciones manuales históricas y no forman una secuencia segura de migraciones. Para habilitar caja menor, asegúrate de que `20261108190000_caja_menor.sql` ya se haya aplicado. Para las actualizaciones en tiempo real de parqueaderos privados, revisa también `20261118142000_habilitar_realtime_parqueadero_privado.sql`; para las transferencias y sus reversos, revisa `20261125133033_unificar_caja_minor_transferencias.sql` y `20261125133257_proteger_reverso_transferencias.sql`.
 
    En la instancia Parqueadero, la migración de caja menor ya existe en la base y está registrada como aplicada en el historial remoto. No la vuelvas a ejecutar manualmente.
    La migración de actualizaciones en tiempo real también fue aplicada en esa instancia. Verifica el historial antes de aplicarla en otros proyectos.
+   La migración `20261125133033_unificar_caja_minor_transferencias.sql` también se aplicó en Parqueadero. Verifica el historial antes de aplicarla en otra instancia.
+   La protección de reversos `20261125133257_proteger_reverso_transferencias.sql` también quedó aplicada en Parqueadero.
 4. Inicia el servidor de desarrollo:
 
    ```bash
@@ -100,7 +109,7 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
 
 La aplicación utiliza Supabase y políticas de seguridad por fila para limitar los registros al parqueadero del usuario. La migración de caja menor crea saldos por parqueadero, asignaciones, facturas múltiples e historial con estado `activo` o `anulado`. Los cambios de saldo y la legalización se realizan mediante funciones transaccionales de PostgreSQL para evitar saldos negativos y registrar cada movimiento en una sola operación.
 
-El saldo inicial de caja menor es cero y debe cargarse desde el panel administrativo. Las operaciones de fondos, asignaciones y anulaciones validan el rol y el parqueadero en la base de datos. El personal de portería puede consultar las asignaciones de su turno y enviar legalizaciones, pero no puede administrar el saldo ni cerrar la caja general.
+El saldo inicial de caja menor es cero y se alimenta transfiriendo dinero desde Caja. La transferencia, su registro como retiro y el abono al fondo se realizan en una sola transacción; si falla una parte, no se guarda ninguna. Las operaciones de asignaciones y anulaciones validan el rol y el parqueadero en la base de datos. El personal de portería puede consultar las asignaciones de su turno y enviar legalizaciones, pero no puede administrar el saldo ni cerrar la caja general.
 
 Las funciones transaccionales de caja menor usan `SECURITY DEFINER` y sólo permiten ejecución a usuarios autenticados; sus validaciones de rol y parqueadero son obligatorias. No concedas su ejecución a `anon` ni a `public`. Para quitar el aviso de contraseñas filtradas, activa la [protección de contraseñas filtradas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) en la configuración de autenticación de Supabase.
 
@@ -110,4 +119,4 @@ No publiques `SUPABASE_SERVICE_ROLE_KEY` ni la guardes en código cliente. Confi
 
 ## Despliegue
 
-Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. En Vercel, actualiza `NEXT_PUBLIC_APP_VERSION` a `2.3.0` en los entornos correspondientes para que la página pública y las vistas internas muestren la versión correcta. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.
+Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. En Vercel, actualiza `NEXT_PUBLIC_APP_VERSION` a `2.4.0` en los entornos correspondientes para que la página pública y las vistas internas muestren la versión correcta. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.

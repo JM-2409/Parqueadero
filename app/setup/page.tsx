@@ -13,6 +13,18 @@ import {
 export default function VersionsPage() {
   const versions = [
     {
+      version: "v2.4.0",
+      date: "25 Noviembre 2026",
+      title: "Caja unificada con fondo para gastos",
+      type: "feature",
+      changes: [
+        "Caja y caja menor se reúnen en una sola sección administrativa.",
+        "Las transferencias descuentan el recaudo disponible y abonan el mismo monto al fondo para gastos en una transacción.",
+        "Los reversos actualizan ambos saldos y quedan registrados en el historial.",
+        "Se eliminó la opción duplicada de agregar fondos manualmente desde caja menor.",
+      ],
+    },
+    {
       version: "v2.3.0",
       date: "18 Noviembre 2026",
       title: "Página de inicio renovada y acceso más cómodo",

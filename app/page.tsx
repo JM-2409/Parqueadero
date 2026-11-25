@@ -294,13 +294,13 @@ export default function Home() {
                 },
                 {
                   icon: Wallet,
-                  title: "Caja y retiros",
-                  desc: "Consulta cierres, movimientos y retiros en un flujo organizado para facilitar el control diario.",
+                  title: "Caja y gastos",
+                  desc: "Consulta el recaudo, transfiere dinero al fondo para gastos y controla los cierres desde una sola sección.",
                 },
                 {
                   icon: FileCheck2,
-                  title: "Caja menor trazable",
-                  desc: "Asigna fondos, registra varias facturas por entrega y devuelve saldos con historial de movimientos.",
+                  title: "Fondo para gastos",
+                  desc: "El saldo transferido desde Caja queda disponible para asignaciones, legalizaciones, facturas y devoluciones con historial detallado.",
                 },
                 {
                   icon: MapPin,
@@ -369,31 +369,31 @@ export default function Home() {
         <section id="updates" className="py-20 bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.3.0</span>
+              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.4.0</span>
               <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 text-slate-900">
-                Una experiencia más completa, de principio a fin
+                Caja más sencilla, con saldos claros
               </h2>
               <p className="text-lg max-w-2xl mx-auto text-slate-600">
-                Consulta lo que ofrece NexoPark y trabaja con una navegación más clara, un acceso mejorado y una sesión que permanece activa al volver atrás.
+                Recaudo y fondo para gastos conectados en una sola sección, con cada movimiento registrado de forma segura.
               </p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {[
                 {
-                  icon: Globe,
-                  title: "Inicio renovado",
-                  desc: "Una página más clara y completa para conocer las herramientas, novedades y planes disponibles.",
+                  icon: Wallet,
+                  title: "Una sola sección de Caja",
+                  desc: "Consulta el recaudo, realiza transferencias al fondo para gastos y revisa cierres desde un solo lugar.",
                 },
                 {
                   icon: ShieldCheck,
-                  title: "Acceso más cómodo",
-                  desc: "Formulario de ingreso más legible, con mejor manejo de errores y opción para mostrar u ocultar la contraseña.",
+                  title: "Transferencia sincronizada",
+                  desc: "El monto se descuenta del recaudo y se suma al fondo para gastos en una sola operación, sin duplicar movimientos.",
                 },
                 {
-                  icon: ArrowRight,
-                  title: "Sesión conservada al volver",
-                  desc: "Al ingresar, la pantalla de acceso se reemplaza en el historial para evitar que el botón Atrás parezca cerrar la sesión.",
+                  icon: FileCheck2,
+                  title: "Historial consistente",
+                  desc: "Las transferencias y sus reversos quedan vinculados en los registros de Caja y del fondo para gastos.",
                 },
               ].map((update) => {
                 const Icon = update.icon;
@@ -741,7 +741,7 @@ export default function Home() {
                 <Car size={16} />
               </div>
               <span className="font-bold text-slate-900">
-                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.3.0"}
+                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.4.0"}
               </span>
               <span>— Gestión administrativa y operación de parqueaderos</span>
             </div>
