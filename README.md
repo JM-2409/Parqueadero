@@ -1,6 +1,13 @@
-# NexoPark v2.5.0
+# NexoPark v2.5.1
 
 Plataforma web para operar y administrar parqueaderos desde computadores, teléfonos y dispositivos instalados como aplicación web progresiva (PWA).
+
+## Novedades de la versión 2.5.1
+
+- Los errores temporales de conexión o consulta del perfil ya no redirigen automáticamente al inicio de sesión.
+- Si vuelves atrás hasta la página de inicio con una sesión activa, se abre nuevamente el panel correspondiente.
+- El cierre de sesión espera la confirmación de Supabase antes de navegar al inicio.
+- No se requieren cambios en la base de datos.
 
 ## Novedades de la versión 2.5.0
 
@@ -81,7 +88,7 @@ Plataforma web para operar y administrar parqueaderos desde computadores, teléf
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    SUPABASE_SERVICE_ROLE_KEY=
    NEXT_PUBLIC_APP_NAME=NexoPark
-   NEXT_PUBLIC_APP_VERSION=2.5.0
+   NEXT_PUBLIC_APP_VERSION=2.5.1
    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=
    ```
 
@@ -125,4 +132,4 @@ No publiques `SUPABASE_SERVICE_ROLE_KEY` ni la guardes en código cliente. Confi
 
 ## Despliegue
 
-Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. En Vercel, actualiza `NEXT_PUBLIC_APP_VERSION` a `2.5.0` en los entornos correspondientes para que la página pública y las vistas internas muestren la versión correcta. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.
+Configura las variables de entorno requeridas en el servicio de alojamiento, aplica las migraciones pendientes en Supabase y despliega la aplicación con el comando de compilación del proyecto. En Vercel, actualiza `NEXT_PUBLIC_APP_VERSION` a `2.5.1` en los entornos correspondientes para que la página pública y las vistas internas muestren la versión correcta. La PWA solicita la activación de la versión nueva del service worker y toma el control de las páginas abiertas.

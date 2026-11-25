@@ -28,7 +28,6 @@ import {
   MonitorSmartphone,
   Download,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sanitizeInput } from "@/lib/sanitize";
 import { Spinner } from "@/components/ui/Spinner";
@@ -460,21 +459,33 @@ export default function SuperAdminPage() {
     const checkUser = async () => {
       try {
         const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (userError || !user) {
-          router.push("/login");
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error("Error verifying superadmin session:", sessionError);
+          setError("No se pudo verificar la sesión por un problema de conexión. Intenta actualizar el panel.");
+          setLoading(false);
+          return;
+        }
+        if (!session) {
+          router.replace("/login");
           return;
         }
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single();
 
-        if (profileError || !profile || profile.role !== "superadmin") {
-          router.push("/");
+        if (profileError) {
+          console.error("Error loading superadmin profile:", profileError);
+          setError("No se pudo cargar el perfil. Revisa tu conexión e intenta actualizar el panel.");
+          setLoading(false);
+          return;
+        }
+        if (!profile || profile.role !== "superadmin") {
+          router.replace("/");
         } else {
           fetchParkingLots();
           fetchAppSettings();
@@ -484,7 +495,8 @@ export default function SuperAdminPage() {
         }
       } catch (err) {
         console.error("Error checking user:", err);
-        router.push("/login");
+        setError(`No se pudo verificar el acceso: ${getErrorMessage(err)}`);
+        setLoading(false);
       }
     };
 
@@ -498,6 +510,17 @@ export default function SuperAdminPage() {
     fetchEmployees,
     fetchPendingDevicesCount,
   ]);
+
+  const handleLogout = async () => {
+    try {
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+      router.replace("/");
+    } catch (err: unknown) {
+      console.error("Error signing out superadmin:", err);
+      setError(`No se pudo cerrar la sesión: ${getErrorMessage(err)}`);
+    }
+  };
 
   // ──────────────────────────────────────────────────────
   // Realtime: dispositivos pendientes (superadmin ve todos)
@@ -1018,14 +1041,14 @@ export default function SuperAdminPage() {
           </button>
         </nav>
         <div className={styles.logoutContainer}>
-          <Link
-            href="/"
-            onClick={() => supabase.auth.signOut()}
+          <button
+            type="button"
+            onClick={handleLogout}
             className={styles.logoutButton}
           >
             <LogOut size={20} />
             <span className="font-bold">Cerrar Sesión</span>
-          </Link>
+          </button>
         </div>
       </div>
 

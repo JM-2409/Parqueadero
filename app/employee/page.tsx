@@ -238,8 +238,14 @@ export default function EmployeePage() {
         data: { session },
         error: sessionError,
       } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        router.push("/login");
+      if (sessionError) {
+        console.error("Error verifying employee session:", sessionError);
+        setError("No se pudo verificar la sesión por un problema de conexión. Intenta actualizar el panel.");
+        setLoading(false);
+        return;
+      }
+      if (!session) {
+        router.replace("/login");
         return;
       }
 
@@ -272,21 +278,27 @@ export default function EmployeePage() {
         profileError = errWithLots;
       }
 
-      if (profileError || profileData?.role !== "employee") {
-        router.push("/");
+      if (profileError) {
+        console.error("Error loading employee profile:", profileError);
+        setError("No se pudo cargar el perfil. Revisa tu conexión e intenta actualizar el panel.");
+        setLoading(false);
+        return;
+      }
+      if (profileData?.role !== "employee") {
+        router.replace("/");
         return;
       }
 
       if (profileData.parking_lots && profileData.parking_lots.is_suspended) {
         await supabase.auth.signOut();
-        router.push("/login?error=suspended");
+        router.replace("/login?error=suspended");
         return;
       }
 
       const subEnd = profileData.parking_lots?.subscription_end_date;
       if (subEnd && new Date(subEnd) < new Date()) {
         await supabase.auth.signOut();
-        router.push("/login?error=expired");
+        router.replace("/login?error=expired");
         return;
       }
 
@@ -297,7 +309,8 @@ export default function EmployeePage() {
       fetchBlacklistedCount(profileData.parking_lot_id);
     } catch (err) {
       console.error("Error checking user:", err);
-      router.push("/login");
+      setError(`No se pudo verificar el acceso: ${getErrorMessage(err)}`);
+      setLoading(false);
     }
   }, [
     router,
@@ -1060,9 +1073,15 @@ export default function EmployeePage() {
   };
 
   const handleLogout = async () => {
-    await handleEndShift();
-    await supabase.auth.signOut();
-    router.push("/");
+    try {
+      await handleEndShift();
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+      router.replace("/");
+    } catch (err: unknown) {
+      console.error("Error signing out employee:", err);
+      setError(`No se pudo cerrar la sesión: ${getErrorMessage(err)}`);
+    }
   };
 
   const savePref = (key: string, value: boolean) => {

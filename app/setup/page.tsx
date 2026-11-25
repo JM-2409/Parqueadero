@@ -13,6 +13,19 @@ import {
 export default function VersionsPage() {
   const versions = [
     {
+      version: "v2.5.1",
+      date: "25 Noviembre 2026",
+      title: "Sesión protegida al volver atrás",
+      type: "fix",
+      changes: [
+        "Los errores temporales de conexión o carga del perfil ya no redirigen al inicio de sesión ni aparentan cerrar la sesión activa.",
+        "El acceso al panel solo se redirige cuando no hay una sesión iniciada; las fallas de verificación ahora muestran un aviso.",
+        "Si vuelves atrás hasta la página de inicio, una sesión activa te devuelve a tu panel.",
+        "El cierre de sesión espera la confirmación de Supabase antes de volver al inicio.",
+        "No se requieren cambios en la base de datos.",
+      ],
+    },
+    {
       version: "v2.5.0",
       date: "25 Noviembre 2026",
       title: "Panel del dueño más claro y rápido",

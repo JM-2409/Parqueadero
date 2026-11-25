@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Car,
   ShieldCheck,
@@ -42,6 +43,7 @@ const navigationItems = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -50,6 +52,45 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
+
+    const restoreAuthenticatedUser = async () => {
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+        if (!active) return;
+        if (sessionError) {
+          console.error("Error al verificar la sesión desde el inicio:", sessionError);
+          return;
+        }
+        if (!session) return;
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (!active) return;
+        if (profileError) {
+          console.error("Error al restaurar la sesión desde el inicio:", profileError);
+          return;
+        }
+
+        const roleRoutes: Record<string, string> = {
+          admin: "/admin",
+          employee: "/employee",
+          superadmin: "/superadmin",
+        };
+        const destination = profile?.role ? roleRoutes[profile.role] : undefined;
+        if (destination) router.replace(destination);
+      } catch (error: unknown) {
+        if (active) {
+          console.error("Error al restaurar la sesión desde el inicio:", error);
+        }
+      }
+    };
 
     const loadPlans = async () => {
       try {
@@ -74,11 +115,12 @@ export default function Home() {
       }
     };
 
+    void restoreAuthenticatedUser();
     void loadPlans();
     return () => {
       active = false;
     };
-  }, []);
+  }, [router]);
 
   return (
     <div
@@ -370,7 +412,7 @@ export default function Home() {
         <section id="updates" className="py-20 bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.5.0</span>
+              <span className="badge-glow badge-emerald mb-4 inline-block">Versión 2.5.1</span>
               <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 text-slate-900">
                 El panel del dueño, más claro y rápido
               </h2>
@@ -742,7 +784,7 @@ export default function Home() {
                 <Car size={16} />
               </div>
               <span className="font-bold text-slate-900">
-                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.5.0"}
+                NexoPark v{process.env.NEXT_PUBLIC_APP_VERSION || "2.5.1"}
               </span>
               <span>— Gestión administrativa y operación de parqueaderos</span>
             </div>
